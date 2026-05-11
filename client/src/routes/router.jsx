@@ -1,0 +1,521 @@
+import { lazy } from 'react';
+import { createBrowserRouter, Outlet } from 'react-router';
+
+import PrivateRoute from '~/components/private-route';
+import { ROLE } from '~/constants/role';
+
+const AppLayout = lazy(() => import('~/components/layouts/app-layout'));
+const RootLayout = lazy(() => import('~/components/layouts/root-layout'));
+const AuthLayout = lazy(() => import('~/components/layouts/auth-layout'));
+const AdminLayout = lazy(() => import('~/components/layouts/admin-layout'));
+const ProfileLayout = lazy(() => import('~/components/layouts/profile-layout'));
+const OnboardingLayout = lazy(
+  () => import('~/components/layouts/onboarding-layout')
+);
+const ErrorComponent = lazy(() => import('~/components/error'));
+
+const OnboardingPage = lazy(() => import('~/app/onboarding/page'));
+const CreatePrivateDishPage = lazy(() => import('~/app/private-dish/page'));
+
+const router = createBrowserRouter([
+  {
+    Component: AppLayout,
+    ErrorBoundary: ErrorComponent,
+    children: [
+      {
+        path: '/',
+        Component: RootLayout,
+        children: [
+          {
+            index: true,
+            Component: lazy(() => import('~/app/page'))
+          },
+          {
+            path: 'collections',
+            Component: lazy(() => import('~/app/collections/page'))
+          },
+          {
+            path: 'collections/:id',
+            Component: lazy(() => import('~/app/collections/[id]/page'))
+          },
+          {
+            path: 'ingredients',
+            Component: lazy(() => import('~/app/ingredients/page'))
+          },
+          {
+            path: 'ingredients/:id',
+            Component: lazy(() => import('~/app/ingredients/[id]/page'))
+          },
+          {
+            path: 'dishes',
+            Component: lazy(() => import('~/app/dishes/page'))
+          },
+          {
+            path: 'dishes/:id',
+            Component: lazy(() => import('~/app/dishes/[id]/page'))
+          },
+          {
+            path: 'private-dishes/:id',
+            Component: lazy(() => import('~/app/private-dish/[id]/page'))
+          },
+          {
+            path: 'private-dishes/:id/edit',
+            Component: lazy(() => import('~/app/private-dish/[id]/edit/page'))
+          },
+          {
+            path: 'exercises',
+            Component: lazy(() => import('~/app/exercises/page'))
+          },
+          {
+            path: 'exercises/:id',
+            Component: lazy(() => import('~/app/exercises/[id]/page'))
+          },
+          {
+            path: 'create-private-dish',
+            Component: () => (
+              <PrivateRoute allowedRoles={[ROLE.USER]}>
+                <CreatePrivateDishPage />
+              </PrivateRoute>
+            )
+          },
+          {
+            path: 'schedules',
+            Component: () => (
+              <PrivateRoute allowedRoles={[ROLE.USER]}>
+                <Outlet />
+              </PrivateRoute>
+            ),
+            children: [
+              {
+                path: 'day',
+                Component: lazy(() => import('~/app/schedules/[day]/page'))
+              },
+              {
+                path: 'day/:id/nutrition',
+                Component: lazy(
+                  () => import('~/app/schedules/[id]/nutrition/page')
+                )
+              },
+              {
+                path: 'week',
+                Component: lazy(() => import('~/app/schedules/[week]/page'))
+              }
+            ]
+          },
+          {
+            path: 'posts',
+            Component: lazy(() => import('~/app/posts/page'))
+          },
+          {
+            path: 'posts/:id',
+            Component: lazy(() => import('~/app/posts/[id]/page'))
+          },
+          {
+            path: 'nutritionists/:id',
+            Component: lazy(() => import('~/app/nutritionists/[id]/page'))
+          },
+          {
+            path: 'dishes/:id/nutrition',
+            Component: lazy(() => import('~/app/dishes/[id]/nutrition/page'))
+          },
+          {
+            path: 'groceries',
+            Component: () => (
+              <PrivateRoute allowedRoles={[ROLE.USER]}>
+                <Outlet />
+              </PrivateRoute>
+            ),
+            children: [
+              {
+                index: true,
+                Component: lazy(() => import('~/app/groceries/page'))
+              }
+            ]
+          },
+          {
+            path: 'payment/success',
+            Component: lazy(() => import('~/app/payment/success/page'))
+          },
+          {
+            path: 'payment/cancel',
+            Component: lazy(() => import('~/app/payment/error/page'))
+          },
+
+          {
+            path: 'profile',
+            Component: () => (
+              <PrivateRoute
+                allowedRoles={[ROLE.USER, ROLE.ADMIN, ROLE.NUTRITIONIST]}
+              >
+                <ProfileLayout />
+              </PrivateRoute>
+            ),
+            children: [
+              {
+                Component: () => (
+                  <PrivateRoute
+                    allowedRoles={[ROLE.USER, ROLE.ADMIN, ROLE.NUTRITIONIST]}
+                  >
+                    <Outlet />
+                  </PrivateRoute>
+                ),
+                children: [
+                  {
+                    index: true,
+                    Component: lazy(() => import('~/app/profile/page'))
+                  }
+                ]
+              },
+              {
+                Component: () => (
+                  <PrivateRoute allowedRoles={[ROLE.USER]}>
+                    <Outlet />
+                  </PrivateRoute>
+                ),
+                children: [
+                  {
+                    path: 'diet',
+                    Component: lazy(() => import('~/app/profile/diet/page'))
+                  },
+                  {
+                    path: 'nutrition-target',
+                    Component: lazy(
+                      () => import('~/app/profile/nutrition-target/page')
+                    )
+                  },
+                  {
+                    path: 'physical-stats',
+                    Component: lazy(
+                      () => import('~/app/profile/physical-stats/page')
+                    )
+                  },
+                  {
+                    path: 'schedule-settings',
+                    Component: lazy(
+                      () => import('~/app/profile/schedule-settings/page')
+                    )
+                  },
+                  {
+                    path: 'food-allergies',
+                    Component: lazy(
+                      () => import('~/app/profile/allergens/page')
+                    )
+                  },
+                  {
+                    path: 'favorites',
+                    Component: lazy(
+                      () => import('~/app/profile/favorites/page')
+                    )
+                  },
+                  {
+                    path: 'blocks',
+                    Component: lazy(() => import('~/app/profile/blocks/page'))
+                  },
+                  {
+                    path: 'achievements',
+                    Component: lazy(
+                      () => import('~/app/profile/achievements/page')
+                    )
+                  }
+                ]
+              },
+              {
+                Component: () => (
+                  <PrivateRoute allowedRoles={[ROLE.NUTRITIONIST]}>
+                    <Outlet />
+                  </PrivateRoute>
+                ),
+                children: [
+                  {
+                    path: 'certificate',
+                    Component: lazy(
+                      () => import('~/app/profile/certificate/page')
+                    )
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        path: 'onboarding',
+        Component: OnboardingLayout,
+        children: [
+          {
+            index: true,
+            Component: () => (
+              <PrivateRoute allowedRoles={[ROLE.USER]}>
+                <OnboardingPage />
+              </PrivateRoute>
+            )
+          }
+        ]
+      },
+      {
+        path: '/auth/',
+        Component: AuthLayout,
+        children: [
+          {
+            path: 'login',
+            Component: lazy(() => import('~/app/auth/login/page'))
+          },
+          {
+            path: 'sign-up',
+            Component: lazy(() => import('~/app/auth/sign-up/page'))
+          },
+          {
+            path: 'callback',
+            Component: lazy(() => import('~/app/auth/callback/page'))
+          },
+          {
+            path: 'forgot-password',
+            Component: lazy(() => import('~/app/auth/forgot-password/page'))
+          },
+          {
+            path: 'reset-password',
+            Component: lazy(() => import('~/app/auth/reset-password/page'))
+          }
+        ]
+      },
+      {
+        path: '/nutritionist/',
+        Component: () => (
+          <PrivateRoute allowedRoles={[ROLE.NUTRITIONIST]}>
+            <AdminLayout />
+          </PrivateRoute>
+        ),
+        // Component: AdminLayout,
+        children: [
+          {
+            path: '',
+            Component: lazy(() => import('~/app/nutritionist/page'))
+          },
+
+          //Manage ingredients
+          {
+            path: 'manage-ingredients/',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-ingredients/page')
+            )
+          },
+          {
+            path: 'manage-ingredients/:id',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-ingredients/[id]/page')
+            )
+          },
+          {
+            path: 'manage-ingredients/create-ingredient',
+            Component: lazy(
+              () =>
+                import(
+                  '~/app/nutritionist/manage-ingredients/create-ingredient/page'
+                )
+            )
+          },
+
+          // Manage dishes
+          {
+            path: 'manage-dishes/',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-dishes/page')
+            )
+          },
+          {
+            path: 'manage-dishes/create-dish',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-dishes/create-dish/page')
+            )
+          },
+          {
+            path: 'manage-dishes/:id',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-dishes/[id]/page')
+            )
+          },
+
+          // Manage collections
+          {
+            path: 'manage-collections/',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-collections/page')
+            )
+          },
+          {
+            path: 'manage-collections/create-collection',
+            Component: lazy(
+              () =>
+                import(
+                  '~/app/nutritionist/manage-collections/create-collections/page'
+                )
+            )
+          },
+          {
+            path: 'manage-collections/:id',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-collections/[id]/page')
+            )
+          },
+
+          //Manage posts
+          {
+            path: 'manage-posts/',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-posts/page')
+            )
+          },
+          {
+            path: 'manage-posts/create-post',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-posts/create-post/page')
+            )
+          },
+          {
+            path: 'manage-posts/:id',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-posts/[id]/page')
+            )
+          },
+          {
+            path: 'feedbacks/',
+            Component: lazy(() => import('~/app/nutritionist/feedbacks/page'))
+          },
+          {
+            path: 'reviews/',
+            Component: lazy(() => import('~/app/nutritionist/reviews/page'))
+          },
+          {
+            path: 'reviews/:id',
+            Component: lazy(
+              () => import('~/app/nutritionist/reviews/[id]/page')
+            )
+          }
+        ]
+      },
+      {
+        path: '/admin/',
+        Component: () => (
+          <PrivateRoute allowedRoles={[ROLE.ADMIN]}>
+            <AdminLayout />
+          </PrivateRoute>
+        ),
+        // Component: AdminLayout,
+        children: [
+          {},
+          {
+            path: '',
+            Component: lazy(() => import('~/app/admin/page'))
+          },
+          {
+            path: 'manage-users/',
+            Component: lazy(() => import('~/app/admin/manage-users/page'))
+          },
+          {
+            path: 'manage-users/:id',
+            Component: lazy(() => import('~/app/admin/manage-users/[id]/page'))
+          },
+          {
+            path: 'manage-users/create-user',
+            Component: lazy(
+              () => import('~/app/admin/manage-users/create-user/page')
+            )
+          },
+          //admin manage dishes
+          {
+            path: 'manage-dishes/',
+            Component: lazy(() => import('~/app/admin/manage-dishes/page'))
+          },
+          {
+            path: 'manage-dishes/:id',
+            Component: lazy(() => import('~/app/admin/manage-dishes/[id]/page'))
+          },
+
+          //admin manage ingredients
+          {
+            path: 'manage-ingredients/',
+            Component: lazy(() => import('~/app/admin/manage-ingredients/page'))
+          },
+          {
+            path: 'manage-ingredients/:id',
+            Component: lazy(
+              () => import('~/app/admin/manage-ingredients/[id]/page')
+            )
+          },
+
+          //admin manage collections
+          {
+            path: 'manage-collections/',
+            Component: lazy(() => import('~/app/admin/manage-collections/page'))
+          },
+          {
+            path: 'manage-collections/:id',
+            Component: lazy(
+              () => import('~/app/admin/manage-collections/[id]/page')
+            )
+          },
+
+          //admin manage posts
+          {
+            path: 'manage-posts/',
+            Component: lazy(() => import('~/app/admin/manage-posts/page'))
+          },
+          {
+            path: 'manage-posts/:id',
+            Component: lazy(() => import('~/app/admin/manage-posts/[id]/page'))
+          },
+
+          //admin manage payments
+          {
+            path: 'manage-payments/',
+            Component: lazy(() => import('~/app/admin/manage-payments/page'))
+          },
+          {
+            path: 'payments/',
+            Component: lazy(() => import('~/app/admin/payments/page'))
+          },
+
+          //admin manage exercises
+          {
+            path: 'manage-exercises/',
+            Component: lazy(() => import('~/app/admin/manage-exercises/page'))
+          },
+          {
+            path: 'manage-exercises/create-exercise',
+            Component: lazy(
+              () => import('~/app/admin/manage-exercises/create-exercise/page')
+            )
+          },
+          {
+            path: 'manage-exercises/:id',
+            Component: lazy(
+              () => import('~/app/admin/manage-exercises/[id]/page')
+            )
+          },
+          {
+            path: 'feedbacks/',
+            Component: lazy(() => import('~/app/admin/feedbacks/page'))
+          },
+          {
+            path: 'ai-dashboard/',
+            Component: lazy(() => import('~/app/admin/ai-dashboard/page'))
+          },
+          {
+            path: 'ai-evaluations/',
+            Component: lazy(() => import('~/app/admin/ai-evaluations/page'))
+          },
+          {
+            path: 'ai-test-cases/',
+            Component: lazy(() => import('~/app/admin/ai-test-cases/page'))
+          }
+        ]
+      },
+      {
+        path: '*',
+        Component: ErrorComponent
+      }
+    ]
+  }
+]);
+
+export default router;
