@@ -12,7 +12,10 @@ import { ACTIVITY_LEVEL } from '~/shared/constants/activity-level';
 import { CERTIFICATE_STATUS } from '~/shared/constants/certificate-status';
 import { DIET } from '~/shared/constants/diet';
 import { GENDER } from '~/shared/constants/gender';
-import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
+import {
+  isPaidMembership,
+  MEMBERSHIP_LEVEL
+} from '~/shared/constants/membership-level';
 import { ROLE } from '~/shared/constants/role';
 import { USER_TARGET } from '~/shared/constants/user-target';
 import {
@@ -378,7 +381,7 @@ const refreshAiQuotaOnProfileRead = async (user: HydratedDocument<User>) => {
   const now = new Date();
   let changed = false;
 
-  if (user.membershipLevel === MEMBERSHIP_LEVEL.VIP) {
+  if (isPaidMembership(user.membershipLevel)) {
     const expiresAt =
       user.membershipExpiresAt instanceof Date
         ? user.membershipExpiresAt
@@ -549,7 +552,7 @@ export const UserService = {
     );
 
     if (!result || result.totalDocs === 0) {
-      throw createHttpError(404, 'Không tìm thấy chuyên gia dinh dưỡng nào');
+      throw createHttpError(404, 'Không tìm thấy chuyên gia nào');
     }
 
     result.docs = result.docs.map(doc =>
@@ -720,7 +723,7 @@ export const UserService = {
     if (user.role !== ROLE.NUTRITIONIST) {
       throw createHttpError(
         403,
-        'Người dùng này không phải chuyên gia dinh dưỡng'
+        'Người dùng này không phải chuyên gia'
       );
     }
 
@@ -820,7 +823,7 @@ export const UserService = {
     if (user.role !== ROLE.NUTRITIONIST) {
       throw createHttpError(
         403,
-        'Chỉ chuyên gia dinh dưỡng mới có thể tải lên chứng chỉ'
+        'Chỉ chuyên gia mới có thể tải lên chứng chỉ'
       );
     }
 
@@ -857,7 +860,7 @@ export const UserService = {
     if (user.role !== ROLE.NUTRITIONIST) {
       throw createHttpError(
         403,
-        'Chỉ chuyên gia dinh dưỡng mới có thể cập nhật hồ sơ'
+        'Chỉ chuyên gia mới có thể cập nhật hồ sơ'
       );
     }
 
@@ -877,7 +880,7 @@ export const UserService = {
     if (user.role !== ROLE.NUTRITIONIST) {
       throw createHttpError(
         403,
-        'Người dùng này không phải là chuyên gia dinh dưỡng'
+        'Người dùng này không phải là chuyên gia'
       );
     }
 
@@ -964,7 +967,7 @@ export const UserService = {
     if (user.role !== ROLE.NUTRITIONIST) {
       throw createHttpError(
         403,
-        'Chỉ chuyên gia dinh dưỡng mới có thể thay đổi cài đặt này'
+        'Chỉ chuyên gia mới có thể thay đổi cài đặt này'
       );
     }
 

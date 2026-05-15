@@ -95,7 +95,7 @@ const SignUpCard = () => {
                 {step === 1
                   ? 'Tạo tài khoản mới để bắt đầu'
                   : selectedRole === ROLE.NUTRITIONIST
-                    ? 'Đăng ký tài khoản chuyên gia dinh dưỡng'
+                    ? 'Đăng ký tài khoản chuyên gia'
                     : 'Điền thông tin tài khoản của bạn'}
               </CardDescription>
             </div>

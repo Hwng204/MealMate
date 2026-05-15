@@ -48,7 +48,7 @@ const Dashboard = () => {
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-destructive'>
             <AlertCircle className='size-5' />
-            Không thể tải dashboard chuyên gia dinh dưỡng
+            Không thể tải dashboard chuyên gia
           </CardTitle>
           <CardDescription>
             {error?.response?.data?.message ||
@@ -146,7 +146,7 @@ const Dashboard = () => {
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <div>
               <h1 className='text-2xl font-semibold tracking-tight'>
-                Dashboard chuyên gia dinh dưỡng
+                Dashboard chuyên gia
               </h1>
               <p className='text-sm text-muted-foreground'>
                 Tổng quan nội dung và hiệu suất tương tác của bạn.

@@ -1,7 +1,6 @@
 import {
   HiOutlineArrowRight,
-  HiOutlineChartBar,
-  HiOutlineCheckBadge
+  HiOutlineSparkles
 } from 'react-icons/hi2';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
@@ -9,90 +8,57 @@ import { Link } from 'react-router';
 const Hero = () => {
   const user = useSelector(state => state.auth.user);
   return (
-    <section className='relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-16 grid md:grid-cols-2 gap-10 md:gap-16 items-center bg-background overflow-hidden'>
-      <div className='relative z-10 order-2 md:order-1'>
-        <div className='inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary shadow-sm'>
-          <HiOutlineCheckBadge className='text-base' />
-          EatDee đồng hành cùng mục tiêu sức khỏe của bạn
-        </div>
-
-        <h1 className='mt-5 text-4xl font-black leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl'>
-          Ăn <span className='text-primary'>thông minh</span>
-          <br />
-          <span className='text-foreground'>Sống khỏe mạnh</span>
-        </h1>
-
-        <p className='mt-6 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg'>
-          EatDee giúp bạn thiết kế thực đơn khoa học, theo dõi dinh dưỡng và đạt
-          mục tiêu cân nặng với trải nghiệm đơn giản, trực quan và dễ duy trì
-          mỗi ngày.
-        </p>
-
-        <div className='mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4'>
-          <Link
-            to={user ? '/schedules/day' : '/auth/login'}
-            className='group inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-bold text-primary-foreground shadow-[0_12px_28px_rgba(59,130,246,0.22)] transition-all duration-200 hover:opacity-95 sm:h-14 sm:px-8 sm:text-base'
-          >
-            Bắt đầu miễn phí
-            <HiOutlineArrowRight className='text-lg transition-transform duration-200 group-hover:translate-x-1' />
-          </Link>
-
-          <a
-            href='https://www.youtube.com/watch?v=7uLCm3g_CLM'
-            target='_blank'
-            rel='noopener noreferrer'
-            className='inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 text-sm font-bold text-foreground shadow-sm transition-colors duration-200 hover:bg-accent sm:h-14 sm:px-8 sm:text-base'
-          >
-            Xem cách hoạt động
-          </a>
-        </div>
-
-        <div className='mt-8 flex flex-wrap gap-3 sm:gap-4'>
-          <div className='inline-flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-xs font-medium text-muted-foreground sm:text-sm'>
-            <HiOutlineCheckBadge className='text-lg text-primary' />
-            Kế hoạch khoa học
-          </div>
-
-          <div className='inline-flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-xs font-medium text-muted-foreground sm:text-sm'>
-            <HiOutlineChartBar className='text-lg text-primary' />
-            Báo cáo chi tiết
-          </div>
-        </div>
+    <section className='relative bg-background overflow-hidden'>
+      <div className='relative left-1/2 w-screen max-w-none -translate-x-1/2'>
+        <img
+          src="/banner.png"
+          alt="MealMeat Banner"
+          className='h-[220px] w-full object-cover object-center sm:h-[300px] md:h-[380px] lg:h-[420px]'
+        />
       </div>
-
-      <div className='relative order-1 md:order-2'>
-        <div className='absolute -inset-6 md:-inset-10 bg-accent/50 blur-[80px] md:blur-[100px] rounded-full' />
-
-        <div className='relative'>
+      <div className='relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 md:py-14 lg:py-16 grid md:grid-cols-2 gap-10 md:gap-14 lg:gap-16 items-center'>
+        <div className='relative order-1'>
           <img
-            src='/food.png'
-            alt='EatDee Healthy Meal'
-            className='relative z-10
-           rounded-3xl md:rounded-[3rem]
-           shadow-2xl shadow-primary/10
-           object-cover
-           w-full h-auto
-           border-4 md:border-6 border-card'
+            src='/food.jpg'
+            alt='MealMeat Healthy Meal'
+            className='relative z-10 w-full h-auto max-h-[min(520px,55vh)] object-cover rounded-3xl md:rounded-[2rem] shadow-xl shadow-black/10 border border-black/[0.06]'
           />
+        </div>
 
-          <div className='absolute -bottom-5 -left-2 md:-bottom-8 md:-left-8 z-20 bg-card p-3 md:p-4 rounded-xl md:rounded-2xl shadow-xl border border-border flex items-center gap-3 animate-bounce-slow'>
-            <div className='w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary'>
-              <HiOutlineChartBar size={20} />
-            </div>
+        <div className='relative z-10 order-2'>
+          <div className='inline-flex items-center gap-2 rounded-full border border-emerald-700/15 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-sm'>
+            <HiOutlineSparkles className='text-base' />
+            Cá nhân hoá bằng AI
+          </div>
 
-            <div>
-              <p className='text-[9px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-widest'>
-                Protein Goal
-              </p>
+          <h1 className='mt-5 text-3xl font-black leading-[1.12] tracking-tight text-neutral-900 sm:text-4xl md:text-5xl lg:text-[3.25rem]'>
+            Trợ lí AI bữa ăn
+            <br />
+            Đồng hành cùng bạn
+          </h1>
 
-              <p className='text-sm md:text-lg font-black text-foreground'>
-                120g / 150g
-              </p>
+          <p className='mt-5 max-w-xl text-base leading-7 text-neutral-600 sm:text-lg'>
+            MealMeat gợi ý thực đơn phù hợp mục tiêu của bạn, theo dõi dinh dưỡng
+            trực quan và giúp duy trì thói quen ăn uống lành mạnh mỗi ngày.
+          </p>
 
-              <div className='w-20 md:w-24 h-1.5 bg-secondary rounded-full mt-1'>
-                <div className='w-4/5 h-full bg-primary rounded-full' />
-              </div>
-            </div>
+          <div className='mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4'>
+            <Link
+              to={user ? '/schedules/day' : '/auth/login'}
+              className='group inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#f5812a] px-6 text-sm font-bold text-white shadow-md shadow-orange-900/10 transition-all duration-200 hover:brightness-105 sm:h-14 sm:px-8 sm:text-base'
+            >
+              Bắt đầu miễn phí
+              <HiOutlineArrowRight className='text-lg transition-transform duration-200 group-hover:translate-x-1' />
+            </Link>
+
+            <a
+              href='https://www.youtube.com/watch?v=7uLCm3g_CLM'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-6 text-sm font-bold text-emerald-900 shadow-sm transition-colors duration-200 hover:bg-neutral-50 sm:h-14 sm:px-8 sm:text-base'
+            >
+              Xem cách hoạt động
+            </a>
           </div>
         </div>
       </div>

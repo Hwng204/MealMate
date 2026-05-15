@@ -45,7 +45,7 @@ describe('UserService.toggleCertificateVisibility (UC87)', () => {
       UserService.toggleCertificateVisibility('u1', true)
     ).rejects.toMatchObject({
       status: 403,
-      message: 'Chỉ chuyên gia dinh dưỡng mới có thể thay đổi cài đặt này'
+      message: 'Chỉ chuyên gia mới có thể thay đổi cài đặt này'
     });
   });
 

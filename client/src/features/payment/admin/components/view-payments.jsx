@@ -26,6 +26,7 @@ import {
   SelectValue
 } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
+import { MEMBERSHIP_LEVEL } from '~/constants/membership-level';
 import { buildQueryParams } from '~/lib/build-query-params';
 
 import { usePayments, useUpdatePaymentStatus } from '../api/view-payments';
@@ -34,11 +35,6 @@ const PAYMENT_STATUS = {
   PENDING: 'Đang chờ xử lý',
   COMPLETED: 'Đã hoàn thành',
   CANCELLED: 'Đã huỷ'
-};
-
-const MEMBERSHIP_LEVEL = {
-  NORMAL: 'Tài khoản thường',
-  VIP: 'Tài khoản VIP'
 };
 
 const PAYMENT_STATUS_OPTIONS = Object.values(PAYMENT_STATUS);

@@ -87,7 +87,7 @@ export default function NutritionistDetail({ id }) {
               <div className='min-w-0 flex-1 space-y-4'>
                 <div className='flex flex-wrap items-center gap-2'>
                   <Badge className='rounded-full bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10'>
-                    Chuyên gia dinh dưỡng
+                    Chuyên gia
                   </Badge>
 
                   {certificate?.status === 'Approved' && (
@@ -292,7 +292,7 @@ export default function NutritionistDetail({ id }) {
                       Vai trò
                     </p>
                     <p className='mt-1 font-semibold text-foreground'>
-                      Chuyên gia dinh dưỡng
+                      Chuyên gia
                     </p>
                   </div>
 
@@ -317,8 +317,7 @@ export default function NutritionistDetail({ id }) {
                 <p className='font-bold text-foreground'>Hồ sơ chuyên gia</p>
                 <p className='mt-2 text-sm leading-7 text-muted-foreground'>
                   Thông tin được hiển thị nhằm giúp người dùng hiểu rõ hơn về
-                  chuyên môn, đơn vị công tác và chứng chỉ của chuyên gia dinh
-                  dưỡng.
+                  chuyên môn, đơn vị công tác và chứng chỉ của chuyên gia.
                 </p>
               </div>
             </div>

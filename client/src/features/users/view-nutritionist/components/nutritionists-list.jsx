@@ -49,7 +49,7 @@ const NutritionistCard = ({ nutritionist }) => {
         </Avatar>
         <div className='flex-1 min-w-0'>
           <p className='font-semibold truncate'>{nutritionist.name}</p>
-          <p className='text-sm text-muted-foreground'>Chuyên gia dinh dưỡng</p>
+          <p className='text-sm text-muted-foreground'>Chuyên gia</p>
         </div>
       </CardHeader>
       <CardContent className='flex-1 space-y-3'>
@@ -140,7 +140,7 @@ export default function NutritionistsList() {
         <div className='flex flex-col items-center justify-center py-16 text-center'>
           <ShieldCheck className='h-12 w-12 text-muted-foreground/40 mb-4' />
           <p className='text-muted-foreground'>
-            Không tìm thấy chuyên gia dinh dưỡng nào
+            Không tìm thấy chuyên gia nào
           </p>
         </div>
       ) : (

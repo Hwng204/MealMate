@@ -12,7 +12,7 @@ export default function PostListHeader() {
 
           <p className='mt-3 max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]'>
             Cập nhật những bài viết mới về dinh dưỡng, sức khỏe và lối sống lành
-            mạnh từ EatDee.
+            mạnh từ MealMeat.
           </p>
         </div>
       </div>

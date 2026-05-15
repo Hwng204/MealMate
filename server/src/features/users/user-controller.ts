@@ -35,7 +35,7 @@ export const UserController = {
       .status(200)
       .json(
         ApiResponse.success(
-          'Lấy danh sách chuyên gia dinh dưỡng thành công',
+          'Lấy danh sách chuyên gia thành công',
           result
         )
       );
@@ -121,7 +121,7 @@ export const UserController = {
       .status(200)
       .json(
         ApiResponse.success(
-          'Lấy hồ sơ chuyên gia dinh dưỡng thành công',
+          'Lấy hồ sơ chuyên gia thành công',
           result
         )
       );

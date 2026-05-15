@@ -16,67 +16,50 @@ const PackageCard = ({ plan, onSelect, isLoading }) => {
   return (
     <div
       className={`
-        relative rounded-3xl md:rounded-[2.5rem]
-        p-5 sm:p-6 md:p-8
-        flex flex-col
-        border-2 transition-all duration-500
-        ${
-          plan.highlight
-            ? 'bg-card border-primary shadow-xl md:shadow-2xl md:shadow-primary/20 md:scale-105 md:-translate-y-4 z-10'
-            : 'bg-card border-border md:hover:border-primary/30'
-        }
+        relative flex flex-col rounded-2xl border border-neutral-900 bg-white
+        p-6 sm:p-7 md:p-8
+        shadow-[0_2px_12px_rgba(0,0,0,0.04)]
+        ${plan.highlight ? 'md:ring-2 md:ring-neutral-900 md:ring-offset-2 md:ring-offset-background' : ''}
       `}
     >
       {plan.highlight && (
         <div
-          className='absolute -top-3 md:-top-5 left-1/2 -translate-x-1/2
-          bg-primary text-primary-foreground
-          px-3 py-1 rounded-full text-[10px] md:text-xs font-bold
-          flex items-center gap-1 shadow-lg'
+          className='absolute -top-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full
+          bg-neutral-900 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-md sm:text-xs'
         >
-          <HiOutlineSparkles />
-          PHỔ BIẾN
+          <HiOutlineSparkles className='h-3.5 w-3.5' />
+          Phổ biến
         </div>
       )}
 
       <div className='mb-6 md:mb-8'>
-        <h3
-          className={`text-lg md:text-xl font-black ${
-            plan.highlight ? 'text-primary' : 'text-foreground'
-          }`}
-        >
+        <h3 className='text-lg font-black text-neutral-900 md:text-xl'>
           {plan.name}
         </h3>
 
-        <p className='text-xs md:text-sm text-muted-foreground mt-1'>
-          {plan.desc}
-        </p>
+        <p className='mt-1 text-xs text-neutral-600 sm:text-sm'>{plan.desc}</p>
 
-        <div className='flex items-baseline gap-1 mt-4 md:mt-6'>
-          <span className='text-2xl sm:text-3xl md:text-4xl font-black text-foreground'>
+        <div className='mt-4 flex items-baseline gap-1 md:mt-6'>
+          <span className='text-2xl font-black text-neutral-900 sm:text-3xl md:text-4xl'>
             {plan.price}
           </span>
 
           {plan.period && (
-            <span className='text-xs md:text-sm text-muted-foreground font-medium'>
+            <span className='text-xs font-medium text-neutral-600 sm:text-sm'>
               {plan.period}
             </span>
           )}
         </div>
       </div>
 
-      <ul className='flex-1 space-y-3 md:space-y-4 mb-6 md:mb-8'>
+      <ul className='mb-6 flex-1 space-y-3 md:mb-8 md:space-y-4'>
         {plan.features.map(f => (
           <li
             key={f}
-            className='flex items-start gap-2 md:gap-3 text-xs sm:text-sm font-medium text-foreground/80'
+            className='flex items-start gap-2 text-xs font-medium text-neutral-800 sm:text-sm md:gap-3'
           >
-            <div
-              className={`mt-0.5 ${
-                plan.highlight ? 'text-primary' : 'text-green-600'
-              }`}
-            >
-              <HiCheck strokeWidth={3} />
+            <div className='mt-0.5 shrink-0 text-emerald-700'>
+              <HiCheck strokeWidth={3} className='h-4 w-4 sm:h-5 sm:w-5' />
             </div>
             {f}
           </li>
@@ -87,18 +70,7 @@ const PackageCard = ({ plan, onSelect, isLoading }) => {
         type='button'
         onClick={handleClick}
         disabled={isLoading && plan.amount > 0}
-        className={`
-          w-full py-3 md:py-4
-          rounded-xl md:rounded-2xl
-          text-sm md:text-base
-          font-black
-          transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed
-          ${
-            plan.highlight
-              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-90'
-              : 'bg-secondary text-secondary-foreground hover:bg-muted border border-border'
-          }
-        `}
+        className='w-full rounded-xl bg-neutral-200 py-3 text-sm font-black text-neutral-900 transition-all hover:bg-neutral-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 md:rounded-2xl md:py-4 md:text-base'
       >
         {plan.amount > 0 && isLoading
           ? 'Đang chuyển đến PayOS...'

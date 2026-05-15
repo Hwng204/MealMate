@@ -62,7 +62,7 @@ const NutritionistCard = ({ nutritionist }) => {
           )}
 
           {profile?.professionalBio && (
-            <div className='rounded-2xl border border-border/70 bg-background px-4 py-4'>
+            <div className='rounded-2xl border border-border/70 bg-background px-4 py-4 text-left'>
               <p className='line-clamp-4 text-sm leading-7 text-muted-foreground'>
                 {profile.professionalBio}
               </p>
@@ -88,7 +88,7 @@ const NutritionistCard = ({ nutritionist }) => {
 
 const NutritionistList = () => {
   const { data } = useNutritionists({ page: 1, limit: 4 });
-  const docs = data.docs;
+  const docs = data?.docs || [];
 
   if (docs.length === 0) {
     return null;
@@ -96,12 +96,13 @@ const NutritionistList = () => {
 
   return (
     <section className='mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8'>
-      <div className='mb-8 flex items-end justify-between gap-4'>
-        <div className='space-y-2'>
-          <span className='inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary'>
-            Chuyên gia dinh dưỡng
+      {/* Centering Header Content */}
+      <div className='mb-12 flex flex-col items-center text-center'>
+        <div className='space-y-3 flex flex-col items-center'>
+          <span className='inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary w-fit'>
+            Chuyên gia
           </span>
-          <h2 className='text-2xl font-black tracking-tight text-foreground sm:text-3xl'>
+          <h2 className='text-3xl font-black tracking-tight text-foreground sm:text-4xl'>
             Đội ngũ chuyên gia của chúng tôi
           </h2>
           <p className='max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base'>
@@ -111,7 +112,8 @@ const NutritionistList = () => {
         </div>
       </div>
 
-      <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4'>
+      {/* Grid Centering: justify-center helps if there are fewer than 4 items */}
+      <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-center'>
         {docs.map(nutritionist => (
           <NutritionistCard
             key={nutritionist._id ?? nutritionist.name}

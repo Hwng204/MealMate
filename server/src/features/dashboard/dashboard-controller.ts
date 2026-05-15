@@ -27,7 +27,7 @@ export const DashboardController = {
       .status(200)
       .json(
         ApiResponse.success(
-          'Lấy dữ liệu dashboard chuyên gia dinh dưỡng thành công',
+          'Lấy dữ liệu dashboard chuyên gia thành công',
           result
         )
       );

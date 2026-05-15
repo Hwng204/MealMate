@@ -11,7 +11,15 @@ import {
   getNextQuotaResetAt
 } from '~/shared/config/ai-quota';
 import type { MembershipLevel } from '~/shared/constants/membership-level';
-import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
+import {
+  getExpertMembershipRank,
+  isExpertMembership,
+  isPaidMembership,
+  MEMBERSHIP_LEVEL,
+  NUTRITIONIST_PURCHASABLE_MEMBERSHIPS,
+  USER_PURCHASABLE_MEMBERSHIPS
+} from '~/shared/constants/membership-level';
+import { ROLE } from '~/shared/constants/role';
 import { PAYMENT_STATUS } from '~/shared/constants/payment-status';
 import { UserModel } from '~/shared/database/models';
 import type { Payment } from '~/shared/database/models/payment-model';
@@ -47,10 +55,9 @@ const applyMembershipUpgrade = async (
   const currentTokens = Number.isFinite(user.aiTokens)
     ? Number(user.aiTokens)
     : 0;
-  user.aiTokens =
-    targetMembership === MEMBERSHIP_LEVEL.VIP
-      ? Math.max(currentTokens, dailyTokenLimit)
-      : Math.min(currentTokens, dailyTokenLimit);
+  user.aiTokens = isPaidMembership(targetMembership)
+    ? Math.max(currentTokens, dailyTokenLimit)
+    : Math.min(currentTokens, dailyTokenLimit);
 
   await user.save();
 
@@ -70,11 +77,36 @@ const applyMembershipUpgrade = async (
 
 export const PaymentService = {
   createPayment: async (data: CreatePaymentRequest, userId: string) => {
-    // Validate targetMembership if provided
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw createHttpError(404, 'Người dùng không tồn tại');
+    }
+
     if (data.targetMembership) {
-      const user = await UserModel.findById(userId);
-      if (!user) {
-        throw createHttpError(404, 'Người dùng không tồn tại');
+      if (user.role === ROLE.USER) {
+        if (
+          !USER_PURCHASABLE_MEMBERSHIPS.includes(
+            data.targetMembership as (typeof USER_PURCHASABLE_MEMBERSHIPS)[number]
+          )
+        ) {
+          throw createHttpError(
+            403,
+            'Gói này chỉ dành cho chuyên gia. Vui lòng chọn gói Premium cá nhân.'
+          );
+        }
+      } else if (user.role === ROLE.NUTRITIONIST) {
+        if (
+          !NUTRITIONIST_PURCHASABLE_MEMBERSHIPS.includes(
+            data.targetMembership as (typeof NUTRITIONIST_PURCHASABLE_MEMBERSHIPS)[number]
+          )
+        ) {
+          throw createHttpError(
+            403,
+            'Gói này chỉ dành cho người dùng cá nhân. Vui lòng chọn gói dành cho chuyên gia.'
+          );
+        }
+      } else {
+        throw createHttpError(403, 'Tài khoản này không được phép mua gói thành viên');
       }
 
       const currentMembership = user.membershipLevel || MEMBERSHIP_LEVEL.NORMAL;
@@ -93,6 +125,18 @@ export const PaymentService = {
         throw createHttpError(
           400,
           'Không thể hạ cấp từ VIP xuống tài khoản thường'
+        );
+      }
+
+      if (
+        isExpertMembership(currentMembership) &&
+        isExpertMembership(data.targetMembership) &&
+        getExpertMembershipRank(data.targetMembership) <=
+          getExpertMembershipRank(currentMembership)
+      ) {
+        throw createHttpError(
+          400,
+          'Không thể hạ cấp hoặc mua lại gói chuyên gia thấp hơn gói hiện tại'
         );
       }
     }

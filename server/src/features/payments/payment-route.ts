@@ -20,7 +20,7 @@ const router = Router();
 router.post(
   '/',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   parseFormData,
   validate(createPaymentRequestSchema.shape),
   asyncHandler(PaymentController.createPayment)
@@ -36,14 +36,14 @@ router.get(
 router.get(
   '/me',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   asyncHandler(PaymentController.getPaymentsHistory)
 );
 
 router.post(
   '/confirm',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   asyncHandler(PaymentController.confirmPayment)
 );
 

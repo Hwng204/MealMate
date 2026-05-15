@@ -41,7 +41,7 @@ const OnboardingHeader = () => {
 
             <div className='flex flex-col leading-none'>
               <span className='text-2xl font-black tracking-tight text-primary'>
-                Eat<span className='text-foreground'>Dee</span>
+                Meal<span className='text-foreground'>Meat</span>
               </span>
               <span className='text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5'>
                 Healthy Life

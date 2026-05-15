@@ -80,7 +80,7 @@ describe('UserService.viewNutritionistProfile (UC84)', () => {
       UserService.viewNutritionistProfile('507f1f77bcf86cd799439011')
     ).rejects.toMatchObject({
       status: 403,
-      message: 'Người dùng này không phải chuyên gia dinh dưỡng'
+      message: 'Người dùng này không phải chuyên gia'
     });
   });
 

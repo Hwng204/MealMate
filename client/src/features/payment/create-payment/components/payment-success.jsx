@@ -73,7 +73,7 @@ const PaymentSuccessView = () => {
         <div className='mt-8 flex flex-col items-center gap-2 text-xs text-muted-foreground/70'>
           <div className='flex items-center gap-2'>
             <HiEnvelope className='text-primary w-4 h-4' />
-            <span className='font-semibold'>support@eatdee.com</span>
+            <span className='font-semibold'>support@mealmeat.com</span>
           </div>
 
           <div className='flex items-center gap-2 text-muted-foreground/60'>

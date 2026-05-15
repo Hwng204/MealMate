@@ -56,7 +56,7 @@ export const signUpRequestSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['certificateName'],
-        message: 'Tên chứng chỉ là bắt buộc với chuyên gia dinh dưỡng'
+        message: 'Tên chứng chỉ là bắt buộc với chuyên gia'
       });
     }
 
@@ -64,7 +64,7 @@ export const signUpRequestSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['certificate'],
-        message: 'Chứng chỉ là bắt buộc với chuyên gia dinh dưỡng'
+        message: 'Chứng chỉ là bắt buộc với chuyên gia'
       });
     }
 
@@ -72,7 +72,7 @@ export const signUpRequestSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['workplace'],
-        message: 'Nơi làm việc là bắt buộc với chuyên gia dinh dưỡng'
+        message: 'Nơi làm việc là bắt buộc với chuyên gia'
       });
     }
 
@@ -80,7 +80,7 @@ export const signUpRequestSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['graduatedUniversity'],
-        message: 'Trường tốt nghiệp là bắt buộc với chuyên gia dinh dưỡng'
+        message: 'Trường tốt nghiệp là bắt buộc với chuyên gia'
       });
     }
   });

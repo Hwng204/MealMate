@@ -114,7 +114,7 @@ export default function PrivateDishFeedback({
   return (
     <SectionCard
       icon={<FaClipboardCheck />}
-      title='Đánh giá từ chuyên gia dinh dưỡng'
+      title='Đánh giá từ chuyên gia'
       iconTone='primary'
     >
       <div className='grid gap-4 lg:grid-cols-3'>

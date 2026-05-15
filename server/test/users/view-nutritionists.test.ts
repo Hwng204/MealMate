@@ -153,7 +153,7 @@ describe('UserService.viewNutritionists (UC83)', () => {
       UserService.viewNutritionists({ filter: {} })
     ).rejects.toMatchObject({
       status: 404,
-      message: 'Không tìm thấy chuyên gia dinh dưỡng nào'
+      message: 'Không tìm thấy chuyên gia nào'
     });
   });
 });

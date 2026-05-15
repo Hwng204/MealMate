@@ -212,7 +212,7 @@ export const AuthService = {
         }
       }).catch(err => {
         console.error(
-          'Không thể gửi email chào mừng chuyên gia dinh dưỡng:',
+          'Không thể gửi email chào mừng chuyên gia:',
           err
         );
       });

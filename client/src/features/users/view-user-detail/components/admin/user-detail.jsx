@@ -478,7 +478,7 @@ const UserDetail = ({ id }) => {
       {user.role === ROLE.NUTRITIONIST && (
         <div className='bg-card rounded-lg border p-6 mt-6'>
           <h2 className='text-lg font-semibold mb-4'>
-            Hồ sơ chuyên gia dinh dưỡng
+            Hồ sơ chuyên gia
           </h2>
 
           <Form {...nutritionistForm}>
