@@ -37,29 +37,22 @@ const Header = () => {
   const avatarSrc = profile?.avatar;
 
   return (
-    <header className='sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+    <header className='sticky top-0 z-50 w-full border-b border-white/20 bg-[#a9c894] backdrop-blur-sm'>
       <div className='mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8'>
         <div className='flex items-center'>
           <Link
             to='/'
             className='group flex items-center gap-3 transition-all hover:opacity-90'
           >
-            <div className='relative flex h-17 w-17 items-center justify-center bg-transparent'>
+            <div className='relative flex h-27 w-47 items-center justify-center bg-transparent'>
               <img
-                src='/logo2.png'
+                src='/logo.png'
                 alt='Logo'
                 className='h-full w-full object-contain scale-[1.8]'
               />
             </div>
 
-            <div className='flex flex-col leading-none'>
-              <span className='text-2xl font-black tracking-tight text-primary'>
-                Eat<span className='text-foreground'>Dee</span>
-              </span>
-              <span className='text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5'>
-                Healthy Life
-              </span>
-            </div>
+            
           </Link>
         </div>
 
@@ -68,10 +61,10 @@ const Header = () => {
         </div>
 
         <div className='flex items-center gap-3'>
-          <div className='hidden sm:flex items-center border-r border-border pr-3'>
+          <div className='hidden sm:flex items-center border-r border-white/25 pr-3 text-white [&_button]:text-white [&_button]:hover:bg-white/15'>
             <ModeToggle />
           </div>
-          <div className='sm:hidden'>
+          <div className='sm:hidden text-white [&_button]:text-white [&_button]:hover:bg-white/15'>
             <ModeToggle />
           </div>
 
@@ -80,9 +73,9 @@ const Header = () => {
               <PopoverTrigger asChild>
                 <Button
                   variant='ghost'
-                  className='group relative h-11 gap-3 rounded-full pl-1.5 pr-4 transition-all hover:bg-primary/5 border border-transparent hover:border-primary/10'
+                  className='group relative h-11 gap-3 rounded-full pl-1.5 pr-4 transition-all text-white hover:bg-white/15 border border-white/25 hover:border-white/40'
                 >
-                  <Avatar className='h-8 w-8 border border-border transition-transform group-hover:scale-105 shadow-sm'>
+                  <Avatar className='h-8 w-8 border border-white/40 transition-transform group-hover:scale-105 shadow-sm'>
                     <AvatarImage src={avatarSrc} alt={displayName} />
                     <AvatarFallback className='bg-primary/10 text-[10px] font-bold'>
                       {displayName.substring(0, 2).toUpperCase()}
@@ -90,15 +83,15 @@ const Header = () => {
                   </Avatar>
 
                   <div className='hidden flex-col items-start leading-none sm:flex'>
-                    <span className='max-w-[100px] truncate text-sm font-bold text-foreground'>
+                    <span className='max-w-[100px] truncate text-sm font-bold text-white'>
                       {displayName}
                     </span>
-                    <span className='text-[10px] text-muted-foreground font-medium'>
+                    <span className='text-[10px] text-white/70 font-medium'>
                       Thành viên
                     </span>
                   </div>
 
-                  <ChevronDown className='hidden h-3.5 w-3.5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180 sm:block' />
+                  <ChevronDown className='hidden h-3.5 w-3.5 text-white/80 transition-transform duration-300 group-data-[state=open]:rotate-180 sm:block' />
                 </Button>
               </PopoverTrigger>
 
@@ -167,14 +160,14 @@ const Header = () => {
               <Button
                 variant='ghost'
                 asChild
-                className='rounded-full px-6 font-bold text-foreground/80 transition-all hover:bg-accent'
+                className='rounded-full px-6 font-bold text-white transition-all hover:bg-white/15 hover:text-white'
               >
                 <Link to='/auth/login'>Đăng nhập</Link>
               </Button>
 
               <Button
                 asChild
-                className='rounded-full bg-primary px-6 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95'
+                className='rounded-full border-0 bg-[#f5a65b] px-6 font-bold text-neutral-900 shadow-md shadow-black/10 transition-all hover:brightness-[0.97] active:scale-[0.98]'
               >
                 <Link to='/auth/sign-up' className='flex items-center gap-2'>
                   Đăng Ký
@@ -187,13 +180,13 @@ const Header = () => {
           <Button
             variant='ghost'
             size='icon'
-            className='md:hidden rounded-xl bg-secondary/50 hover:bg-primary/10 transition-colors'
+            className='md:hidden rounded-xl text-white bg-white/10 hover:bg-white/20 transition-colors'
             onClick={() => setMobileMenuOpen(v => !v)}
           >
             {mobileMenuOpen ? (
-              <X className='h-5 w-5 text-primary animate-in spin-in-90 duration-300' />
+              <X className='h-5 w-5 animate-in spin-in-90 duration-300' />
             ) : (
-              <Menu className='h-5 w-5 text-primary animate-in fade-in duration-300' />
+              <Menu className='h-5 w-5 animate-in fade-in duration-300' />
             )}
             <span className='sr-only'>Toggle menu</span>
           </Button>
@@ -202,7 +195,7 @@ const Header = () => {
 
       <div
         className={cn(
-          'md:hidden overflow-hidden bg-background/95 backdrop-blur-xl transition-all duration-300 ease-in-out border-b border-border',
+          'md:hidden overflow-hidden bg-[#9cb883] backdrop-blur-xl transition-all duration-300 ease-in-out border-b border-white/20',
           mobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
         )}
       >
@@ -217,10 +210,10 @@ const Header = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center rounded-xl px-4 py-3 text-base font-bold transition-all',
+                        'flex items-center rounded-full px-4 py-3 text-base font-bold transition-all',
                         isActive
-                          ? 'bg-primary text-primary-foreground shadow-md'
-                          : 'text-muted-foreground hover:bg-primary/5 hover:text-primary'
+                          ? 'bg-[#e8f1e4] text-neutral-900 shadow-sm'
+                          : 'text-white hover:bg-white/10'
                       )
                     }
                   >
@@ -236,10 +229,10 @@ const Header = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center rounded-xl px-4 py-3 text-base font-bold transition-all',
+                      'flex items-center rounded-full px-4 py-3 text-base font-bold transition-all',
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-md'
-                        : 'text-muted-foreground hover:bg-primary/5 hover:text-primary'
+                        ? 'bg-[#e8f1e4] text-neutral-900 shadow-sm'
+                        : 'text-white hover:bg-white/10'
                     )
                   }
                 >
@@ -254,14 +247,14 @@ const Header = () => {
               <Button
                 variant='outline'
                 asChild
-                className='rounded-xl border-border h-12 font-bold'
+                className='rounded-xl border-white/40 bg-transparent text-white h-12 font-bold hover:bg-white/10 hover:text-white'
               >
                 <Link to='/auth/login'>Đăng Nhập</Link>
               </Button>
 
               <Button
                 asChild
-                className='rounded-xl bg-primary h-12 font-bold shadow-lg shadow-primary/10'
+                className='rounded-xl bg-[#f5a65b] text-neutral-900 h-12 font-bold shadow-md border-0 hover:brightness-[0.97]'
               >
                 <Link to='/auth/sign-up'>Đăng Ký</Link>
               </Button>

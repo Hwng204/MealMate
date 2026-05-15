@@ -8,7 +8,10 @@ export const AI_TOKEN_QUOTA_CONFIG = {
   timezoneOffsetMinutes: 7 * 60,
   dailyTokenLimitByMembership: {
     [MEMBERSHIP_LEVEL.NORMAL]: 25_000,
-    [MEMBERSHIP_LEVEL.VIP]: 120_000
+    [MEMBERSHIP_LEVEL.VIP]: 120_000,
+    [MEMBERSHIP_LEVEL.EXPERT_BASIC]: 80_000,
+    [MEMBERSHIP_LEVEL.EXPERT_STANDARD]: 100_000,
+    [MEMBERSHIP_LEVEL.EXPERT_PREMIUM]: 120_000
   } as const,
   reserveTokensByEndpoint: {
     recommend_daily_meals: {
@@ -33,7 +36,13 @@ export type AiQuotaEndpoint =
 export const resolveMembershipLevel = (
   value: string | null | undefined
 ): MembershipLevel => {
-  if (value === MEMBERSHIP_LEVEL.VIP) return MEMBERSHIP_LEVEL.VIP;
+  if (!value) return MEMBERSHIP_LEVEL.NORMAL;
+
+  const levels = Object.values(MEMBERSHIP_LEVEL) as MembershipLevel[];
+  if (levels.includes(value as MembershipLevel)) {
+    return value as MembershipLevel;
+  }
+
   return MEMBERSHIP_LEVEL.NORMAL;
 };
 

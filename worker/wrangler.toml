@@ -7,7 +7,7 @@ compatibility_date = "2025-02-08"
 
 # 1. Routing: Worker runs on requests matching this pattern
 routes = [
-  { pattern = "eatdee.net/*", zone_id = "1311fe6cc03895593e5ba6dad388bf17" }
+  { pattern = "mealmeat.net/*", zone_id = "1311fe6cc03895593e5ba6dad388bf17" }
 ]
 
 # 2. Variables: Public config (Non-sensitive)

@@ -12,9 +12,9 @@ const roleCards = [
   },
   {
     role: ROLE.NUTRITIONIST,
-    title: 'Chuyên gia dinh dưỡng',
+    title: 'Chuyên gia',
     description:
-      'Tôi là chuyên gia dinh dưỡng và muốn đóng góp nội dung cho nền tảng.',
+      'Tôi là chuyên gia và muốn đóng góp nội dung cho nền tảng.',
     Icon: HiOutlineAcademicCap
   }
 ];

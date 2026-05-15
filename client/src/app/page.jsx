@@ -29,10 +29,10 @@ const Page = () => {
   return (
     <div className='bg-background text-foreground scroll-smooth'>
       <Hero />
+      <Features />
+      <PackagesSection />
       <Stats />
       <NutritionistList />
-      <PackagesSection />
-      <Features />
     </div>
   );
 };

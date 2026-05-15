@@ -106,7 +106,7 @@ describe('UserService.uploadCertificate (UC86)', () => {
       )
     ).rejects.toMatchObject({
       status: 403,
-      message: 'Chỉ chuyên gia dinh dưỡng mới có thể tải lên chứng chỉ'
+      message: 'Chỉ chuyên gia mới có thể tải lên chứng chỉ'
     });
   });
 

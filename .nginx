@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name eatdee.net;
+    server_name mealmeat.net;
 
     # Frontend: React Static Files
     root /home/cattamthe/nutrition-recommendation-mern/client/dist;

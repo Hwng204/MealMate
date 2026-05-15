@@ -7,7 +7,7 @@ export function StepZeroIntro() {
       <title>Chào mừng</title>
       <meta
         name='description'
-        content='Chào mừng bạn đến với website Eatdee. Bắt đầu hành trình sức khỏe của bạn.'
+        content='Chào mừng bạn đến với website MealMeat. Bắt đầu hành trình sức khỏe của bạn.'
       />
       <div className='space-y-2 text-center sm:text-left'>
         <h3 className='text-3xl font-bold'>Thiết lập tài khoản của bạn</h3>

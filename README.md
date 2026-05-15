@@ -1,6 +1,6 @@
-# Eatdee - Nutrition Schedule
+# MealMeat - Nutrition Schedule
 
-**Eatdee** is a nutrition scheduling platform that helps users plan meals and receive personalized meal recommendations based on their health goals.
+**MealMeat** is a nutrition scheduling platform that helps users plan meals and receive personalized meal recommendations based on their health goals.
 
 ## Screenshots
 

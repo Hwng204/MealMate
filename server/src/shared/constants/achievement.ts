@@ -61,7 +61,7 @@ export const ACHIEVEMENTS = {
   },
   NUTRITIONAL_POLYMATH: {
     key: 'NUTRITIONAL_POLYMATH',
-    name: 'Chuyên Gia Dinh Dưỡng Toàn Diện',
+    name: 'Chuyên Gia Toàn Diện',
     description:
       'Sử dụng 50 nguyên liệu độc nhất trong tất cả các bữa ăn đã ghi nhận.',
     category: ACHIEVEMENT_CATEGORY.DIVERSE_PALATE,

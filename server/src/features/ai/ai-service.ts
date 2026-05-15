@@ -23,7 +23,10 @@ import { EXERCISE_DIFFICULTY } from '~/shared/constants/exercise-difficulty';
 import { EXERCISE_TYPE } from '~/shared/constants/exercise-type';
 import { MEAL_SIZE } from '~/shared/constants/meal-size';
 import { MEAL_TYPE } from '~/shared/constants/meal-type';
-import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
+import {
+  isPaidMembership,
+  MEMBERSHIP_LEVEL
+} from '~/shared/constants/membership-level';
 import { NUTRITION_FOCUS } from '~/shared/constants/nutrition-focus';
 import { USER_TARGET } from '~/shared/constants/user-target';
 import {
@@ -757,7 +760,7 @@ export const AiService = {
 };
 
 const applyMembershipExpiryIfNeeded = (user: any, now: Date): boolean => {
-  if (user.membershipLevel !== MEMBERSHIP_LEVEL.VIP) return false;
+  if (!isPaidMembership(user.membershipLevel)) return false;
   const expiresAt =
     user.membershipExpiresAt instanceof Date
       ? user.membershipExpiresAt

@@ -41,7 +41,7 @@ const SignUpSuccessDialog = ({ open, role, onConfirm }) => {
               {isNutritionist ? (
                 <>
                   <p>
-                    Tài khoản chuyên gia dinh dưỡng của bạn đã được tạo. Chứng
+                    Tài khoản chuyên gia của bạn đã được tạo. Chứng
                     chỉ của bạn đang chờ xét duyệt từ quản trị viên.
                   </p>
                   <div className='flex justify-center'>

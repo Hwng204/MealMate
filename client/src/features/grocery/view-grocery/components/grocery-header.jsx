@@ -63,7 +63,7 @@ const GroceryHeader = ({ filters, onFilterChange }) => {
 
               <p className='mt-2 text-sm sm:text-[15px] font-medium text-muted-foreground max-w-xl leading-relaxed'>
                 Quản lý nguyên liệu, theo dõi tiến độ mua sắm và tối ưu dinh
-                dưỡng cùng EatDee
+                dưỡng cùng MealMeat
               </p>
             </div>
 

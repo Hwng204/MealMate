@@ -214,13 +214,13 @@ export function AdminSidebar({ ...props }) {
           <div className='flex aspect-square size-8 items-center justify-center transition-all duration-300 ease-in-out'>
             <img
               src='/logo2.png'
-              alt='EatDee Logo'
+              alt='MealMeat Logo'
               className='h-8 w-8 object-contain'
             />
           </div>
           <div className='grid flex-1 text-left text-sm leading-tight transition-all duration-300 ease-in-out group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 overflow-hidden'>
             <span className='truncate font-semibold transition-all duration-300 ease-in-out'>
-              EatDee
+              MealMeat
             </span>
             <span className='truncate text-xs transition-all duration-300 ease-in-out'>
               Admin Panel

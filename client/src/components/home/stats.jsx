@@ -71,28 +71,7 @@ const Stats = () => {
         </p>
       </div>
 
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8'>
-        <Item
-          icon={<HiOutlineFire />}
-          value='500+'
-          label='Thực đơn khoa học'
-          tone='orange'
-        />
-
-        <Item
-          icon={<HiOutlineClock />}
-          value='< 30 giây'
-          label='Tạo kế hoạch nhanh'
-          tone='sky'
-        />
-
-        <Item
-          icon={<HiOutlineChartBar />}
-          value='Chính xác'
-          label='Theo dõi dinh dưỡng'
-          tone='emerald'
-        />
-      </div>
+      
     </section>
   );
 };

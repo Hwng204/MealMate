@@ -1,58 +1,63 @@
 import {
-  HiOutlineAdjustmentsHorizontal,
-  HiOutlineArrowPath,
+  HiOutlineCamera,
+  HiOutlineChartBar,
   HiOutlineShoppingBag
 } from 'react-icons/hi2';
 
-const Feature = ({ icon, title, desc, colorClass }) => (
-  <div className='group relative overflow-hidden rounded-[24px] border border-border/70 bg-card/90 p-5 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition-all duration-200 hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)] sm:p-5 md:p-6'>
-    <div
-      className={`
-        flex h-11 w-11 items-center justify-center
-        rounded-xl border border-border/60 bg-muted/50
-        text-xl shadow-sm transition-transform duration-200
-        group-hover:scale-[1.02]
-        md:h-12 md:w-12 md:text-[1.35rem]
-        ${colorClass}
-      `}
-    >
+const Feature = ({ icon, title, desc }) => (
+  <div className='group rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow duration-200 hover:shadow-[0_8px_28px_rgba(15,23,42,0.08)] sm:p-7'>
+    <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-lg text-neutral-700 transition-transform duration-200 group-hover:scale-[1.02] md:h-12 md:w-12 md:text-xl'>
       {icon}
     </div>
 
-    <div className='mt-4 space-y-2'>
-      <h3 className='text-base font-bold tracking-tight text-foreground sm:text-lg'>
+    <div className='mt-5 space-y-2'>
+      <h3 className='text-base font-bold tracking-tight text-neutral-900 sm:text-lg'>
         {title}
       </h3>
 
-      <p className='text-sm leading-6 text-muted-foreground'>{desc}</p>
+      <p className='text-sm leading-6 text-neutral-600'>{desc}</p>
     </div>
   </div>
 );
 
 const Features = () => {
   return (
-    <section className='mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-12 lg:px-8'>
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 md:gap-6'>
-        <Feature
-          icon={<HiOutlineAdjustmentsHorizontal />}
-          title='Cá nhân hóa'
-          desc='Tự động thiết kế thực đơn dựa trên chỉ số cơ thể, mục tiêu cân nặng và sở thích ăn uống riêng.'
-          colorClass='text-emerald-500'
-        />
+    <section className='mx-auto max-w-7xl px-4 pb-10 sm:px-6 md:pb-14 lg:px-8'>
+      <div className='rounded-[22px] bg-[#eceff1] px-5 py-10 sm:px-8 sm:py-12 md:px-10 md:py-14'>
+        <div className='mx-auto max-w-3xl text-center'>
+          <p className='text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-900 sm:text-xs'>
+            Tính năng thông minh
+          </p>
 
-        <Feature
-          icon={<HiOutlineArrowPath />}
-          title='Đổi món linh hoạt'
-          desc='Đổi món trong 1 giây mà vẫn đảm bảo chuẩn lượng Calories và Macro.'
-          colorClass='text-sky-500'
-        />
+          <h2 className='mt-3 text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl md:text-4xl'>
+            Cải thiện chế độ ăn của bạn
+          </h2>
 
-        <Feature
-          icon={<HiOutlineShoppingBag />}
-          title='Đi chợ thông minh'
-          desc='Tổng hợp danh sách nguyên liệu theo tuần giúp tiết kiệm thời gian.'
-          colorClass='text-orange-500'
-        />
+          <p className='mt-4 text-sm leading-7 text-neutral-600 sm:text-base'>
+            Trợ lí bữa ăn MealMeat giúp việc lựa chọn bữa ăn dễ dàng hơn bao giờ
+            hết.
+          </p>
+        </div>
+
+        <div className='mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-5 md:mt-12 md:grid-cols-3 md:gap-6'>
+          <Feature
+            icon={<HiOutlineCamera />}
+            title='Cá nhân hoá'
+            desc='Thiết kế thực đơn riêng biệt dựa trên chỉ số cơ thể và mục tiêu sức khỏe của bạn.'
+          />
+
+          <Feature
+            icon={<HiOutlineShoppingBag />}
+            title='Đa dạng món ăn'
+            desc='Thư viện hàng ngàn món ăn dinh dưỡng, từ món truyền thống đến các chế độ ăn đặc biệt.'
+          />
+
+          <Feature
+            icon={<HiOutlineChartBar />}
+            title='Mạng lưới sức khỏe'
+            desc='Kết nối với các chuyên gia và hệ thống phòng gym đối tác trên toàn quốc.'
+          />
+        </div>
       </div>
     </section>
   );

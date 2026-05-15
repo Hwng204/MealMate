@@ -66,7 +66,7 @@ describe('UserService.updateUserNutritionistProfile (UC85 admin)', () => {
       })
     ).rejects.toMatchObject({
       status: 403,
-      message: 'Người dùng này không phải là chuyên gia dinh dưỡng'
+      message: 'Người dùng này không phải là chuyên gia'
     });
   });
 

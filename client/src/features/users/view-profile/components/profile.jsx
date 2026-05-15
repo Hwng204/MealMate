@@ -83,18 +83,19 @@ const Profile = () => {
   const quotaResetAtText = formatQuotaResetAt(profile?.aiQuotaResetAt);
   const mealSettings = profile?.mealSettings || [];
   const effectiveRole = profile?.role || user?.role;
-  const shouldShowMembershipAndAi =
-    effectiveRole !== ROLE.NUTRITIONIST && effectiveRole !== ROLE.ADMIN;
+  const shouldShowMembershipAndAi = effectiveRole !== ROLE.ADMIN;
   const roleDisplayText =
     effectiveRole === ROLE.NUTRITIONIST
-      ? 'Chuyên gia dinh dưỡng'
+      ? 'Chuyên gia'
       : effectiveRole || 'Chưa cập nhật';
   const membershipBadgeClass =
     membershipLevel === 'Tài khoản VIP'
       ? 'text-orange-light'
       : membershipLevel === 'Tài khoản thường'
         ? 'text-cyan-light'
-        : 'border-primary/20 bg-primary/5 text-primary';
+        : membershipLevel.includes('chuyên gia')
+          ? 'text-emerald-700'
+          : 'border-primary/20 bg-primary/5 text-primary';
 
   const form = useForm({
     resolver: yupResolver(updateProfileSchema),
@@ -375,7 +376,7 @@ const Profile = () => {
                   <div className='p-6 space-y-6'>
                     <div className='space-y-1'>
                       <h3 className='text-base font-semibold'>
-                        Hồ sơ chuyên gia dinh dưỡng
+                        Hồ sơ chuyên gia
                       </h3>
                       <p className='text-sm text-muted-foreground'>
                         Thông tin nghề nghiệp và chuyên môn của bạn

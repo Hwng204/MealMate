@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createPaymentRequestSchema } from '~/features/payments/payment-dto';
 import { PaymentService } from '~/features/payments/payment-service';
 import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
+import { ROLE } from '~/shared/constants/role';
 import { UserModel } from '~/shared/database/models';
 import { PaymentModel } from '~/shared/database/models/payment-model';
 import { payOS } from '~/shared/utils/payos';
@@ -80,6 +81,7 @@ describe('PaymentService.createPayment (UC98)', () => {
 
     it('should throw 400 when user already has target membership', async () => {
       mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.VIP
       } as any);
 
@@ -93,6 +95,7 @@ describe('PaymentService.createPayment (UC98)', () => {
 
     it('should throw 400 when trying to downgrade VIP to normal', async () => {
       mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.VIP
       } as any);
 
@@ -109,6 +112,7 @@ describe('PaymentService.createPayment (UC98)', () => {
 
     it('should throw 409 when generated order code already exists', async () => {
       mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.NORMAL
       } as any);
       mockFindPayments.mockResolvedValue([] as any);
@@ -124,6 +128,7 @@ describe('PaymentService.createPayment (UC98)', () => {
 
     it('should throw 409 when user has active pending payment', async () => {
       mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.NORMAL
       } as any);
       mockFindPayments.mockResolvedValue([
@@ -148,6 +153,7 @@ describe('PaymentService.createPayment (UC98)', () => {
       const saveExpired = vi.fn().mockResolvedValue(undefined);
 
       mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.NORMAL
       } as any);
       mockFindPayments.mockResolvedValue([
@@ -175,8 +181,78 @@ describe('PaymentService.createPayment (UC98)', () => {
       expect(result).toBe('https://pay.test/checkout');
     });
 
+    it('should throw 403 when nutritionist tries to buy VIP package', async () => {
+      mockFindUser.mockResolvedValue({
+        role: ROLE.NUTRITIONIST,
+        membershipLevel: MEMBERSHIP_LEVEL.NORMAL
+      } as any);
+
+      await expect(
+        PaymentService.createPayment(validData, userId)
+      ).rejects.toMatchObject({
+        status: 403,
+        message:
+          'Gói này chỉ dành cho người dùng cá nhân. Vui lòng chọn gói dành cho chuyên gia.'
+      });
+    });
+
+    it('should throw 403 when user tries to buy expert package', async () => {
+      mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
+        membershipLevel: MEMBERSHIP_LEVEL.NORMAL
+      } as any);
+
+      await expect(
+        PaymentService.createPayment(
+          {
+            ...validData,
+            targetMembership: MEMBERSHIP_LEVEL.EXPERT_BASIC
+          },
+          userId
+        )
+      ).rejects.toMatchObject({
+        status: 403,
+        message:
+          'Gói này chỉ dành cho chuyên gia. Vui lòng chọn gói Premium cá nhân.'
+      });
+    });
+
+    it('should create pending payment for nutritionist expert package', async () => {
+      mockFindUser.mockResolvedValue({
+        role: ROLE.NUTRITIONIST,
+        membershipLevel: MEMBERSHIP_LEVEL.NORMAL
+      } as any);
+      mockFindPayments.mockResolvedValue([] as any);
+      mockFindPayment.mockResolvedValueOnce(null);
+      mockCreatePayLink.mockResolvedValue({
+        orderCode: 900000002,
+        checkoutUrl: 'https://pay.test/checkout-expert',
+        paymentLinkId: 'plink-2'
+      } as any);
+      mockCreatePayment.mockResolvedValue({
+        checkoutUrl: 'https://pay.test/checkout-expert'
+      } as any);
+
+      const result = await PaymentService.createPayment(
+        {
+          ...validData,
+          amount: 375000,
+          targetMembership: MEMBERSHIP_LEVEL.EXPERT_BASIC
+        },
+        userId
+      );
+
+      expect(result).toBe('https://pay.test/checkout-expert');
+      expect(mockCreatePayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetMembership: MEMBERSHIP_LEVEL.EXPERT_BASIC
+        })
+      );
+    });
+
     it('should create pending payment and return checkout url successfully', async () => {
       mockFindUser.mockResolvedValue({
+        role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.NORMAL
       } as any);
       mockFindPayments.mockResolvedValue([] as any);

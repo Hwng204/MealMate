@@ -20,7 +20,7 @@ const HeaderNav = ({ links }) => {
           if (isMobile) {
             return (
               <div key={link.label} className='flex flex-col'>
-                <span className='px-4 py-2 font-semibold text-muted-foreground'>
+                <span className='px-4 py-2 font-semibold text-white/80'>
                   {link.label}
                 </span>
 
@@ -28,7 +28,7 @@ const HeaderNav = ({ links }) => {
                   <NavLink
                     key={child.to}
                     to={child.to}
-                    className='ml-4 rounded-lg px-4 py-2 text-sm hover:bg-accent'
+                    className='ml-4 rounded-lg px-4 py-2 text-sm text-white hover:bg-white/10'
                   >
                     {child.label}
                   </NavLink>
@@ -45,10 +45,10 @@ const HeaderNav = ({ links }) => {
                 onClick={() => toggleMenu(link.label)}
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium',
-                  'hover:bg-accent hover:text-primary',
+                  'hover:bg-white/10 hover:text-white',
                   isOpen
-                    ? 'bg-accent text-primary ring-1 ring-border'
-                    : 'text-muted-foreground'
+                    ? 'bg-[#e8f1e4] text-neutral-900'
+                    : 'text-white'
                 )}
               >
                 {link.label}
@@ -85,10 +85,10 @@ const HeaderNav = ({ links }) => {
             className={({ isActive }) =>
               cn(
                 'rounded-full px-4 py-2 text-sm font-medium',
-                'hover:bg-accent hover:text-primary',
+                'hover:bg-white/10 hover:text-white',
                 isActive
-                  ? 'bg-accent text-primary ring-1 ring-border'
-                  : 'text-muted-foreground'
+                  ? 'bg-[#e8f1e4] text-neutral-900'
+                  : 'text-white'
               )
             }
           >
