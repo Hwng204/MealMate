@@ -10,7 +10,16 @@ import AddIngredientButton from './add-ingredient-button';
 import GroceryIngredientsList from './grocery-ingredients-list';
 
 const GroceryReceipt = ({ list, isExpanded = false, onToggle }) => {
-  const date = list?.date?.[0];
+  const dates = [...(list?.date ?? [])].sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  );
+  const date = dates[0];
+  const dateLabel = dates.length > 1
+    ? `Từ ${formatDateVI(dates[0], 'dd/MM/yyyy')} đến ${formatDateVI(
+        dates[dates.length - 1],
+        'dd/MM/yyyy'
+      )}`
+    : formatDateVI(date, 'dd/MM/yyyy');
   const ingredients = list?.ingredients ?? [];
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -132,7 +141,7 @@ const GroceryReceipt = ({ list, isExpanded = false, onToggle }) => {
             <div className='flex items-center justify-center gap-4 text-l font-mono font-bold uppercase text-muted-foreground'>
               <span className='flex items-center gap-2'>
                 <HiOutlineCalendar className='text-primary text-lg' />
-                {formatDateVI(date, 'dd/MM/yyyy')}
+                {dateLabel}
               </span>
             </div>
           )}

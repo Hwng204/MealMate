@@ -33,13 +33,20 @@ export default function GroceryIngredientsList({
     });
   };
 
-  return sortedIngredients.map(item => (
-    <div
-      key={item?._id}
-      className={`group/item flex items-center justify-between px-2 py-4 border-b border-border/40 last:border-0 ${
-        item?.isPurchased ? 'opacity-40 grayscale' : ''
-      }`}
-    >
+  return sortedIngredients.map(item => {
+    const quantityText = item?.quantity
+      ? `${item.quantity.toLocaleString()} ${item.unit ?? 'g'}`
+      : item?.unit
+      ? item.unit
+      : '';
+
+    return (
+      <div
+        key={item?._id}
+        className={`group/item flex items-center justify-between px-2 py-4 border-b border-border/40 last:border-0 ${
+          item?.isPurchased ? 'opacity-40 grayscale' : ''
+        }`}
+      >
       <div className='flex items-center gap-5'>
         <button
           onClick={() => togglePurchased(item)}
@@ -66,9 +73,9 @@ export default function GroceryIngredientsList({
       </div>
 
       <div className='flex items-center gap-4'>
-        {item?.quantity && (
+        {quantityText && (
           <div className='font-mono font-extrabold text-lg text-primary'>
-            {item.quantity.toLocaleString()}G
+            {quantityText}
           </div>
         )}
 
@@ -78,5 +85,6 @@ export default function GroceryIngredientsList({
         />
       </div>
     </div>
-  ));
+  );
+  });
 }

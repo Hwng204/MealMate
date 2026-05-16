@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { formatDateVI } from '~/lib/utils';
 
-import { useGroceries } from '../../view-grocery/api/view-grocery';
 import { useCreateGrocery } from '../api/create-grocery';
 import CreateGroceryCalendar from './create-grocery-calender';
 import CreateGroceryHeader from './create-grocery-header';
@@ -15,13 +14,6 @@ import CreateGroceryInput from './create-grocery-input';
 export default function CreateGroceryModal({ open, onClose }) {
   const [title, setTitle] = useState('');
   const [dates, setDates] = useState([]);
-
-  const { data } = useGroceries();
-
-  const existingDates =
-    data?.docs?.flatMap(g =>
-      (g.date ?? []).map(d => format(new Date(d), 'yyyy-MM-dd'))
-    ) ?? [];
 
   const handleClose = () => {
     setTitle('');
@@ -43,19 +35,13 @@ export default function CreateGroceryModal({ open, onClose }) {
     if (dates.length === 0) return;
 
     const finalTitle = title.trim() || 'Danh sách mua sắm của tôi';
-    const selected = dates.map(d => format(d, 'yyyy-MM-dd'));
-    const newDates = selected.filter(d => !existingDates.includes(d));
+    const selected = Array.from(
+      new Set(dates.map(d => format(d, 'yyyy-MM-dd')))
+    ).sort();
 
-    if (newDates.length === 0) {
-      toast.info('Các ngày đã tồn tại danh sách');
-      return;
-    }
-
-    newDates.forEach(d => {
-      mutate({
-        name: finalTitle,
-        date: [d]
-      });
+    mutate({
+      name: finalTitle,
+      date: selected
     });
   };
 
