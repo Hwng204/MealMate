@@ -27,6 +27,8 @@ type GroceryIngredient = {
   ingredientId: string;
   name: string;
   image: string;
+  quantity?: number;
+  unit?: string;
   isPurchased: boolean;
 };
 
@@ -333,6 +335,8 @@ async function resolveIngredientSnapshots(
     ingredientId: ingredient._id.toString(),
     name: ingredient.name,
     image: ingredient.image ?? '',
+    quantity: ingredient.baseUnit?.amount ?? undefined,
+    unit: ingredient.baseUnit?.unit ?? undefined,
     isPurchased: false
   }));
 }
@@ -389,17 +393,33 @@ function collectIngredientSnapshots(
   const allIngredients = dishes.flatMap(dish => dish.ingredients ?? []);
   for (const ingredient of allIngredients) {
     const ingredientId = ingredient.ingredientId?.toString();
-    const shouldAddIngredient =
-      ingredientId && !ingredientMap.has(ingredientId);
+    if (!ingredientId) continue;
 
-    if (shouldAddIngredient) {
-      ingredientMap.set(ingredientId, {
-        ingredientId,
-        name: ingredient.name,
-        image: ingredient.image ?? '',
-        isPurchased: false
-      });
+    const defaultUnit =
+      ingredient.units?.find(unit => unit.isDefault) ?? ingredient.units?.[0];
+    const quantity = defaultUnit?.quantity;
+    const unit = defaultUnit?.unit;
+
+    const existing = ingredientMap.get(ingredientId);
+    if (existing) {
+      if (
+        typeof quantity === 'number' &&
+        unit &&
+        existing.unit === unit
+      ) {
+        existing.quantity = (existing.quantity ?? 0) + quantity;
+      }
+      continue;
     }
+
+    ingredientMap.set(ingredientId, {
+      ingredientId,
+      name: ingredient.name,
+      image: ingredient.image ?? '',
+      quantity,
+      unit,
+      isPurchased: false
+    });
   }
   return Array.from(ingredientMap.values());
 }

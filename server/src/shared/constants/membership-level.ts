@@ -34,6 +34,17 @@ const EXPERT_MEMBERSHIP_RANK: Record<string, number> = {
   [MEMBERSHIP_LEVEL.EXPERT_PREMIUM]: 3
 };
 
+const TOKEN_LIMITS_BY_MEMBERSHIP: Record<MembershipLevel, number> = {
+  [MEMBERSHIP_LEVEL.NORMAL]: 100,
+  [MEMBERSHIP_LEVEL.VIP]: 500,
+  [MEMBERSHIP_LEVEL.EXPERT_BASIC]: 1000,
+  [MEMBERSHIP_LEVEL.EXPERT_STANDARD]: 5000,
+  [MEMBERSHIP_LEVEL.EXPERT_PREMIUM]: 10000
+};
+
+export const getTokenLimitByMembership = (level: MembershipLevel | null | undefined): number =>
+  (level && TOKEN_LIMITS_BY_MEMBERSHIP[level]) ?? TOKEN_LIMITS_BY_MEMBERSHIP[MEMBERSHIP_LEVEL.NORMAL];
+
 export const isExpertMembership = (
   level: string | null | undefined
 ): level is MembershipLevel =>
