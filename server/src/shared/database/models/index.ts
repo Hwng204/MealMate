@@ -7,6 +7,7 @@ export * from './exercise-model';
 export * from './feedback-model';
 export * from './grocery-model';
 export * from './ingredient-model';
+export * from './nutritionist-client-model';
 export * from './payment-model';
 export * from './post-model';
 export * from './schedule-model';
