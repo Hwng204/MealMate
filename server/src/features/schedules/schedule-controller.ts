@@ -10,8 +10,14 @@ export const ScheduleController = {
     const data = req.body;
     const userId = req.user!._id.toString();
     const userName = req.user!.name;
+    const role = req.user?.role;
 
-    const result = await ScheduleService.createSchedule(userId, userName, data);
+    const result = await ScheduleService.createSchedule(
+      userId,
+      userName,
+      role,
+      data
+    );
 
     res.status(201).json(ApiResponse.success('Tạo lịch ăn thành công', result));
   },
@@ -57,10 +63,12 @@ export const ScheduleController = {
     const id = req.params.id;
     const data = req.body;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.addScheduleWorkoutExercise(
       id,
       userId,
+      role,
       data
     );
 
@@ -74,10 +82,12 @@ export const ScheduleController = {
     const exerciseId = req.params.exerciseId;
     const data = req.body;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.updateScheduleWorkoutExercise(
       id,
       userId,
+      role,
       exerciseId,
       data
     );
@@ -93,8 +103,14 @@ export const ScheduleController = {
     const id = req.params.id;
     const data = req.body;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
-    const result = await ScheduleService.updateScheduleMeals(id, userId, data);
+    const result = await ScheduleService.updateScheduleMeals(
+      id,
+      userId,
+      role,
+      data
+    );
 
     res
       .status(200)
@@ -107,10 +123,12 @@ export const ScheduleController = {
     const mealType = req.params.mealType;
     const data = req.body;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.updateScheduleDishStatus(
       id,
       userId,
+      role,
       mealType,
       dishId,
       data
@@ -138,10 +156,12 @@ export const ScheduleController = {
     const dishId = req.params.dishId;
     const mealType = req.params.mealType;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.removeScheduleDish(
       id,
       userId,
+      role,
       mealType,
       dishId
     );
@@ -155,10 +175,12 @@ export const ScheduleController = {
     const id = req.params.id;
     const mealType = req.params.mealType;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.removeScheduleMeal(
       id,
       userId,
+      role,
       mealType
     );
 
@@ -169,10 +191,12 @@ export const ScheduleController = {
     const id = req.params.id;
     const mealType = req.params.mealType;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.clearScheduleMealDishes(
       id,
       userId,
+      role,
       mealType
     );
 
@@ -187,10 +211,12 @@ export const ScheduleController = {
     const id = req.params.id;
     const exerciseId = req.params.exerciseId;
     const userId = req.user!._id.toString();
+    const role = req.user?.role;
 
     const result = await ScheduleService.removeScheduleWorkoutExercise(
       id,
       userId,
+      role,
       exerciseId
     );
 

@@ -50,7 +50,7 @@ router.put(
 router.post(
   '/:id/workout/exercises',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   parseFormData,
   validate(addScheduleWorkoutExerciseRequestSchema.shape),
   asyncHandler(ScheduleController.addScheduleWorkoutExercise)
@@ -59,7 +59,7 @@ router.post(
 router.put(
   '/:id/workout/exercises/:exerciseId',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   parseFormData,
   validate(updateScheduleWorkoutExerciseRequestSchema.shape),
   asyncHandler(ScheduleController.updateScheduleWorkoutExercise)
@@ -68,7 +68,7 @@ router.put(
 router.put(
   '/:id/meals',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   parseFormData,
   validate(updateScheduleMealsRequestSchema.shape),
   asyncHandler(ScheduleController.updateScheduleMeals)
@@ -77,7 +77,7 @@ router.put(
 router.put(
   '/:id/meals/:mealType/dishes/:dishId/is-eaten',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   parseFormData,
   validate(updateScheduleDishStatusRequestSchema.shape),
   asyncHandler(ScheduleController.updateScheduleDishStatus)
@@ -86,35 +86,35 @@ router.put(
 router.delete(
   '/:id',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST, ROLE.ADMIN]),
   asyncHandler(ScheduleController.deleteSchedule)
 );
 
 router.delete(
   '/:id/workout/exercises/:exerciseId',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   asyncHandler(ScheduleController.removeScheduleWorkoutExercise)
 );
 
 router.delete(
   '/:id/meals/:mealType',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   asyncHandler(ScheduleController.removeScheduleMeal)
 );
 
 router.delete(
   '/:id/meals/:mealType/dishes/:dishId',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   asyncHandler(ScheduleController.removeScheduleDish)
 );
 
 router.delete(
   '/:id/meals/:mealType/dishes',
   authenticate(),
-  authorize([ROLE.USER]),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST]),
   asyncHandler(ScheduleController.clearScheduleMealDishes)
 );
 

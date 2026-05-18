@@ -39,6 +39,7 @@ export const nutritionistClientQuerySchema = z.object({
   status: z
     .enum(Object.values(NUTRITIONIST_CLIENT_STATUS), 'Trạng thái không hợp lệ')
     .optional(),
+  keyword: z.string().trim().min(1, 'Từ khóa không được để trống').optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().optional(),
   sort: z.string().optional()
@@ -47,3 +48,14 @@ export const nutritionistClientQuerySchema = z.object({
 export type NutritionistClientQuery = z.infer<
   typeof nutritionistClientQuerySchema
 >;
+
+export const clientTrackingQuerySchema = z.object({
+  days: z
+    .union([z.literal('7'), z.literal('30'), z.coerce.number().int()])
+    .optional()
+    .refine(value => value === undefined || Number(value) === 7 || Number(value) === 30, {
+      message: 'Số ngày chỉ được là 7 hoặc 30'
+    })
+});
+
+export type ClientTrackingQuery = z.infer<typeof clientTrackingQuerySchema>;

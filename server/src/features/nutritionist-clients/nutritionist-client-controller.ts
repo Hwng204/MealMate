@@ -48,6 +48,38 @@ export const NutritionistClientController = {
       .json(ApiResponse.success('Lấy danh sách học viên thành công', result));
   },
 
+  viewInbox: async (req: Request, res: Response) => {
+    const actorId = req.user?._id.toString();
+    const role = req.user?.role ?? '';
+    const parsed = parseQuery(req.query);
+
+    const result = await NutritionistClientService.viewInbox(
+      actorId,
+      role,
+      parsed
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Lấy danh sách quan hệ nhận được thành công', result));
+  },
+
+  viewOutbox: async (req: Request, res: Response) => {
+    const actorId = req.user?._id.toString();
+    const role = req.user?.role ?? '';
+    const parsed = parseQuery(req.query);
+
+    const result = await NutritionistClientService.viewOutbox(
+      actorId,
+      role,
+      parsed
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Lấy danh sách quan hệ đã gửi thành công', result));
+  },
+
   viewMyClientDetail: async (req: Request, res: Response) => {
     const nutritionistId = req.user?._id.toString();
     const userId = req.params.userId;
@@ -60,6 +92,103 @@ export const NutritionistClientController = {
     res
       .status(200)
       .json(ApiResponse.success('Lấy chi tiết học viên thành công', result));
+  },
+
+  viewMyClientDashboard: async (req: Request, res: Response) => {
+    const nutritionistId = req.user?._id.toString();
+    const userId = req.params.userId;
+
+    const result = await NutritionistClientService.viewMyClientDashboard(
+      nutritionistId,
+      userId
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Lấy dashboard học viên thành công', result));
+  },
+
+  viewMyClientTracking: async (req: Request, res: Response) => {
+    const nutritionistId = req.user?._id.toString();
+    const userId = req.params.userId;
+    const days =
+      req.query.days === undefined ? undefined : Number(req.query.days);
+
+    const result = await NutritionistClientService.viewMyClientTracking(
+      nutritionistId,
+      userId,
+      days
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Lấy tracking học viên thành công', result));
+  },
+
+  updateClientPhysicalStats: async (req: Request, res: Response) => {
+    const nutritionistId = req.user?._id.toString();
+    const userId = req.params.userId;
+    const data = req.body;
+
+    const result = await NutritionistClientService.updateClientPhysicalStats(
+      nutritionistId,
+      userId,
+      data
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Cập nhật chỉ số học viên thành công', result));
+  },
+
+  updateClientNutritionTarget: async (req: Request, res: Response) => {
+    const nutritionistId = req.user?._id.toString();
+    const userId = req.params.userId;
+    const data = req.body;
+
+    const result = await NutritionistClientService.updateClientNutritionTarget(
+      nutritionistId,
+      userId,
+      data
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success('Cập nhật mục tiêu dinh dưỡng thành công', result)
+      );
+  },
+
+  updateClientRestrictions: async (req: Request, res: Response) => {
+    const nutritionistId = req.user?._id.toString();
+    const userId = req.params.userId;
+    const data = req.body;
+
+    const result = await NutritionistClientService.updateClientRestrictions(
+      nutritionistId,
+      userId,
+      data
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Cập nhật chế độ ăn thành công', result));
+  },
+
+  updateClientAllergens: async (req: Request, res: Response) => {
+    const nutritionistId = req.user?._id.toString();
+    const userId = req.params.userId;
+    const data = req.body;
+
+    const result = await NutritionistClientService.updateClientAllergens(
+      nutritionistId,
+      userId,
+      data
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Cập nhật dị ứng thành công', result));
   },
 
   updateStatus: async (req: Request, res: Response) => {
