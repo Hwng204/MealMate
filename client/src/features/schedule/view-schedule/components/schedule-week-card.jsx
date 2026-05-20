@@ -27,7 +27,9 @@ export default function ScheduleWeekCard({
   date,
   schedule,
   isCreating,
-  onCreateEmptyDay
+  onCreateEmptyDay,
+  readOnly = false,
+  onDishClick
 }) {
   const isDayToday = isToday(date);
 
@@ -60,7 +62,7 @@ export default function ScheduleWeekCard({
         `
       )}
     >
-      {schedule && (
+      {schedule && !readOnly && (
         <DeleteScheduleModal scheduleId={schedule._id}>
           <button
             className='
@@ -125,6 +127,8 @@ export default function ScheduleWeekCard({
           isCreating={isCreating}
           handleCreate={handleCreate}
           getSmallMealIcon={getSmallMealIcon}
+          readOnly={readOnly}
+          onDishClick={onDishClick}
         />
       </div>
     </div>

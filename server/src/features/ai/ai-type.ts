@@ -40,6 +40,7 @@ export interface IMealSlotPromptInput {
   availableTime?: string;
   complexity?: string;
   dishCategories: string[];
+  calorieTarget?: number;
 }
 
 export interface IDishCatalogPromptInput {
@@ -50,6 +51,7 @@ export interface IDishCatalogPromptInput {
   tags: string[];
   totalTimeMinutes: number;
   defaultServings: number;
+  calories: number;
   blockedByAllergen: boolean;
   nutrients: Array<{
     label: string;

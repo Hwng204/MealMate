@@ -374,14 +374,14 @@ export default function DishesList() {
                   </p>
 
                   <div className='mt-auto flex items-center justify-between border-t border-border/60 pt-4'>
-                    <div className='flex min-w-0 items-center gap-2.5'>
+                    {/* <div className='flex min-w-0 items-center gap-2.5'>
                       <div className='flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground'>
                         <FaUser size={12} />
                       </div>
                       <span className='truncate text-xs font-bold text-foreground/80'>
                         {dish.user?.name}
                       </span>
-                    </div>
+                    </div> */}
 
                     <div className='flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-primary transition-all group-hover:gap-2 group-hover:bg-primary group-hover:text-primary-foreground'>
                       Chi tiết <FaChevronRight />

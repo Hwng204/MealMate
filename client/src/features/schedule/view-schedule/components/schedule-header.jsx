@@ -19,6 +19,7 @@ import ScheduleViewSwitcher from './schedule-view-switcher';
 
 export default function ScheduleHeader({
   view,
+  embedded = false,
   onPrev,
   onNext,
   onSelectDate,
@@ -30,17 +31,27 @@ export default function ScheduleHeader({
 
   const handleChangeView = v => {
     if (v === view) return;
-    navigate(`/schedules/${v}`);
+    if (!embedded) {
+      navigate(`/schedules/${v}`);
+    }
   };
 
   return (
     <div className='flex items-center justify-between rounded-[28px] border border-border/60 bg-card px-6 py-4 shadow-[0_10px_40px_rgba(45,106,79,0.06)]'>
       <div className='flex items-center gap-6'>
-        <div className='scale-110 origin-left'>
-          <ScheduleViewSwitcher view={view} onChange={handleChangeView} />
-        </div>
+        {!embedded && (
+          <div className='origin-left scale-110'>
+            <ScheduleViewSwitcher view={view} onChange={handleChangeView} />
+          </div>
+        )}
 
-        <div className='flex items-center gap-3 border-l-2 border-border/40 pl-6'>
+        <div
+          className={
+            embedded
+              ? 'flex items-center gap-3'
+              : 'flex items-center gap-3 border-l-2 border-border/40 pl-6'
+          }
+        >
           <Button
             variant='ghost'
             size='icon'
@@ -54,15 +65,10 @@ export default function ScheduleHeader({
             <PopoverTrigger asChild>
               <Button
                 variant='outline'
-                className='
-          h-11 gap-2.5 rounded-2xl border-border/80 bg-background
-          px-5 text-[12px] font-black uppercase tracking-[0.1em] text-primary
-          hover:bg-primary/10 hover:border-primary/40
-          transition-all shadow-sm active:scale-95
-        '
+                className='h-11 gap-2.5 rounded-2xl border-border/80 bg-background px-5 text-[12px] font-black uppercase tracking-[0.1em] text-primary shadow-sm transition-all hover:border-primary/40 hover:bg-primary/10 active:scale-95'
               >
                 <HiOutlineCalendar size={18} />
-                <span>Chọn ngày</span>
+                <span>{view === 'day' ? 'Chọn ngày' : 'Chọn tuần'}</span>
               </Button>
             </PopoverTrigger>
 
@@ -71,14 +77,11 @@ export default function ScheduleHeader({
               className='w-auto overflow-hidden rounded-[32px] border border-border/60 bg-card p-0 shadow-2xl'
             >
               <Calendar
-                mode={view === 'day' ? 'single' : 'range'}
+                mode={view === 'day' ? 'single' : 'single'}
                 selected={selectedDate}
                 onSelect={val => {
-                  if (view === 'day') {
-                    onSelectDate?.(val);
-                  } else {
-                    onSelectRange?.(val);
-                  }
+                  onSelectDate?.(val);
+                  onSelectRange?.(val);
                   setOpen(false);
                 }}
                 initialFocus
@@ -97,16 +100,18 @@ export default function ScheduleHeader({
         </div>
       </div>
 
-      <div className='hidden md:flex flex-col items-end gap-1.5'>
-        <h2 className='text-lg font-black capitalize leading-tight tracking-tight text-foreground'>
-          {formatScheduleTitle(view, selectedDate)}
-        </h2>
-        <div className='rounded-full bg-primary px-3 py-1 shadow-lg shadow-primary/20'>
-          <p className='text-[9px] font-black uppercase tracking-[0.2em] text-primary-foreground'>
-            {view === 'day' ? 'Lịch trình ngày' : 'Kế hoạch tuần'}
-          </p>
+      {!embedded && (
+        <div className='hidden flex-col items-end gap-1.5 md:flex'>
+          <h2 className='text-lg font-black capitalize leading-tight tracking-tight text-foreground'>
+            {formatScheduleTitle(view, selectedDate)}
+          </h2>
+          <div className='rounded-full bg-primary px-3 py-1 shadow-lg shadow-primary/20'>
+            <p className='text-[9px] font-black uppercase tracking-[0.2em] text-primary-foreground'>
+              {view === 'day' ? 'Lịch trình ngày' : 'Kế hoạch tuần'}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

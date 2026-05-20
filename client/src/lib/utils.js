@@ -55,6 +55,7 @@ export const NAV_LINKS = [
     label: 'Khác',
     children: [
       { to: '/groceries', label: 'Mua sắm' },
+      { to: '/classes', label: 'Lớp học' },
       { to: '/exercises', label: 'Bài tập' }
     ]
   }

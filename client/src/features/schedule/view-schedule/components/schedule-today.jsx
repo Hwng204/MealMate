@@ -16,9 +16,19 @@ import ScheduleEmptyState from './schedule-empty-state';
 import ScheduleTodayCard from './schedule-today-card';
 import ScheduleTodayWorkout from './workout/schedule-today-workout';
 
-export default function ScheduleToday({ selectedDate = new Date() }) {
+export default function ScheduleToday({
+  selectedDate = new Date(),
+  userId,
+  readOnly = false,
+  onDishClick,
+  memberProfile
+}) {
   const queryClient = useQueryClient();
-  const { data } = useSchedules({ limit: 1000 });
+  const scheduleParams = { limit: 1000 };
+  if (userId) {
+    scheduleParams['user._id'] = userId;
+  }
+  const { data } = useSchedules(scheduleParams);
 
   const { mutate: createSchedule, isPending: isCreating } = useCreateSchedule();
   const { mutate: generateAI, isPending: isGeneratingAI } =
@@ -42,7 +52,8 @@ export default function ScheduleToday({ selectedDate = new Date() }) {
   const handleCreateToday = () => {
     createSchedule({
       date: format(selectedDate, 'yyyy-MM-dd'),
-      dayOfWeek: format(selectedDate, 'EEEE', { locale: vi })
+      dayOfWeek: format(selectedDate, 'EEEE', { locale: vi }),
+      userId
     });
   };
 
@@ -50,7 +61,7 @@ export default function ScheduleToday({ selectedDate = new Date() }) {
     if (!schedule?._id) return;
 
     generateAI(
-      { date: format(selectedDate, 'yyyy-MM-dd') },
+      { date: format(selectedDate, 'yyyy-MM-dd'), userId },
       {
         onSuccess: async () => {
           await Promise.all([
@@ -73,7 +84,8 @@ export default function ScheduleToday({ selectedDate = new Date() }) {
     if (!schedule?._id) return;
 
     generateWorkoutAI({
-      date: format(selectedDate, 'yyyy-MM-dd')
+      date: format(selectedDate, 'yyyy-MM-dd'),
+      userId
     });
   };
 
@@ -96,6 +108,14 @@ export default function ScheduleToday({ selectedDate = new Date() }) {
   };
 
   if (!schedule) {
+    if (readOnly) {
+      return (
+        <p className='rounded-2xl border border-dashed px-6 py-12 text-center text-sm text-muted-foreground'>
+          Học viên chưa có lịch ăn uống trong ngày này.
+        </p>
+      );
+    }
+
     return (
       <ScheduleEmptyState
         onCreate={handleCreateToday}
@@ -114,35 +134,50 @@ export default function ScheduleToday({ selectedDate = new Date() }) {
               selectedDate={selectedDate}
               onGenerateAI={handleGenerateAI}
               isGeneratingAI={isGeneratingAI}
+              readOnly={readOnly}
+              onDishClick={onDishClick}
             />
           </div>
 
           <div className='min-w-0 w-full'>
-            <ScheduleTodayDetail scheduleId={schedule._id} />
+            <ScheduleTodayDetail
+              scheduleId={schedule._id}
+              memberProfile={memberProfile}
+            />
           </div>
         </div>
 
-        <ScheduleTodayWorkout
-          schedule={schedule}
-          onEditWorkout={handleOpenEditWorkout}
-          onAddWorkout={handleOpenAddWorkout}
-          onGenerateWorkoutAI={handleGenerateWorkoutAI}
-          isGeneratingWorkoutAI={isGeneratingWorkoutAI}
-        />
+        {!readOnly && (
+          <ScheduleTodayWorkout
+            schedule={schedule}
+            onEditWorkout={handleOpenEditWorkout}
+            onAddWorkout={handleOpenAddWorkout}
+            onGenerateWorkoutAI={handleGenerateWorkoutAI}
+            isGeneratingWorkoutAI={isGeneratingWorkoutAI}
+          />
+        )}
+
+        {readOnly && schedule.workout?.length > 0 && (
+          <ScheduleTodayWorkout schedule={schedule} readOnly />
+        )}
       </div>
 
-      <EditWorkoutModal
-        open={isEditWorkoutOpen}
-        onClose={handleCloseEditWorkout}
-        scheduleId={schedule._id}
-        workout={selectedWorkout}
-      />
+      {!readOnly && (
+        <>
+          <EditWorkoutModal
+            open={isEditWorkoutOpen}
+            onClose={handleCloseEditWorkout}
+            scheduleId={schedule._id}
+            workout={selectedWorkout}
+          />
 
-      <AddWorkoutModal
-        open={isAddWorkoutOpen}
-        onClose={handleCloseAddWorkout}
-        scheduleId={schedule._id}
-      />
+          <AddWorkoutModal
+            open={isAddWorkoutOpen}
+            onClose={handleCloseAddWorkout}
+            scheduleId={schedule._id}
+          />
+        </>
+      )}
     </>
   );
 }

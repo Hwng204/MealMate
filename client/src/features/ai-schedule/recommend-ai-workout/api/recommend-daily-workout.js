@@ -4,11 +4,15 @@ import { toast } from 'sonner';
 import apiClient from '~/lib/api-client';
 import { QUERY_KEYS } from '~/lib/query-keys';
 
-const recommendDailyWorkout = async ({ date, maxExercises }) => {
+const recommendDailyWorkout = async ({ date, maxExercises, userId }) => {
   const body = { date };
 
   if (maxExercises) {
     body.maxExercises = Number(maxExercises);
+  }
+
+  if (userId) {
+    body.userId = userId;
   }
 
   const response = await apiClient.post(

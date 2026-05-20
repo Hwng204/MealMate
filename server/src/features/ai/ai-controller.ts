@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import createHttpError from 'http-errors';
 
+import { ClassModel, NutritionistClientModel, UserModel } from '~/shared/database/models';
+import { ROLE } from '~/shared/constants/role';
 import { ApiResponse } from '~/shared/utils';
 
 import type {
@@ -9,6 +11,43 @@ import type {
   RecommendDailyWorkoutRequest
 } from './ai-dto';
 import { AiService } from './ai-service';
+
+const isNutritionistAssignedToClient = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  return Boolean(
+    await UserModel.exists({
+      _id: clientId,
+      assignedNutritionist: nutritionistId
+    })
+  );
+};
+
+const isNutritionistClassMember = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  return Boolean(
+    await ClassModel.exists({
+      nutritionist: nutritionistId,
+      'members.user': clientId
+    })
+  );
+};
+
+const isActiveNutritionistClient = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  return Boolean(
+    await NutritionistClientModel.exists({
+      nutritionistId,
+      clientId,
+      status: 'active'
+    })
+  );
+};
 
 export const AiController = {
   askAgent: async (req: Request, res: Response) => {
@@ -20,13 +59,36 @@ export const AiController = {
   },
 
   recommendDailyMeals: async (req: Request, res: Response) => {
-    const userId = req.user?._id?.toString();
-    if (!userId) {
+    const currentUserId = req.user?._id?.toString();
+    const role = req.user?.role;
+    
+    if (!currentUserId) {
       throw createHttpError(401, 'Unauthorized');
     }
 
     const payload = req.body as RecommendDailyMealsRequest;
-    const result = await AiService.recommendDailyMeals(userId, payload);
+    let targetUserId = currentUserId;
+
+    if (payload.userId) {
+      if (role !== ROLE.ADMIN && role !== ROLE.NUTRITIONIST) {
+        throw createHttpError(403, 'Bạn không có quyền tạo lịch cho người dùng này');
+      }
+
+      if (role === ROLE.NUTRITIONIST) {
+        const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
+          isNutritionistAssignedToClient(currentUserId, payload.userId),
+          isNutritionistClassMember(currentUserId, payload.userId),
+          isActiveNutritionistClient(currentUserId, payload.userId)
+        ]);
+
+        if (!isAssigned && !isClassMember && !isActiveClient) {
+          throw createHttpError(403, 'Bạn không có quyền tạo lịch cho học viên này');
+        }
+      }
+      targetUserId = payload.userId;
+    }
+
+    const result = await AiService.recommendDailyMeals(targetUserId, currentUserId, payload);
 
     res
       .status(200)
@@ -34,13 +96,36 @@ export const AiController = {
   },
 
   recommendDailyWorkout: async (req: Request, res: Response) => {
-    const userId = req.user?._id?.toString();
-    if (!userId) {
+    const currentUserId = req.user?._id?.toString();
+    const role = req.user?.role;
+
+    if (!currentUserId) {
       throw createHttpError(401, 'Unauthorized');
     }
 
     const payload = req.body as RecommendDailyWorkoutRequest;
-    const result = await AiService.recommendDailyWorkout(userId, payload);
+    let targetUserId = currentUserId;
+
+    if (payload.userId) {
+      if (role !== ROLE.ADMIN && role !== ROLE.NUTRITIONIST) {
+        throw createHttpError(403, 'Bạn không có quyền tạo lịch cho người dùng này');
+      }
+
+      if (role === ROLE.NUTRITIONIST) {
+        const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
+          isNutritionistAssignedToClient(currentUserId, payload.userId),
+          isNutritionistClassMember(currentUserId, payload.userId),
+          isActiveNutritionistClient(currentUserId, payload.userId)
+        ]);
+
+        if (!isAssigned && !isClassMember && !isActiveClient) {
+          throw createHttpError(403, 'Bạn không có quyền tạo lịch cho học viên này');
+        }
+      }
+      targetUserId = payload.userId;
+    }
+
+    const result = await AiService.recommendDailyWorkout(targetUserId, currentUserId, payload);
 
     res
       .status(200)

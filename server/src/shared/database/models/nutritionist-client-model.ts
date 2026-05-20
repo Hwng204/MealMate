@@ -5,40 +5,39 @@ import mongoose, {
 } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 
-import { NUTRITIONIST_CLIENT_STATUS } from '~/shared/constants/nutritionist-client-status';
-import { ROLE } from '~/shared/constants/role';
-
-const participantSnapshotSchema = new Schema(
-  {
-    _id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    name: { type: String, required: true },
-    avatar: { type: String, default: '' }
-  },
-  { _id: false }
-);
+import {
+  NUTRITIONIST_CLIENT_SOURCE,
+  NUTRITIONIST_CLIENT_STATUS
+} from '~/shared/constants/nutritionist-client-status';
 
 const nutritionistClientSchema = new Schema(
   {
-    nutritionist: {
-      type: participantSnapshotSchema,
-      required: true
+    nutritionistId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
     },
-    user: {
-      type: participantSnapshotSchema,
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
+    },
+    source: {
+      type: String,
+      enum: Object.values(NUTRITIONIST_CLIENT_SOURCE),
       required: true
     },
     status: {
       type: String,
       enum: Object.values(NUTRITIONIST_CLIENT_STATUS),
       default: NUTRITIONIST_CLIENT_STATUS.PENDING,
-      required: true
+      index: true
     },
-    initiatedBy: {
-      type: String,
-      enum: [ROLE.NUTRITIONIST, ROLE.USER],
-      required: true
-    },
-    notes: { type: String, default: '' }
+    notes: { type: String, default: '' },
+    respondedAt: { type: Date },
+    endedAt: { type: Date }
   },
   {
     timestamps: true
@@ -48,34 +47,8 @@ const nutritionistClientSchema = new Schema(
 nutritionistClientSchema.plugin(mongoosePaginate);
 
 nutritionistClientSchema.index(
-  {
-    'user._id': 1
-  },
-  {
-    unique: true,
-    partialFilterExpression: {
-      status: {
-        $in: [
-          NUTRITIONIST_CLIENT_STATUS.PENDING,
-          NUTRITIONIST_CLIENT_STATUS.ACTIVE
-        ]
-      }
-    }
-  }
+  { nutritionistId: 1, userId: 1 }
 );
-
-nutritionistClientSchema.index(
-  {
-    'nutritionist._id': 1,
-    'user._id': 1
-  },
-  {
-    unique: true
-  }
-);
-
-nutritionistClientSchema.index({ 'nutritionist._id': 1, status: 1 });
-nutritionistClientSchema.index({ 'user._id': 1, status: 1 });
 
 export type NutritionistClient = InferSchemaType<
   typeof nutritionistClientSchema

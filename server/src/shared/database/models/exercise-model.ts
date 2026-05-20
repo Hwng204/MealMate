@@ -51,6 +51,11 @@ const exerciseSchema = new Schema(
         image: { type: String, default: '' }
       }
     ],
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
     isActive: { type: Boolean, default: true }
   },
   {

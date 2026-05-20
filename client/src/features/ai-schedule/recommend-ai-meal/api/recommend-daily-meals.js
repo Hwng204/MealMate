@@ -4,10 +4,12 @@ import { toast } from 'sonner';
 import apiClient from '~/lib/api-client';
 import { QUERY_KEYS } from '~/lib/query-keys';
 
-const recommendDailyMeals = async ({ date }) => {
-  const response = await apiClient.post('/api/ai/recommend-daily-meals', {
-    date
-  });
+const recommendDailyMeals = async ({ date, userId }) => {
+  const body = { date };
+  if (userId) {
+    body.userId = userId;
+  }
+  const response = await apiClient.post('/api/ai/recommend-daily-meals', body);
 
   return response.data;
 };

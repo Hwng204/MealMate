@@ -6,6 +6,7 @@ import { NUTRITIONIST_CLIENT_STATUS } from '~/shared/constants/nutritionist-clie
 import { ROLE } from '~/shared/constants/role';
 import { WORKOUT_COUNTER_TYPE } from '~/shared/constants/workout-counter-type';
 import {
+  ClassModel,
   DishModel,
   ExerciseModel,
   NutritionistClientModel,
@@ -50,9 +51,6 @@ type LoadedDish = Awaited<ReturnType<typeof loadDishesByIds>>[number];
 type IncomingScheduleMealDish = NonNullable<
   UpdateScheduleMealsRequest['meals'][number]['dishes']
 >[number];
-type ScheduleCreateInput = CreateScheduleRequest & { userId?: string };
-
-type RoleOr<T> = string | T;
 
 const collectDishIdsOrThrow = (meals: UpdateScheduleMealsRequest['meals']) => {
   const dishIds = new Set<string>();
@@ -249,6 +247,84 @@ const buildDishByIdMap = (dishes: LoadedDish[]) =>
 const buildMealsByTypeMap = (schedule: {
   meals: Array<{ mealType: string }>;
 }) => new Map(schedule.meals.map(meal => [meal.mealType, meal] as const));
+
+const isNutritionistAssignedToClient = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  if (!validateObjectId(nutritionistId) || !validateObjectId(clientId)) {
+    return false;
+  }
+
+  return Boolean(
+    await UserModel.exists({
+      _id: clientId,
+      assignedNutritionist: nutritionistId
+    })
+  );
+};
+
+const isNutritionistClassMember = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  if (!validateObjectId(nutritionistId) || !validateObjectId(clientId)) {
+    return false;
+  }
+
+  return Boolean(
+    await ClassModel.exists({
+      nutritionistId,
+      members: clientId,
+      isActive: true
+    })
+  );
+};
+
+const isActiveNutritionistClient = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  if (!validateObjectId(nutritionistId) || !validateObjectId(clientId)) {
+    return false;
+  }
+
+  return Boolean(
+    await NutritionistClientModel.exists({
+      nutritionistId,
+      userId: clientId,
+      status: NUTRITIONIST_CLIENT_STATUS.ACTIVE
+    })
+  );
+};
+
+const ensureScheduleAccess = async (
+  schedule: Schedule,
+  userId: string,
+  role: string | undefined
+) => {
+  if (role === ROLE.ADMIN) {
+    return;
+  }
+
+  if (schedule.user?._id.toString() === userId) {
+    return;
+  }
+
+  if (role === ROLE.NUTRITIONIST) {
+    const clientId = schedule.user?._id.toString() ?? '';
+    const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
+      isNutritionistAssignedToClient(userId, clientId),
+      isNutritionistClassMember(userId, clientId),
+      isActiveNutritionistClient(userId, clientId)
+    ]);
+    if (isAssigned || isClassMember || isActiveClient) {
+      return;
+    }
+  }
+
+  throw createHttpError(403, 'Bạn không có quyền xem hoặc cập nhật lịch ăn này');
+};
 
 const getOrCreateMealByType = (
   schedule: {
@@ -542,78 +618,43 @@ async function resolveScheduleWorkoutExercises(items: ScheduleWorkoutInput) {
   );
 }
 
-const getManagedClientIds = async (nutritionistId: string) => {
-  const relations = await NutritionistClientModel.find({
-    'nutritionist._id': nutritionistId,
-    status: NUTRITIONIST_CLIENT_STATUS.ACTIVE
-  })
-    .select('user._id')
-    .lean();
-
-  return relations
-    .map(relation => relation.user?._id?.toString())
-    .filter((id): id is string => Boolean(id));
-};
-
-const canNutritionistManageUser = async (
-  nutritionistId: string,
-  userId: string
-) => {
-  const relation = await NutritionistClientModel.findOne({
-    'nutritionist._id': nutritionistId,
-    'user._id': userId,
-    status: NUTRITIONIST_CLIENT_STATUS.ACTIVE
-  })
-    .select('_id')
-    .lean();
-
-  return Boolean(relation);
-};
-
-const assertCanAccessSchedule = async (
-  schedule: Schedule,
-  actorId: string,
-  role: string | undefined,
-  errorMessage: string
-) => {
-  const scheduleUserId = schedule.user?._id.toString();
-
-  if (role === ROLE.ADMIN || scheduleUserId === actorId) {
-    return;
-  }
-
-  if (
-    role === ROLE.NUTRITIONIST &&
-    scheduleUserId &&
-    (await canNutritionistManageUser(actorId, scheduleUserId))
-  ) {
-    return;
-  }
-
-  throw createHttpError(403, errorMessage);
-};
-
 export const ScheduleService = {
   createSchedule: async (
-    actorId: string,
-    actorName: string,
-    roleOrData: RoleOr<ScheduleCreateInput>,
-    dataArg?: ScheduleCreateInput
+    userId: string,
+    userName: string,
+    data: CreateScheduleRequest
   ) => {
-    const role = dataArg ? (roleOrData as string | undefined) : undefined;
-    const data = (dataArg ?? roleOrData) as ScheduleCreateInput;
-    const targetUserId =
-      role === ROLE.USER || !data.userId ? actorId : data.userId;
+    let targetUserId = userId;
+    let targetUserName = userName;
 
-    if (!validateObjectId(targetUserId)) {
-      throw createHttpError(400, 'Định dạng ID người dùng không hợp lệ');
-    }
+    if (data.userId) {
+      if (!validateObjectId(data.userId)) {
+        throw createHttpError(400, 'Định dạng ID học viên không hợp lệ');
+      }
 
-    if (
-      role === ROLE.NUTRITIONIST &&
-      !(await canNutritionistManageUser(actorId, targetUserId))
-    ) {
-      throw createHttpError(403, 'Bạn không có quyền tạo lịch cho học viên này');
+      const targetUser = await UserModel.findById(data.userId);
+      if (!targetUser) {
+        throw createHttpError(404, 'Không tìm thấy học viên');
+      }
+
+      if (targetUser.role !== ROLE.USER) {
+        throw createHttpError(400, 'Chỉ có thể tạo lịch cho học viên');
+      }
+
+      const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
+        isNutritionistAssignedToClient(userId, data.userId),
+        isNutritionistClassMember(userId, data.userId),
+        isActiveNutritionistClient(userId, data.userId)
+      ]);
+      if (!isAssigned && !isClassMember && !isActiveClient) {
+        throw createHttpError(
+          403,
+          'Bạn không có quyền tạo lịch cho học viên này'
+        );
+      }
+
+      targetUserId = data.userId;
+      targetUserName = targetUser.name;
     }
 
     const user = await UserModel.findById(targetUserId);
@@ -634,7 +675,7 @@ export const ScheduleService = {
     const newSchedule = await ScheduleModel.create({
       user: {
         _id: targetUserId,
-        name: user.name ?? actorName
+        name: targetUserName
       },
       date: data.date,
       dayOfWeek: data.dayOfWeek,
@@ -665,29 +706,31 @@ export const ScheduleService = {
 
     const { filter } = parsed;
     const options = buildPaginateOptions(parsed);
-    let scopedFilter: Record<string, unknown>;
+
+    let scopedFilter: Record<string, any> = { ...filter };
 
     if (role === ROLE.ADMIN) {
       scopedFilter = { ...filter };
     } else if (role === ROLE.NUTRITIONIST) {
-      const managedClientIds = await getManagedClientIds(userId);
-      const requestedUserId = (filter as Record<string, unknown>)['user._id'];
+      const [assignedClients, classes, activeRelations] = await Promise.all([
+        UserModel.find({ assignedNutritionist: userId }).select('_id'),
+        ClassModel.find({ nutritionistId: userId, isActive: true }).select(
+          'members'
+        ),
+        NutritionistClientModel.find({
+          nutritionistId: userId,
+          status: NUTRITIONIST_CLIENT_STATUS.ACTIVE
+        }).select('userId')
+      ]);
+      const classMemberIds = classes.flatMap(classDoc => classDoc.members);
+      const clientIds = [
+        userId,
+        ...assignedClients.map(c => c._id),
+        ...classMemberIds,
+        ...activeRelations.map(relation => relation.userId)
+      ];
 
-      if (typeof requestedUserId === 'string') {
-        if (!managedClientIds.includes(requestedUserId)) {
-          throw createHttpError(
-            403,
-            'Bạn không có quyền xem lịch ăn của học viên này'
-          );
-        }
-
-        scopedFilter = { ...filter, 'user._id': requestedUserId };
-      } else {
-        scopedFilter = {
-          ...filter,
-          'user._id': { $in: managedClientIds }
-        };
-      }
+      scopedFilter = { ...filter, 'user._id': { $in: clientIds } };
     } else {
       scopedFilter = { ...filter, 'user._id': userId };
     }
@@ -712,12 +755,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền xem lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const scheduleData = schedule.toObject();
     const dishIds = collectScheduleDishIds(scheduleData.meals);
@@ -760,12 +798,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     validateDishIds(data.meals);
 
@@ -795,11 +828,9 @@ export const ScheduleService = {
   addScheduleWorkoutExercise: async (
     id: string,
     userId: string,
-    roleOrData: RoleOr<AddScheduleWorkoutExerciseRequest>,
-    dataArg?: AddScheduleWorkoutExerciseRequest
+    role: string | undefined,
+    data: AddScheduleWorkoutExerciseRequest
   ) => {
-    const role = dataArg ? (roleOrData as string | undefined) : undefined;
-    const data = (dataArg ?? roleOrData) as AddScheduleWorkoutExerciseRequest;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -810,12 +841,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const existingExercise = schedule.workout.find(
       item => item.exerciseId?.toString() === data.exerciseId
@@ -836,17 +862,10 @@ export const ScheduleService = {
   updateScheduleWorkoutExercise: async (
     id: string,
     userId: string,
-    roleOrExerciseId: string,
-    exerciseIdOrData: string | UpdateScheduleWorkoutExerciseRequest,
-    dataArg?: UpdateScheduleWorkoutExerciseRequest
+    role: string | undefined,
+    exerciseId: string,
+    data: UpdateScheduleWorkoutExerciseRequest
   ) => {
-    const role = dataArg ? roleOrExerciseId : undefined;
-    const exerciseId = (
-      dataArg ? exerciseIdOrData : roleOrExerciseId
-    ) as string;
-    const data = (
-      dataArg ?? exerciseIdOrData
-    ) as UpdateScheduleWorkoutExerciseRequest;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -861,12 +880,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const workoutExercise = schedule.workout.find(
       item => item.exerciseId?.toString() === exerciseId
@@ -902,11 +916,9 @@ export const ScheduleService = {
   removeScheduleWorkoutExercise: async (
     id: string,
     userId: string,
-    roleOrExerciseId: string,
-    exerciseIdArg?: string
+    role: string | undefined,
+    exerciseId: string
   ) => {
-    const role = exerciseIdArg ? roleOrExerciseId : undefined;
-    const exerciseId = (exerciseIdArg ?? roleOrExerciseId) as string;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -921,12 +933,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const workoutExerciseIndex = schedule.workout.findIndex(
       item => item.exerciseId?.toString() === exerciseId
@@ -945,11 +952,9 @@ export const ScheduleService = {
   updateScheduleMeals: async (
     id: string,
     userId: string,
-    roleOrData: RoleOr<UpdateScheduleMealsRequest>,
-    dataArg?: UpdateScheduleMealsRequest
+    role: string | undefined,
+    data: UpdateScheduleMealsRequest
   ) => {
-    const role = dataArg ? (roleOrData as string | undefined) : undefined;
-    const data = (dataArg ?? roleOrData) as UpdateScheduleMealsRequest;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -960,12 +965,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     validateDishIds(data.meals);
 
@@ -1033,15 +1033,11 @@ export const ScheduleService = {
   updateScheduleDishStatus: async (
     id: string,
     userId: string,
-    roleOrMealType: string,
-    mealTypeOrDishId: string,
-    dishIdOrData: string | UpdateScheduleDishStatusRequest,
-    dataArg?: UpdateScheduleDishStatusRequest
+    role: string | undefined,
+    mealType: string,
+    dishId: string,
+    data: UpdateScheduleDishStatusRequest
   ) => {
-    const role = dataArg ? roleOrMealType : undefined;
-    const mealType = (dataArg ? mealTypeOrDishId : roleOrMealType) as string;
-    const dishId = (dataArg ? dishIdOrData : mealTypeOrDishId) as string;
-    const data = (dataArg ?? dishIdOrData) as UpdateScheduleDishStatusRequest;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -1060,12 +1056,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const meal = schedule.meals.find(item => item.mealType === mealType);
 
@@ -1086,7 +1077,7 @@ export const ScheduleService = {
 
     if (data.isEaten) {
       eventBus.emit(EVENTS.SCHEDULE_DISH_EATEN, {
-        userId: schedule.user?._id.toString() ?? userId,
+        userId,
         dishId,
         scheduleId: id
       });
@@ -1110,12 +1101,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền xóa lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     await ScheduleModel.findByIdAndDelete(id);
   },
@@ -1123,13 +1109,10 @@ export const ScheduleService = {
   removeScheduleDish: async (
     id: string,
     userId: string,
-    roleOrMealType: string,
-    mealTypeOrDishId: string,
-    dishIdArg?: string
+    role: string | undefined,
+    mealType: string,
+    dishId: string
   ) => {
-    const role = dishIdArg ? roleOrMealType : undefined;
-    const mealType = (dishIdArg ? mealTypeOrDishId : roleOrMealType) as string;
-    const dishId = (dishIdArg ?? mealTypeOrDishId) as string;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -1144,12 +1127,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const meal = schedule.meals.find(item => item.mealType === mealType);
 
@@ -1178,11 +1156,9 @@ export const ScheduleService = {
   removeScheduleMeal: async (
     id: string,
     userId: string,
-    roleOrMealType: string,
-    mealTypeArg?: string
+    role: string | undefined,
+    mealType: string
   ) => {
-    const role = mealTypeArg ? roleOrMealType : undefined;
-    const mealType = (mealTypeArg ?? roleOrMealType) as string;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -1193,12 +1169,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const mealIndex = schedule.meals.findIndex(
       item => item.mealType === mealType
@@ -1218,11 +1189,9 @@ export const ScheduleService = {
   clearScheduleMealDishes: async (
     id: string,
     userId: string,
-    roleOrMealType: string,
-    mealTypeArg?: string
+    role: string | undefined,
+    mealType: string
   ) => {
-    const role = mealTypeArg ? roleOrMealType : undefined;
-    const mealType = (mealTypeArg ?? roleOrMealType) as string;
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
     }
@@ -1233,12 +1202,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy lịch ăn');
     }
 
-    await assertCanAccessSchedule(
-      schedule,
-      userId,
-      role,
-      'Bạn không có quyền cập nhật lịch ăn này'
-    );
+    await ensureScheduleAccess(schedule, userId, role);
 
     const meal = schedule.meals.find(item => item.mealType === mealType);
 

@@ -10,7 +10,35 @@ import { Link } from 'react-router';
 import AddFoodModal from './add-food-modal';
 import DeleteDishModal from './delete-dish-modal';
 
-export default function SchedulePlan({ schedule, getSmallMealIcon }) {
+const WeekDishCard = ({ dish, readOnly, onDishClick, children }) => {
+  const className =
+    'flex h-full flex-col overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] transition-all duration-500 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_15px_35px_rgb(0,0,0,0.10)]';
+
+  if (readOnly) {
+    return (
+      <button
+        type='button'
+        onClick={() => onDishClick?.(dish.dishId)}
+        className={`${className} w-full text-left`}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={`/dishes/${dish.dishId}`} className={className}>
+      {children}
+    </Link>
+  );
+};
+
+export default function SchedulePlan({
+  schedule,
+  getSmallMealIcon,
+  readOnly = false,
+  onDishClick
+}) {
   return (
     <div className='space-y-8'>
       {schedule.meals.map(meal => (
@@ -33,24 +61,30 @@ export default function SchedulePlan({ schedule, getSmallMealIcon }) {
               </div>
             </div>
 
-            <AddFoodModal
-              mealType={meal.mealType}
-              scheduleId={schedule._id}
-              scheduleMeals={schedule.meals}
-            >
-              <button className='flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-300 hover:bg-primary hover:text-primary-foreground'>
-                <HiOutlineDotsVertical size={18} />
-              </button>
-            </AddFoodModal>
+            {!readOnly && (
+              <AddFoodModal
+                mealType={meal.mealType}
+                scheduleId={schedule._id}
+                scheduleMeals={schedule.meals}
+              >
+                <button className='flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-300 hover:bg-primary hover:text-primary-foreground'>
+                  <HiOutlineDotsVertical size={18} />
+                </button>
+              </AddFoodModal>
+            )}
           </div>
 
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             {meal.dishes.length > 0 ? (
               meal.dishes.map(dish => (
-                <div key={dish._id} className='group/dish relative'>
-                  <Link
-                    to={`/dishes/${dish.dishId}`}
-                    className='flex h-full flex-col overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] transition-all duration-500 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_15px_35px_rgb(0,0,0,0.10)]'
+                <div
+                  key={dish.dishId || dish._id}
+                  className='group/dish relative'
+                >
+                  <WeekDishCard
+                    dish={dish}
+                    readOnly={readOnly}
+                    onDishClick={onDishClick}
                   >
                     <div className='relative h-36 w-full overflow-hidden bg-muted'>
                       <img
@@ -73,19 +107,21 @@ export default function SchedulePlan({ schedule, getSmallMealIcon }) {
                         {dish.servings} khẩu phần
                       </p>
                     </div>
-                  </Link>
+                  </WeekDishCard>
 
-                  <div className='absolute -right-1 -top-1 scale-75 opacity-0 transition-all group-hover/dish:scale-100 group-hover/dish:opacity-100'>
-                    <DeleteDishModal
-                      scheduleId={schedule._id}
-                      mealType={meal.mealType}
-                      dishId={dish.dishId}
-                    >
-                      <button className='flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-xl transition-transform'>
-                        <HiOutlineTrash size={14} />
-                      </button>
-                    </DeleteDishModal>
-                  </div>
+                  {!readOnly && (
+                    <div className='absolute -right-1 -top-1 scale-75 opacity-0 transition-all group-hover/dish:scale-100 group-hover/dish:opacity-100'>
+                      <DeleteDishModal
+                        scheduleId={schedule._id}
+                        mealType={meal.mealType}
+                        dishId={dish.dishId}
+                      >
+                        <button className='flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-xl transition-transform'>
+                          <HiOutlineTrash size={14} />
+                        </button>
+                      </DeleteDishModal>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -113,14 +149,15 @@ export default function SchedulePlan({ schedule, getSmallMealIcon }) {
         </div>
       ))}
 
-      <Link
-        to={`/schedules/day/${schedule._id}/nutrition`}
-        className='group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-[24px] bg-primary py-5 text-[13px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/40 active:scale-95'
-      >
-        <div className='absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-[shimmer_1.5s_infinite]' />
-        <span>Báo cáo dinh dưỡng</span>
-        <HiOutlineChevronRight size={18} />
-      </Link>
+      {!readOnly && (
+        <Link
+          to={`/schedules/day/${schedule._id}/nutrition`}
+          className='group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-[24px] bg-primary py-5 text-[13px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/40 active:scale-95'
+        >
+          <span>Báo cáo dinh dưỡng</span>
+          <HiOutlineChevronRight size={18} />
+        </Link>
+      )}
     </div>
   );
 }

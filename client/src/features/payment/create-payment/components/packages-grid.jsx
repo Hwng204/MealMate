@@ -31,9 +31,7 @@ const plans = [
     desc: 'Tối ưu hóa sức khỏe toàn diện',
     features: [
       'AI gợi ý bữa ăn & tập luyện theo tuần',
-      'Tự động tạo danh sách mua sắm',
-      'Nhận tư vấn từ chuyên gia',
-      'Chuyên gia lên lịch trình riêng'
+      'Tự động tạo danh sách mua sắm'
     ],
     highlight: true,
     amount: 89000,

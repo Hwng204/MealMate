@@ -4,6 +4,7 @@ import achievementRoute from '~/features/achievements/achievement-route';
 import aiRoute from '~/features/ai/ai-route';
 import aiEvaluationRoute from '~/features/ai-evaluation/ai-evaluation-route';
 import authRoute from '~/features/auth/auth-route';
+import classRoute from '~/features/classes/class-route';
 import collectionRoute from '~/features/collections/collection-route';
 import dashboardRoute from '~/features/dashboard/dashboard-route';
 import dishRoute from '~/features/dishes/dish-route';
@@ -22,6 +23,7 @@ const router = Router();
 
 router.use('/achievements', achievementRoute);
 router.use('/auth', authRoute);
+router.use('/classes', classRoute);
 router.use('/users', userRoute);
 router.use('/dashboard', dashboardRoute);
 router.use('/ingredients', ingredientRoute);

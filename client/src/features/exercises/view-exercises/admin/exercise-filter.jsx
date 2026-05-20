@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
 import { buildQueryParams } from '~/lib/build-query-params';
 
-const ExercisesFilter = () => {
+const ExercisesFilter = ({ createPath = '/admin/manage-exercises/create-exercise' }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -85,7 +85,7 @@ const ExercisesFilter = () => {
 
           <Button
             type='button'
-            onClick={() => navigate('/admin/manage-exercises/create-exercise')}
+            onClick={() => navigate(createPath)}
             className='sm:ml-auto'
           >
             <Plus className='mr-2 h-4 w-4' />

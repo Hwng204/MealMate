@@ -150,9 +150,9 @@ const scheduleWorkoutExerciseSchema = z
   });
 
 export const createScheduleRequestSchema = z.object({
-  userId: z.string().trim().optional(),
   date: z.coerce.date('Định dạng ngày không hợp lệ'),
   dayOfWeek: z.enum(Object.values(DAY_OF_WEEK), 'Ngày trong tuần không hợp lệ'),
+  userId: z.string().trim().optional(),
   workout: z
     .preprocess(parseJSON, z.array(scheduleWorkoutExerciseSchema))
     .optional()

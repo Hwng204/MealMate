@@ -13,6 +13,9 @@ const OnboardingLayout = lazy(
   () => import('~/components/layouts/onboarding-layout')
 );
 const ErrorComponent = lazy(() => import('~/components/error'));
+const NutritionistProtectedRoute = lazy(() =>
+  import('~/components/nutritionist-protected-route')
+);
 
 const OnboardingPage = lazy(() => import('~/app/onboarding/page'));
 const CreatePrivateDishPage = lazy(() => import('~/app/private-dish/page'));
@@ -37,6 +40,24 @@ const router = createBrowserRouter([
           {
             path: 'collections/:id',
             Component: lazy(() => import('~/app/collections/[id]/page'))
+          },
+          {
+            path: 'classes',
+            Component: () => (
+              <PrivateRoute allowedRoles={[ROLE.USER]}>
+                <Outlet />
+              </PrivateRoute>
+            ),
+            children: [
+              {
+                index: true,
+                Component: lazy(() => import('~/app/classes/page'))
+              },
+              {
+                path: ':id',
+                Component: lazy(() => import('~/app/classes/[id]/page'))
+              }
+            ]
           },
           {
             path: 'ingredients',
@@ -81,7 +102,7 @@ const router = createBrowserRouter([
           {
             path: 'schedules',
             Component: () => (
-              <PrivateRoute allowedRoles={[ROLE.USER]}>
+              <PrivateRoute allowedRoles={[ROLE.USER, ROLE.NUTRITIONIST]}>
                 <Outlet />
               </PrivateRoute>
             ),
@@ -253,7 +274,7 @@ const router = createBrowserRouter([
         ]
       },
       {
-        path: '/auth/',
+        path: 'auth',
         Component: AuthLayout,
         children: [
           {
@@ -279,7 +300,7 @@ const router = createBrowserRouter([
         ]
       },
       {
-        path: '/nutritionist/',
+        path: 'nutritionist',
         Component: () => (
           <PrivateRoute allowedRoles={[ROLE.NUTRITIONIST]}>
             <AdminLayout />
@@ -355,6 +376,58 @@ const router = createBrowserRouter([
             path: 'manage-collections/:id',
             Component: lazy(
               () => import('~/app/nutritionist/manage-collections/[id]/page')
+            )
+          },
+
+          // Manage classes
+          {
+            path: 'classes',
+            Component: () => (
+              <NutritionistProtectedRoute>
+                <Outlet />
+              </NutritionistProtectedRoute>
+            ),
+            children: [
+              {
+                index: true,
+                Component: lazy(() => import('~/app/nutritionist/classes/page'))
+              },
+              {
+                path: ':id',
+                Component: lazy(() => import('~/app/nutritionist/classes/[id]/page'))
+              },
+              {
+                path: ':id/students/:memberId',
+                Component: lazy(
+                  () =>
+                    import(
+                      '~/app/nutritionist/classes/[id]/students/[memberId]/page'
+                    )
+                )
+              }
+            ]
+          },
+
+          // Manage exercises
+          {
+            path: 'manage-exercises/',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-exercises/page')
+            )
+          },
+          {
+            path: 'manage-exercises/create-exercise',
+            Component: lazy(
+              () =>
+                import(
+                  '~/app/nutritionist/manage-exercises/create-exercise/page'
+                )
+            )
+          },
+          {
+            path: 'manage-exercises/:id',
+            Component: lazy(
+              () => import('~/app/nutritionist/manage-exercises/[id]/page')
             )
           },
 

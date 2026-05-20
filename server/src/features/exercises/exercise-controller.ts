@@ -9,8 +9,15 @@ export const ExerciseController = {
   createExercise: async (req: Request, res: Response) => {
     const data = req.body;
     const tutorial = req.file;
+    const userId = req.user!._id.toString();
+    const userRole = req.user?.role;
 
-    const result = await ExerciseService.createExercise(data, tutorial);
+    const result = await ExerciseService.createExercise(
+      data,
+      userId,
+      userRole,
+      tutorial
+    );
 
     res.status(201).json(ApiResponse.success('Tạo bài tập thành công', result));
   },
@@ -39,8 +46,16 @@ export const ExerciseController = {
     const id = req.params.id;
     const data = req.body;
     const tutorial = req.file;
+    const userId = req.user!._id.toString();
+    const userRole = req.user?.role;
 
-    const result = await ExerciseService.updateExercise(id, data, tutorial);
+    const result = await ExerciseService.updateExercise(
+      id,
+      userId,
+      userRole,
+      data,
+      tutorial
+    );
 
     res
       .status(200)
@@ -49,8 +64,10 @@ export const ExerciseController = {
 
   deleteExercise: async (req: Request, res: Response) => {
     const id = req.params.id;
+    const userId = req.user!._id.toString();
+    const userRole = req.user?.role;
 
-    await ExerciseService.deleteExercise(id);
+    await ExerciseService.deleteExercise(id, userId, userRole);
 
     res.status(200).json(ApiResponse.success('Xóa bài tập thành công'));
   }

@@ -163,6 +163,10 @@ const userSchema = new Schema(
     hasOnboarded: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     certificate: { type: certificateSchema, default: null },
+    assignedNutritionist: { type: Schema.Types.ObjectId, ref: 'User' },
+    enrolledClasses: [
+      { type: Schema.Types.ObjectId, ref: 'Class', default: [] }
+    ],
     nutritionistProfile: { type: nutritionistProfileSchema }
   },
   {

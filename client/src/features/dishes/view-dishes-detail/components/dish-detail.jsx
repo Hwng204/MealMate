@@ -114,7 +114,7 @@ export default function DishDetail() {
             <FaFireAlt />
           </Link>
 
-          {dish.user && (
+          {/* {dish.user && (
             <div className='flex items-center gap-4 rounded-[1.5rem] bg-card p-4 shadow-sm ring-1 ring-border/50'>
               <div className='flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border'>
                 <FaUser className='text-base' />
@@ -131,7 +131,7 @@ export default function DishDetail() {
                 </Link>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
