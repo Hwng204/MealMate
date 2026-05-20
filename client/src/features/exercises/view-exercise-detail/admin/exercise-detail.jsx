@@ -39,7 +39,7 @@ import { useUpdateExercise } from '~/features/exercises/update-exercise/api/upda
 import { updateExerciseSchema } from '~/features/exercises/update-exercise/schemas/update-exercise-schema';
 import { useExerciseDetail } from '~/features/exercises/view-exercise-detail/api/view-exercise-detail';
 
-const ExerciseDetail = ({ id }) => {
+const ExerciseDetail = ({ id, backPath = '/admin/manage-exercises' }) => {
   const navigate = useNavigate();
 
   const { data: exercise } = useExerciseDetail(id);
@@ -81,11 +81,11 @@ const ExerciseDetail = ({ id }) => {
   };
 
   const handleBack = () => {
-    navigate('/admin/manage-exercises');
+    navigate(backPath);
   };
 
   const handleDeleteSuccess = () => {
-    navigate('/admin/manage-exercises');
+    navigate(backPath);
   };
 
   const handleTutorialChange = e => {

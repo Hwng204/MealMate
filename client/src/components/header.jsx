@@ -87,7 +87,7 @@ const Header = () => {
                       {displayName}
                     </span>
                     <span className='text-[10px] text-white/70 font-medium'>
-                      Thành viên
+                      {profile?.membershipLevel || 'Thành viên'}
                     </span>
                   </div>
 

@@ -67,7 +67,12 @@ const calculateDishCalories = (
   } | null
 ): number => {
   if (!dish?.nutrition?.nutrients?.length) return 0;
-  const energy = dish.nutrition.nutrients[0];
+
+  const energy = dish.nutrition.nutrients.find(item =>
+    typeof item.label === 'string' &&
+    /năng lượng|energy|calor/i.test(item.label)
+  ) ?? dish.nutrition.nutrients[0];
+
   if (!energy || typeof energy.value !== 'number') return 0;
   return energy.value;
 };

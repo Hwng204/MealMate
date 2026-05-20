@@ -27,7 +27,8 @@ export interface AskAgentResponse {
 }
 
 export const recommendDailyMealsRequestSchema = z.object({
-  date: z.coerce.date('Định dạng ngày không hợp lệ')
+  date: z.coerce.date('Định dạng ngày không hợp lệ'),
+  userId: z.string().optional()
 });
 
 export type RecommendDailyMealsRequest = z.infer<
@@ -36,6 +37,7 @@ export type RecommendDailyMealsRequest = z.infer<
 
 export const recommendDailyWorkoutRequestSchema = z.object({
   date: z.coerce.date('Định dạng ngày không hợp lệ'),
+  userId: z.string().optional(),
   maxExercises: z.coerce
     .number()
     .int('Số bài tập phải là số nguyên')

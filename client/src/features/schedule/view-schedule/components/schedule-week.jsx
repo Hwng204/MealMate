@@ -6,9 +6,22 @@ import { useCreateSchedule } from '../../create-schedule/api/create-schedule';
 import { useSchedules } from '../api/view-schedule';
 import ScheduleWeekCard from './schedule-week-card';
 
-export default function ScheduleWeek({ startOfSelectedWeek }) {
-  const { data } = useSchedules({ limit: 1000 });
+export default function ScheduleWeek({
+  startOfSelectedWeek,
+  userId,
+  readOnly = false,
+  onDishClick
+}) {
+  const scheduleParams = { limit: 1000 };
+  if (userId) {
+    scheduleParams['user._id'] = userId;
+  }
+  const { data } = useSchedules(scheduleParams);
   const { mutate: createSchedule, isPending: isCreating } = useCreateSchedule();
+
+  const handleCreateEmptyDay = readOnly
+    ? undefined
+    : createSchedule;
 
   const docs = useMemo(
     () => (Array.isArray(data?.docs) ? data.docs : []),
@@ -28,7 +41,9 @@ export default function ScheduleWeek({ startOfSelectedWeek }) {
           date={date}
           schedule={schedule}
           isCreating={isCreating}
-          onCreateEmptyDay={createSchedule}
+          onCreateEmptyDay={handleCreateEmptyDay}
+          readOnly={readOnly}
+          onDishClick={onDishClick}
         />
       ))}
     </div>

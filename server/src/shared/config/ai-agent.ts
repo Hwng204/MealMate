@@ -20,6 +20,13 @@ const model = new ChatGoogleGenerativeAI({
   maxOutputTokens: 2048
 });
 
+export const mealRecommendationModel = new ChatGoogleGenerativeAI({
+  apiKey: googleApiKey,
+  model: agentConfig.model,
+  temperature: 0.65,
+  maxOutputTokens: 2048
+});
+
 export const agent = createAgent({
   model,
   systemPrompt: agentConfig.systemPrompt

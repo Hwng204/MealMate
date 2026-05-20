@@ -10,14 +10,8 @@ export const ScheduleController = {
     const data = req.body;
     const userId = req.user!._id.toString();
     const userName = req.user!.name;
-    const role = req.user?.role;
 
-    const result = await ScheduleService.createSchedule(
-      userId,
-      userName,
-      role,
-      data
-    );
+    const result = await ScheduleService.createSchedule(userId, userName, data);
 
     res.status(201).json(ApiResponse.success('Tạo lịch ăn thành công', result));
   },
@@ -57,46 +51,6 @@ export const ScheduleController = {
     res
       .status(200)
       .json(ApiResponse.success('Cập nhật lịch ăn thành công', result));
-  },
-
-  addScheduleWorkoutExercise: async (req: Request, res: Response) => {
-    const id = req.params.id;
-    const data = req.body;
-    const userId = req.user!._id.toString();
-    const role = req.user?.role;
-
-    const result = await ScheduleService.addScheduleWorkoutExercise(
-      id,
-      userId,
-      role,
-      data
-    );
-
-    res
-      .status(200)
-      .json(ApiResponse.success('Thêm bài tập vào workout thành công', result));
-  },
-
-  updateScheduleWorkoutExercise: async (req: Request, res: Response) => {
-    const id = req.params.id;
-    const exerciseId = req.params.exerciseId;
-    const data = req.body;
-    const userId = req.user!._id.toString();
-    const role = req.user?.role;
-
-    const result = await ScheduleService.updateScheduleWorkoutExercise(
-      id,
-      userId,
-      role,
-      exerciseId,
-      data
-    );
-
-    res
-      .status(200)
-      .json(
-        ApiResponse.success('Cập nhật bài tập trong workout thành công', result)
-      );
   },
 
   updateScheduleMeals: async (req: Request, res: Response) => {
@@ -139,6 +93,64 @@ export const ScheduleController = {
       .json(
         ApiResponse.success('Cập nhật trạng thái món ăn thành công', result)
       );
+  },
+
+  addScheduleWorkoutExercise: async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const data = req.body;
+    const userId = req.user!._id.toString();
+    const role = req.user?.role;
+
+    const result = await ScheduleService.addScheduleWorkoutExercise(
+      id,
+      userId,
+      role,
+      data
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Thêm bài tập vào workout thành công', result));
+  },
+
+  updateScheduleWorkoutExercise: async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const exerciseId = req.params.exerciseId;
+    const data = req.body;
+    const userId = req.user!._id.toString();
+    const role = req.user?.role;
+
+    const result = await ScheduleService.updateScheduleWorkoutExercise(
+      id,
+      userId,
+      role,
+      exerciseId,
+      data
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success('Cập nhật bài tập trong workout thành công', result)
+      );
+  },
+
+  removeScheduleWorkoutExercise: async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const exerciseId = req.params.exerciseId;
+    const userId = req.user!._id.toString();
+    const role = req.user?.role;
+
+    const result = await ScheduleService.removeScheduleWorkoutExercise(
+      id,
+      userId,
+      role,
+      exerciseId
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Xóa bài tập khỏi workout thành công', result));
   },
 
   deleteSchedule: async (req: Request, res: Response) => {
@@ -205,23 +217,5 @@ export const ScheduleController = {
       .json(
         ApiResponse.success('Xóa tất cả món ăn trong bữa thành công', result)
       );
-  },
-
-  removeScheduleWorkoutExercise: async (req: Request, res: Response) => {
-    const id = req.params.id;
-    const exerciseId = req.params.exerciseId;
-    const userId = req.user!._id.toString();
-    const role = req.user?.role;
-
-    const result = await ScheduleService.removeScheduleWorkoutExercise(
-      id,
-      userId,
-      role,
-      exerciseId
-    );
-
-    res
-      .status(200)
-      .json(ApiResponse.success('Xóa bài tập khỏi workout thành công', result));
   }
 };

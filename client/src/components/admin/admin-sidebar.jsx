@@ -1,6 +1,7 @@
 import {
   Apple,
   BicepsFlexed,
+  BookOpen,
   ClipboardCheck,
   Cpu,
   FlaskConical,
@@ -145,6 +146,16 @@ export function AdminSidebar({ ...props }) {
       ]
     },
     {
+      title: 'Quản lý lớp học',
+      items: [
+        {
+          title: 'Lớp học',
+          url: '/nutritionist/classes',
+          icon: BookOpen
+        }
+      ]
+    },
+    {
       title: 'Quản lý món ăn',
       items: [
         {
@@ -171,6 +182,16 @@ export function AdminSidebar({ ...props }) {
           title: 'Bài viết',
           url: '/nutritionist/manage-posts',
           icon: StickyNote
+        }
+      ]
+    },
+    {
+      title: 'Quản lý bài tập',
+      items: [
+        {
+          title: 'Bài tập',
+          url: '/nutritionist/manage-exercises',
+          icon: BicepsFlexed
         }
       ]
     },

@@ -9,6 +9,21 @@ export const QUERY_KEYS = {
   INGREDIENT: id => ['ingredient', id],
   COLLECTIONS: ['collections'],
   COLLECTION: id => ['collection', id],
+  CLASSES: ['classes'],
+  CLASS: id => ['class', id],
+  CLASS_MEMBERS: id => ['class-members', id],
+  CLASS_MEMBER_PROGRESS: (classId, memberId) => [
+    'class-member-progress',
+    classId,
+    memberId
+  ],
+  CLASS_MY_PROGRESS: classId => ['class-my-progress', classId],
+  CLASS_MEMBER_PHOTOS: (classId, memberId, asNutritionist) => [
+    'class-member-photos',
+    classId,
+    memberId,
+    asNutritionist
+  ],
   DISHES: ['dishes'],
   DISH: id => ['dish', id],
   SCHEDULES: ['schedules'],
@@ -21,6 +36,17 @@ export const QUERY_KEYS = {
   ACHIEVEMENTS: ['achievements'],
   NUTRITIONISTS: ['nutritionists'],
   NUTRITIONIST: id => ['nutritionist', id],
+  NUTRITIONIST_CLIENTS: ['nutritionist-clients'],
+  NUTRITIONIST_CLIENT: userId => ['nutritionist-client', userId],
+  NUTRITIONIST_CLIENT_DASHBOARD: userId => [
+    'nutritionist-client-dashboard',
+    userId
+  ],
+  NUTRITIONIST_CLIENT_TRACKING: (userId, days) => [
+    'nutritionist-client-tracking',
+    userId,
+    days
+  ],
   EXERCISES: ['exercises'],
   EXERCISE: id => ['exercise', id],
   FEEDBACKS: ['feedbacks'],

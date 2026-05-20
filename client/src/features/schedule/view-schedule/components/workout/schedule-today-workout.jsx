@@ -20,7 +20,8 @@ export default function ScheduleTodayWorkout({
   onEditWorkout,
   onAddWorkout,
   onGenerateWorkoutAI,
-  isGeneratingWorkoutAI
+  isGeneratingWorkoutAI,
+  readOnly = false
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -74,38 +75,42 @@ export default function ScheduleTodayWorkout({
         </button>
 
         <div className='ml-4 flex shrink-0 items-center gap-3'>
-          <button
-            type='button'
-            onClick={e => {
-              e.stopPropagation();
-              onGenerateWorkoutAI?.();
-            }}
-            disabled={isGeneratingWorkoutAI}
-            className='group flex h-10 items-center gap-2 rounded-xl bg-purple-50 px-4 text-purple-600 transition-all hover:bg-purple-600 hover:text-white disabled:opacity-50 dark:bg-purple-950/30 dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
-          >
-            {isGeneratingWorkoutAI ? (
-              <span className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent' />
-            ) : (
-              <HiSparkles className='h-4 w-4 transition-transform group-hover:rotate-12' />
-            )}
-            <span className='text-[12px] font-black uppercase tracking-wider'>
-              AI Gợi ý
-            </span>
-          </button>
+          {!readOnly && (
+            <>
+              <button
+                type='button'
+                onClick={e => {
+                  e.stopPropagation();
+                  onGenerateWorkoutAI?.();
+                }}
+                disabled={isGeneratingWorkoutAI}
+                className='group flex h-10 items-center gap-2 rounded-xl bg-purple-50 px-4 text-purple-600 transition-all hover:bg-purple-600 hover:text-white disabled:opacity-50 dark:bg-purple-950/30 dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
+              >
+                {isGeneratingWorkoutAI ? (
+                  <span className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                ) : (
+                  <HiSparkles className='h-4 w-4 transition-transform group-hover:rotate-12' />
+                )}
+                <span className='text-[12px] font-black uppercase tracking-wider'>
+                  AI Gợi ý
+                </span>
+              </button>
 
-          <button
-            type='button'
-            onClick={e => {
-              e.stopPropagation();
-              onAddWorkout?.();
-            }}
-            className='flex h-10 items-center gap-2 rounded-xl bg-primary/10 px-4 text-primary transition-all hover:bg-primary hover:text-white'
-          >
-            <Plus className='h-4 w-4' />
-            <span className='text-[12px] font-black uppercase tracking-wider'>
-              Thêm bài tập
-            </span>
-          </button>
+              <button
+                type='button'
+                onClick={e => {
+                  e.stopPropagation();
+                  onAddWorkout?.();
+                }}
+                className='flex h-10 items-center gap-2 rounded-xl bg-primary/10 px-4 text-primary transition-all hover:bg-primary hover:text-white'
+              >
+                <Plus className='h-4 w-4' />
+                <span className='text-[12px] font-black uppercase tracking-wider'>
+                  Thêm bài tập
+                </span>
+              </button>
+            </>
+          )}
 
           <button
             type='button'
@@ -284,6 +289,22 @@ export default function ScheduleTodayWorkout({
               })}
             </div>
           )}
+
+          {/* Workout Proofs Section */}
+          <div className='mt-4 border-t border-border/50 pt-4 px-4 pb-2'>
+            <h4 className='text-sm font-bold text-foreground mb-3'>Ảnh minh chứng tập luyện (của học viên)</h4>
+            {schedule?.workoutProofs?.length > 0 ? (
+              <div className='flex gap-3 overflow-x-auto pb-2'>
+                {schedule.workoutProofs.map((proof, idx) => (
+                  <div key={idx} className='h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-border shadow-sm'>
+                    <img src={proof} alt='Minh chứng' className='h-full w-full object-cover' />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className='text-sm text-muted-foreground italic'>Học viên chưa tải lên ảnh minh chứng nào cho ngày này.</p>
+            )}
+          </div>
         </div>
       )}
     </div>

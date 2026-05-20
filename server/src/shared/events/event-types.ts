@@ -13,7 +13,12 @@ export const EVENTS = {
   POST_COMMENTED: 'post:commented',
   POST_COMMENT_DELETED: 'post:comment_deleted',
   GROCERY_CREATED: 'grocery:created',
-  GROCERY_INGREDIENT_PURCHASED: 'grocery:ingredient_purchased'
+  GROCERY_INGREDIENT_PURCHASED: 'grocery:ingredient_purchased',
+  CLASS_CREATED: 'class:created',
+  CLASS_UPDATED: 'class:updated',
+  CLASS_DELETED: 'class:deleted',
+  CLASS_MEMBER_ADDED: 'class:member_added',
+  CLASS_MEMBER_REMOVED: 'class:member_removed'
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -80,5 +85,24 @@ export type EventPayloads = {
   [EVENTS.GROCERY_INGREDIENT_PURCHASED]: {
     userId: string;
     groceryId: string;
+  };
+  [EVENTS.CLASS_CREATED]: {
+    classId: string;
+    nutritionistId: string;
+  };
+  [EVENTS.CLASS_UPDATED]: {
+    classId: string;
+  };
+  [EVENTS.CLASS_DELETED]: {
+    classId: string;
+    nutritionistId: string;
+  };
+  [EVENTS.CLASS_MEMBER_ADDED]: {
+    classId: string;
+    userId: string;
+  };
+  [EVENTS.CLASS_MEMBER_REMOVED]: {
+    classId: string;
+    memberId: string;
   };
 };

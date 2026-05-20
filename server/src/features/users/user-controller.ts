@@ -41,6 +41,60 @@ export const UserController = {
       );
   },
 
+  viewNutritionistClients: async (req: Request, res: Response) => {
+    const nutritionistId = req.user!._id.toString();
+    const parsed = parseQuery(req.query);
+
+    const result = await UserService.viewNutritionistClients(
+      nutritionistId,
+      parsed
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          'Lấy danh sách học viên thành công',
+          result
+        )
+      );
+  },
+
+  viewNutritionistClientDetail: async (req: Request, res: Response) => {
+    const nutritionistId = req.user!._id.toString();
+    const clientId = req.params.id;
+
+    const result = await UserService.viewNutritionistClientDetail(
+      nutritionistId,
+      clientId
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          'Lấy thông tin học viên thành công',
+          result
+        )
+      );
+  },
+
+  assignNutritionistClient: async (req: Request, res: Response) => {
+    const nutritionistId = req.user!._id.toString();
+    const clientId = req.params.id;
+
+    const result = await UserService.assignNutritionistClient(
+      nutritionistId,
+      clientId
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success('Gán học viên thành công', result)
+      );
+  },
+
   pendingCertificatesCount: async (_req: Request, res: Response) => {
     const count = await UserService.pendingCertificatesCount();
 

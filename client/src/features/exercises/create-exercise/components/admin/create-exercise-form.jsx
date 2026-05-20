@@ -52,7 +52,7 @@ import {
 import { useCreateExercise } from '~/features/exercises/create-exercise/api/create-exercise';
 import { createExerciseSchema } from '~/features/exercises/create-exercise/schemas/create-exercise-schemas';
 
-const CreateExerciseForm = () => {
+const CreateExerciseForm = ({ backPath = '/admin/manage-exercises' }) => {
   const navigate = useNavigate();
   const [selectedTutorial, setSelectedTutorial] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -76,7 +76,7 @@ const CreateExerciseForm = () => {
   const { mutate: createExercise, isPending } = useCreateExercise({
     onSuccess: response => {
       toast.success(response?.message || 'Tạo bài tập thành công');
-      navigate('/admin/manage-exercises');
+      navigate(backPath);
     },
     onError: error => {
       toast.error(error.response?.data?.message || 'Tạo bài tập thất bại');
@@ -146,7 +146,7 @@ const CreateExerciseForm = () => {
         <Button
           variant='ghost'
           size='icon'
-          onClick={() => navigate('/admin/manage-exercises')}
+          onClick={() => navigate(backPath)}
         >
           <ArrowLeft className='h-5 w-5' />
         </Button>
@@ -521,7 +521,7 @@ const CreateExerciseForm = () => {
             <Button
               type='button'
               variant='outline'
-              onClick={() => navigate('/admin/manage-exercises')}
+              onClick={() => navigate(backPath)}
               disabled={isPending}
             >
               Hủy

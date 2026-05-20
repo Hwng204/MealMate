@@ -1,5 +1,6 @@
 import { HiOutlinePlus } from 'react-icons/hi';
 
+import ScheduleDayWorkoutsCompact from './schedule-day-workouts-compact';
 import SchedulePlan from './schedule-plan';
 
 export default function DayScheduleContent({
@@ -7,11 +8,29 @@ export default function DayScheduleContent({
   isDayToday,
   isCreating,
   handleCreate,
-  getSmallMealIcon
+  getSmallMealIcon,
+  readOnly = false,
+  onDishClick
 }) {
   if (schedule) {
     return (
-      <SchedulePlan schedule={schedule} getSmallMealIcon={getSmallMealIcon} />
+      <>
+        <SchedulePlan
+          schedule={schedule}
+          getSmallMealIcon={getSmallMealIcon}
+          readOnly={readOnly}
+          onDishClick={onDishClick}
+        />
+        <ScheduleDayWorkoutsCompact schedule={schedule} />
+      </>
+    );
+  }
+
+  if (readOnly) {
+    return (
+      <p className='py-8 text-center text-xs text-muted-foreground'>
+        Chưa có lịch
+      </p>
     );
   }
 

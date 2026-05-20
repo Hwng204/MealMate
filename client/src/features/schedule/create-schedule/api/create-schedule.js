@@ -4,10 +4,13 @@ import { toast } from 'sonner';
 import apiClient from '~/lib/api-client';
 import { QUERY_KEYS } from '~/lib/query-keys';
 
-const createSchedule = async ({ date, dayOfWeek }) => {
+const createSchedule = async ({ date, dayOfWeek, userId }) => {
   const formData = new FormData();
   formData.append('date', date);
   formData.append('dayOfWeek', dayOfWeek);
+  if (userId) {
+    formData.append('userId', userId);
+  }
 
   const response = await apiClient.post('/api/schedules', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }

@@ -1,3 +1,4 @@
+import { MEAL_CALORIE_RATIO_LABEL } from '~/shared/constants/meal-calorie-ratio';
 import { MEAL_TYPE } from '~/shared/constants/meal-type';
 
 import {
@@ -22,6 +23,7 @@ type MealRecommendationPromptConfig = {
   mealSlots: IMealSlotPromptInput[];
   dishCatalog: IDishCatalogPromptInput[];
   retrievalSummary?: string;
+  regenerationNotes?: string;
 };
 
 const formatMealSlots = (mealSlots: IMealSlotPromptInput[]) =>
@@ -41,7 +43,12 @@ const formatMealSlots = (mealSlots: IMealSlotPromptInput[]) =>
         `          - cookingPreference: ${slot.cookingPreference ?? 'N/A'}`,
         `          - availableTime: ${slot.availableTime ?? 'N/A'}`,
         `          - complexity: ${slot.complexity ?? 'N/A'}`,
-        `          - dishCategories: ${dishCategories}`
+        `          - dishCategories: ${dishCategories}`,
+        `          - calorieTarget: ${
+          typeof slot.calorieTarget === 'number'
+            ? `${slot.calorieTarget} kcal`
+            : 'N/A'
+        }`
       ].join('\n');
     })
     .join('\n');
@@ -73,6 +80,7 @@ const formatDishCatalog = (dishCatalog: IDishCatalogPromptInput[]) =>
         `          - tags: ${dish.tags.length > 0 ? dish.tags.join(', ') : 'N/A'}`,
         `          - totalTimeMinutes: ${dish.totalTimeMinutes}`,
         `          - defaultServings: ${dish.defaultServings}`,
+        `          - calories: ${dish.calories ?? 0} kcal`,
         `          - nutrients: ${nutrientSummary || 'N/A'}`
       ].join('\n');
     })
@@ -105,7 +113,8 @@ const mealRecommendationPrompt = (
     dayOfWeek,
     mealSlots,
     dishCatalog,
-    retrievalSummary
+    retrievalSummary,
+    regenerationNotes
   }: MealRecommendationPromptConfig
 ) => {
   const mealSlotsBlock = formatMealSlots(mealSlots);
@@ -116,6 +125,23 @@ const mealRecommendationPrompt = (
 ${retrievalSummary}
 `
     : '';
+  const regenerationBlock = regenerationNotes
+    ? `
+     Regeneration notes:
+${regenerationNotes}
+`
+    : '';
+  const calorieTarget = input.caloriesTarget;
+  const calorieRule =
+    typeof calorieTarget === 'number' && calorieTarget > 0
+      ? `     - TOP PRIORITY: Total daily calories (sum of each dish's calories × servings across ALL meals) MUST be between ${calorieTarget - 100} and ${calorieTarget + 100} kcal (target ${calorieTarget} kcal, tolerance ±100).
+     - Use the calories values from the dish catalog to calculate the daily total before returning any recommendation.
+     - Weekly dish repetition is allowed. Do not sacrifice the daily calorie constraint for variety or meal-level distribution.
+     - Meal-level calorie distribution is only a soft preference; if needed, prioritize the daily total within ±100 over meal targets.
+     - Adjust servings (within allowed range) to hit the daily calorie target before finalizing dish picks.`
+      : `     - Keep total daily calories balanced and realistic for the user's goal.
+     - Weekly dish repetition is allowed.
+     - When main meals are present, prefer calorie distribution ${MEAL_CALORIE_RATIO_LABEL} (sáng-trưa-tối) only if it does not violate the total daily calorie constraint.`;
 
   return `You are an experienced nutrition coach creating a daily meal recommendation from an existing dish catalog.
      
@@ -141,7 +167,7 @@ ${retrievalSummary}
      }
      - Calories target: ${input.caloriesTarget ?? 'N/A'}
      - Macro targets: ${formatMacroTargets(input)}
-${retrievalBlock}
+${retrievalBlock}${regenerationBlock}
      SCHEDULE INFORMATION:
      - date: ${dateISO}
      - dayOfWeek: ${dayOfWeek}
@@ -163,6 +189,8 @@ ${dishCatalogBlock}
      } and ${MEAL_RECOMMENDATION_PROMPT_CONFIG.maxServings}.
      - Do not repeat the same dishId across different meals in the same day unless there are not enough unique dishes.
      - Use retrieval notes to reduce repeating dishes from recent days when alternatives exist.
+     - When regeneration notes are provided, prefer different dishes than the current plan unless no suitable alternatives exist.
+${calorieRule}
      - Respect allergens, meal constraints, user goal, and nutrition balance.
      - Do NOT invent new fields.
      

@@ -136,6 +136,27 @@ router.put(
   asyncHandler(UserController.updateNutritionistProfile)
 );
 
+router.get(
+  '/me/clients',
+  authenticate(),
+  authorize([ROLE.NUTRITIONIST]),
+  asyncHandler(UserController.viewNutritionistClients)
+);
+
+router.get(
+  '/me/clients/:id',
+  authenticate(),
+  authorize([ROLE.NUTRITIONIST]),
+  asyncHandler(UserController.viewNutritionistClientDetail)
+);
+
+router.put(
+  '/me/clients/:id/assign',
+  authenticate(),
+  authorize([ROLE.NUTRITIONIST]),
+  asyncHandler(UserController.assignNutritionistClient)
+);
+
 router.post(
   '/me/favorites/dishes',
   authenticate(),

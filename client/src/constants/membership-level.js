@@ -11,3 +11,6 @@ export const EXPERT_MEMBERSHIP_LEVELS = [
   MEMBERSHIP_LEVEL.EXPERT_STANDARD,
   MEMBERSHIP_LEVEL.EXPERT_PREMIUM
 ];
+
+export const isExpertMembership = level =>
+  EXPERT_MEMBERSHIP_LEVELS.includes(level);

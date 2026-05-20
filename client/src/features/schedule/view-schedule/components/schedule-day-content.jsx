@@ -4,7 +4,7 @@ import { useState } from 'react';
 import ScheduleHeader from './schedule-header';
 import ScheduleToday from './schedule-today';
 
-export default function ScheduleDayContent() {
+export default function ScheduleDayContent({ userId }) {
   const [date, setDate] = useState(new Date());
 
   return (
@@ -18,7 +18,7 @@ export default function ScheduleDayContent() {
       />
 
       <div className='rounded-3xl border border-slate-200 px-6 py-6 shadow-sm'>
-        <ScheduleToday selectedDate={date} />
+        <ScheduleToday selectedDate={date} userId={userId} />
       </div>
     </div>
   );

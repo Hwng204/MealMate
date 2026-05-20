@@ -4,6 +4,7 @@ import type { HydratedDocument, PaginateResult } from 'mongoose';
 
 import { ExerciseModel } from '~/shared/database/models';
 import type { Exercise } from '~/shared/database/models/exercise-model';
+import { ROLE } from '~/shared/constants/role';
 import { eventBus } from '~/shared/events/event-bus';
 import { EVENTS } from '~/shared/events/event-types';
 import {
@@ -21,6 +22,8 @@ import type {
 export const ExerciseService = {
   createExercise: async (
     data: CreateExerciseRequest,
+    userId: string,
+    userRole: string,
     tutorial?: Express.Multer.File
   ) => {
     const existingExercise = await ExerciseModel.findOne({ name: data.name });
@@ -29,7 +32,12 @@ export const ExerciseService = {
       throw createHttpError(409, 'Bài tập với tên này đã tồn tại');
     }
 
-    const newExercise = await ExerciseModel.create(data);
+    const exerciseData = {
+      ...data,
+      ...(userRole === ROLE.NUTRITIONIST && { createdBy: userId })
+    };
+
+    const newExercise = await ExerciseModel.create(exerciseData);
 
     if (tutorial) {
       await replaceExerciseTutorial(newExercise, tutorial);
@@ -69,11 +77,24 @@ export const ExerciseService = {
 
   updateExercise: async (
     id: string,
+    userId: string,
+    userRole: string,
     data: UpdateExerciseRequest,
     tutorial?: Express.Multer.File
   ) => {
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID bài tập không hợp lệ');
+    }
+
+    const exercise = await ExerciseModel.findById(id);
+
+    if (!exercise) {
+      throw createHttpError(404, 'Không tìm thấy bài tập');
+    }
+
+    // Check ownership: only admins can update other people's exercises, nutritionists can only update their own
+    if (userRole === ROLE.NUTRITIONIST && exercise.createdBy?.toString() !== userId) {
+      throw createHttpError(403, 'Bạn không có quyền chỉnh sửa bài tập này');
     }
 
     if (data.name) {
@@ -106,9 +127,20 @@ export const ExerciseService = {
     return updatedExercise;
   },
 
-  deleteExercise: async (id: string) => {
+  deleteExercise: async (id: string, userId: string, userRole: string) => {
     if (!validateObjectId(id)) {
       throw createHttpError(400, 'Định dạng ID bài tập không hợp lệ');
+    }
+
+    const exercise = await ExerciseModel.findById(id);
+
+    if (!exercise) {
+      throw createHttpError(404, 'Không tìm thấy bài tập');
+    }
+
+    // Check ownership: only admins can delete other people's exercises, nutritionists can only delete their own
+    if (userRole === ROLE.NUTRITIONIST && exercise.createdBy?.toString() !== userId) {
+      throw createHttpError(403, 'Bạn không có quyền xóa bài tập này');
     }
 
     const deletedExercise = await ExerciseModel.findByIdAndDelete(id);

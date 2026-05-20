@@ -14,7 +14,8 @@ import { DIET } from '~/shared/constants/diet';
 import { GENDER } from '~/shared/constants/gender';
 import {
   isPaidMembership,
-  MEMBERSHIP_LEVEL
+  MEMBERSHIP_LEVEL,
+  NUTRITIONIST_CLIENT_LIMITS
 } from '~/shared/constants/membership-level';
 import { ROLE } from '~/shared/constants/role';
 import { USER_TARGET } from '~/shared/constants/user-target';
@@ -253,6 +254,118 @@ const saveNutritionistProfile = async (
   await user.save();
 
   return user;
+};
+
+const getNutritionistClientLimit = (membershipLevel?: string | null) =>
+  membershipLevel &&
+  membershipLevel in NUTRITIONIST_CLIENT_LIMITS
+    ? NUTRITIONIST_CLIENT_LIMITS[
+        membershipLevel as keyof typeof NUTRITIONIST_CLIENT_LIMITS
+      ]
+    : 0;
+
+const isNutritionistAssignedToClient = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  if (!validateObjectId(nutritionistId) || !validateObjectId(clientId)) {
+    return false;
+  }
+
+  return Boolean(
+    await UserModel.exists({
+      _id: clientId,
+      assignedNutritionist: nutritionistId
+    })
+  );
+};
+
+const getNutritionistClientCount = async (nutritionistId: string) => {
+  if (!validateObjectId(nutritionistId)) {
+    return 0;
+  }
+
+  return UserModel.countDocuments({ assignedNutritionist: nutritionistId });
+};
+
+const assignNutritionistClient = async (
+  nutritionistId: string,
+  clientId: string
+) => {
+  if (!validateObjectId(nutritionistId)) {
+    throw createHttpError(400, 'Định dạng ID chuyên gia không hợp lệ');
+  }
+
+  if (!validateObjectId(clientId)) {
+    throw createHttpError(400, 'Định dạng ID học viên không hợp lệ');
+  }
+
+  const [nutritionist, client] = await Promise.all([
+    UserModel.findById(nutritionistId),
+    UserModel.findById(clientId)
+  ]);
+
+  if (!nutritionist) {
+    throw createHttpError(404, 'Chuyên gia không tồn tại');
+  }
+
+  if (nutritionist.role !== ROLE.NUTRITIONIST) {
+    throw createHttpError(403, 'Chỉ chuyên gia mới được phép quản lý học viên');
+  }
+
+  if (!client) {
+    throw createHttpError(404, 'Học viên không tồn tại');
+  }
+
+  if (client.role !== ROLE.USER) {
+    throw createHttpError(400, 'Chỉ học viên mới có thể được gán cho chuyên gia');
+  }
+
+  const existingNutritionistId =
+    client.assignedNutritionist?.toString() ?? undefined;
+
+  if (existingNutritionistId === nutritionistId) {
+    return client;
+  }
+
+  if (existingNutritionistId) {
+    throw createHttpError(
+      409,
+      'Học viên đã được gán cho chuyên gia khác'
+    );
+  }
+
+  const maxClients = getNutritionistClientLimit(nutritionist.membershipLevel);
+  const currentClientCount = await getNutritionistClientCount(nutritionistId);
+
+  if (currentClientCount >= maxClients) {
+    throw createHttpError(
+      403,
+      'Bạn đã đạt giới hạn học viên cho gói chuyên gia hiện tại'
+    );
+  }
+
+  client.assignedNutritionist = nutritionist._id;
+  await client.save();
+
+  return client;
+};
+
+const buildNutritionistClientSummary = (doc: User & { _id: unknown }) => {
+  const latestWeight = doc.weightRecord?.[doc.weightRecord.length - 1]?.weight;
+
+  return {
+    _id: doc._id,
+    name: doc.name,
+    avatar: doc.avatar,
+    email: doc.email,
+    gender: doc.gender,
+    goal: doc.goal,
+    nutritionTarget: doc.nutritionTarget,
+    latestWeight,
+    membershipLevel: doc.membershipLevel,
+    assignedNutritionist: doc.assignedNutritionist
+  };
 };
 
 const addToUserArrayField = async (
@@ -560,6 +673,96 @@ export const UserService = {
     ) as typeof result.docs;
 
     return result;
+  },
+
+  viewNutritionistClients: async (
+    nutritionistId: string,
+    parsed: QueryOptions
+  ): Promise<PaginateResult<User>> => {
+    if (!validateObjectId(nutritionistId)) {
+      throw createHttpError(400, 'Định dạng ID chuyên gia không hợp lệ');
+    }
+
+    const nutritionist = await UserModel.findById(nutritionistId);
+    if (!nutritionist) {
+      throw createHttpError(404, 'Chuyên gia không tồn tại');
+    }
+
+    if (nutritionist.role !== ROLE.NUTRITIONIST) {
+      throw createHttpError(403, 'Chỉ chuyên gia mới có thể xem danh sách học viên');
+    }
+
+    const { filter } = parsed;
+    const options = buildPaginateOptions(parsed);
+
+    const result = await UserModel.paginate(
+      { ...filter, assignedNutritionist: nutritionistId },
+      {
+        ...options,
+        select:
+          'name avatar email gender goal nutritionTarget membershipLevel weightRecord assignedNutritionist'
+      }
+    );
+
+    return result;
+  },
+
+  viewNutritionistClientDetail: async (
+    nutritionistId: string,
+    clientId: string
+  ) => {
+    if (!validateObjectId(nutritionistId)) {
+      throw createHttpError(400, 'Định dạng ID chuyên gia không hợp lệ');
+    }
+
+    if (!validateObjectId(clientId)) {
+      throw createHttpError(400, 'Định dạng ID học viên không hợp lệ');
+    }
+
+    const client = await UserModel.findById(clientId).select(
+      'name avatar email gender dob height bodyfat diet allergens medicalHistory goal nutritionTarget mealSettings weightRecord assignedNutritionist'
+    );
+
+    if (!client) {
+      throw createHttpError(404, 'Học viên không tồn tại');
+    }
+
+    if (client.role !== ROLE.USER) {
+      throw createHttpError(403, 'Người dùng này không phải học viên');
+    }
+
+    if (client.assignedNutritionist?.toString() !== nutritionistId) {
+      throw createHttpError(
+        403,
+        'Bạn không có quyền xem thông tin học viên này'
+      );
+    }
+
+    const scheduleCount = await ScheduleModel.countDocuments({
+      'user._id': clientId
+    });
+
+    const lastSchedule = await ScheduleModel.findOne({
+      'user._id': clientId
+    })
+      .sort({ date: -1 })
+      .select('date dayOfWeek');
+
+    return {
+      client,
+      stats: {
+        scheduleCount,
+        lastScheduleDate: lastSchedule?.date,
+        lastScheduleDayOfWeek: lastSchedule?.dayOfWeek
+      }
+    };
+  },
+
+  assignNutritionistClient: async (
+    nutritionistId: string,
+    clientId: string
+  ) => {
+    return assignNutritionistClient(nutritionistId, clientId);
   },
 
   pendingCertificatesCount: async (): Promise<number> => {

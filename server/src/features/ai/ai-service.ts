@@ -6,7 +6,8 @@ import {
   agent,
   agentConfig,
   evaluationAgent,
-  evaluationConfig
+  evaluationConfig,
+  mealRecommendationModel
 } from '~/shared/config/ai-agent';
 import {
   type AiQuotaEndpoint,
@@ -22,6 +23,10 @@ import { DISH_CATEGORY } from '~/shared/constants/dish-category';
 import { EXERCISE_DIFFICULTY } from '~/shared/constants/exercise-difficulty';
 import { EXERCISE_TYPE } from '~/shared/constants/exercise-type';
 import { MEAL_SIZE } from '~/shared/constants/meal-size';
+import {
+  computeMealCalorieTargets,
+  getMealCalorieTolerance
+} from '~/shared/constants/meal-calorie-ratio';
 import { MEAL_TYPE } from '~/shared/constants/meal-type';
 import {
   isPaidMembership,
@@ -57,7 +62,8 @@ import type {
   IDishCatalogPromptInput,
   IExerciseCatalogPromptInput,
   IInputGenerateMeal,
-  IInputGenerateWorkout
+  IInputGenerateWorkout,
+  IMealSlotPromptInput
 } from './ai-type';
 import exerciseRecommendationPrompt, {
   EXERCISE_RECOMMENDATION_PROMPT_CONFIG
@@ -198,6 +204,8 @@ type RecentMealDishContext = {
 type MealRankingContext = {
   targetDate: Date;
   recentDishCounts: Map<string, number>;
+  regenerationSeed: number;
+  currentDayDishIds: Set<string>;
 };
 
 type RecentWorkoutExerciseContext = {
@@ -371,6 +379,7 @@ const RECOVERY_TYPES = new Set<string>([
 ]);
 
 const MEAL_HISTORY_LOOKBACK_DAYS = 7;
+const MEAL_CALORIE_TOLERANCE = 100;
 
 const dayOfWeekByIndex: Record<number, string> = {
   0: DAY_OF_WEEK.SUNDAY,
@@ -435,6 +444,7 @@ export const AiService = {
 
   recommendDailyMeals: async (
     userId: string,
+    billingUserId: string,
     payload: RecommendDailyMealsRequest
   ): Promise<DailyMealRecommendationResponse> => {
     let reservation: AiQuotaReservation | null = null;
@@ -453,6 +463,20 @@ export const AiService = {
         targetDate,
         MEAL_HISTORY_LOOKBACK_DAYS
       );
+      const existingSchedule = await ScheduleModel.findOne({
+        'user._id': userId,
+        date: targetDate
+      })
+        .select('meals.dishes.dishId')
+        .lean();
+      const currentDayDishIds = new Set<string>();
+      existingSchedule?.meals?.forEach(meal => {
+        meal.dishes?.forEach(dish => {
+          const dishId = dish.dishId?.toString();
+          if (dishId) currentDayDishIds.add(dishId);
+        });
+      });
+      const regenerationSeed = Date.now();
       const dishRetrieval = await getCandidateDishes(user, mealSlots);
       const candidateDishes = dishRetrieval.dishes;
       console.log(
@@ -473,7 +497,9 @@ export const AiService = {
           slot.mealType,
           pickCandidatesForMeal(slot, candidateDishes, user, {
             targetDate,
-            recentDishCounts: recentMealContext.dishCounts
+            recentDishCounts: recentMealContext.dishCounts,
+            regenerationSeed,
+            currentDayDishIds
           })
         );
       });
@@ -493,12 +519,22 @@ export const AiService = {
         dishRetrieval.ragMatchedDishIds,
         recentMealContext
       );
+      const regenerationNotes = buildRegenerationNotes(
+        currentDayDishIds,
+        dishesById
+      );
+      const dailyCalorieTarget = user.nutritionTarget?.caloriesTarget;
+      const mealSlotsForPrompt = toMealSlotsForPrompt(
+        mealSlots,
+        dailyCalorieTarget
+      );
       const prompt = mealRecommendationPrompt(inputForPrompt, {
         dateISO: targetDate.toISOString(),
         dayOfWeek,
-        mealSlots,
+        mealSlots: mealSlotsForPrompt,
         dishCatalog,
-        retrievalSummary
+        retrievalSummary,
+        regenerationNotes
       });
 
       const estimatedReserve = estimateReserveTokensForPrompt(
@@ -509,18 +545,18 @@ export const AiService = {
         `[AI_QUOTA] endpoint=recommend_daily_meals promptChars=${prompt.length} estimatedReserve=${estimatedReserve}`
       );
       reservation = await reserveAiTokensForRecommendation(
-        userId,
+        billingUserId,
         'recommend_daily_meals',
         estimatedReserve
       );
-      aiInvocation = await invokeAi(prompt);
+      aiInvocation = await invokeMealRecommendationAi(prompt);
 
       console.log(
         `[AiInvocation] endpoint=recommend_daily_meals textLength=${aiInvocation.text.length} totalTokens=${aiInvocation.usage.totalTokens}`
       );
 
       const quotaSettlement = await settleAiTokenUsage(
-        userId,
+        billingUserId,
         reservation,
         aiInvocation.usage
       );
@@ -531,12 +567,18 @@ export const AiService = {
       };
       const aiSelection = parseAiSelection(aiInvocation.text);
 
-      const meals = materializeMeals({
-        mealSlots,
-        aiSelection,
+      const meals = optimizeMealsForCalorieTarget(
+        materializeMeals({
+          mealSlots,
+          aiSelection,
+          dishesById,
+          candidatesByMealType,
+          regenerationSeed,
+          currentDayDishIds
+        }),
         dishesById,
-        candidatesByMealType
-      });
+        user.nutritionTarget?.caloriesTarget
+      );
       const scheduleMeals = toScheduleMealPayloads(meals, dishesById);
       const schedule = await upsertScheduleMeals({
         user,
@@ -557,9 +599,9 @@ export const AiService = {
           calorieTarget: user.nutritionTarget?.caloriesTarget ?? 2000,
           goal: user.goal?.target ?? ''
         },
-        mealSlots: mealSlots.map(slot => ({
+        mealSlots: mealSlotsForPrompt.map(slot => ({
           mealType: slot.mealType,
-          calorieTarget: 0
+          calorieTarget: slot.calorieTarget ?? 0
         })),
         dishCatalog: candidateDishes.map(dish => ({
           dishId: dish._id,
@@ -626,6 +668,7 @@ export const AiService = {
 
   recommendDailyWorkout: async (
     userId: string,
+    billingUserId: string,
     payload: RecommendDailyWorkoutRequest
   ): Promise<DailyWorkoutRecommendationResponse> => {
     let reservation: AiQuotaReservation | null = null;
@@ -702,13 +745,13 @@ export const AiService = {
         `[AI_QUOTA] endpoint=recommend_daily_workout promptChars=${prompt.length} estimatedReserve=${estimatedReserve}`
       );
       reservation = await reserveAiTokensForRecommendation(
-        userId,
+        billingUserId,
         'recommend_daily_workout',
         estimatedReserve
       );
       aiInvocation = await invokeAi(prompt);
       const quotaSettlement = await settleAiTokenUsage(
-        userId,
+        billingUserId,
         reservation,
         aiInvocation.usage
       );
@@ -1533,9 +1576,252 @@ const stableHash = (value: string) => {
   return Math.abs(hash);
 };
 
-const getDateDishJitter = (dishId: string, targetDate: Date) => {
-  const hash = stableHash(`${dateKey(targetDate)}:${dishId}`);
+const getDateDishJitter = (
+  dishId: string,
+  targetDate: Date,
+  regenerationSeed = 0
+) => {
+  const hash = stableHash(`${dateKey(targetDate)}:${regenerationSeed}:${dishId}`);
   return (hash % 1000) / 1000 - 0.5;
+};
+
+const seededShuffle = <T>(items: T[], seed: number): T[] => {
+  const arr = [...items];
+  let state = Math.abs(seed) % 2147483647 || 1;
+
+  const next = () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+};
+
+const getDishCaloriesPerServing = (dish?: DishCandidate | null) =>
+  calculateDishCalories(dish);
+
+const getMealsTotalCalories = (
+  meals: Array<{
+    dishes: Array<{ dishId: string; servings: number }>;
+  }>,
+  dishesById: Map<string, DishCandidate>
+) =>
+  meals.reduce((total, meal) => {
+    const mealTotal = meal.dishes.reduce((sum, item) => {
+      const dish = dishesById.get(item.dishId);
+      return sum + getDishCaloriesPerServing(dish) * item.servings;
+    }, 0);
+    return total + mealTotal;
+  }, 0);
+
+const getSingleMealCalories = (
+  meal: { dishes: Array<{ dishId: string; servings: number }> },
+  dishesById: Map<string, DishCandidate>
+) =>
+  meal.dishes.reduce((sum, item) => {
+    const dish = dishesById.get(item.dishId);
+    return sum + getDishCaloriesPerServing(dish) * item.servings;
+  }, 0);
+
+const toMealSlotsForPrompt = (
+  mealSlots: MealSlot[],
+  dailyCalorieTarget?: number
+): IMealSlotPromptInput[] => {
+  const calorieTargets = dailyCalorieTarget
+    ? computeMealCalorieTargets(dailyCalorieTarget, mealSlots)
+    : new Map<string, number>();
+
+  return mealSlots.map(slot => ({
+    mealType: slot.mealType,
+    mealSettingName: slot.mealSettingName,
+    dishCount: slot.dishCount,
+    preferredTypes: slot.preferredTypes,
+    mealSize: slot.mealSize,
+    cookingPreference: slot.cookingPreference,
+    availableTime: slot.availableTime,
+    complexity: slot.complexity,
+    dishCategories: slot.dishCategories,
+    calorieTarget: calorieTargets.get(slot.mealType)
+  }));
+};
+
+const adjustMealServingsTowardTarget = (
+  meal: {
+    dishes: Array<{
+      dishId: string;
+      name: string;
+      servings: number;
+      image?: string;
+      nutrition: DishNutrition;
+    }>;
+  },
+  dishesById: Map<string, DishCandidate>,
+  mealTarget: number,
+  tolerance: number
+) => {
+  const { minServings, maxServings } = MEAL_RECOMMENDATION_PROMPT_CONFIG;
+  const maxIterations = 40;
+
+  for (let iteration = 0; iteration < maxIterations; iteration += 1) {
+    const total = getSingleMealCalories(meal, dishesById);
+    const diff = mealTarget - total;
+
+    if (Math.abs(diff) <= tolerance) {
+      break;
+    }
+
+    const adjustable = meal.dishes
+      .map(dish => ({
+        dish,
+        caloriesPerServing: getDishCaloriesPerServing(
+          dishesById.get(dish.dishId)
+        )
+      }))
+      .filter(item => item.caloriesPerServing > 0)
+      .sort((left, right) => {
+        if (diff > 0) {
+          return right.caloriesPerServing - left.caloriesPerServing;
+        }
+        return left.caloriesPerServing - right.caloriesPerServing;
+      });
+
+    let adjusted = false;
+    for (const target of adjustable) {
+      const nextServings =
+        diff > 0 ? target.dish.servings + 1 : target.dish.servings - 1;
+
+      if (nextServings < minServings || nextServings > maxServings) {
+        continue;
+      }
+
+      target.dish.servings = nextServings;
+      adjusted = true;
+      break;
+    }
+
+    if (!adjusted) {
+      break;
+    }
+  }
+};
+
+const optimizeMealsForCalorieTarget = (
+  meals: Array<{
+    mealType: string;
+    dishes: Array<{
+      dishId: string;
+      name: string;
+      servings: number;
+      image?: string;
+      nutrition: DishNutrition;
+    }>;
+  }>,
+  dishesById: Map<string, DishCandidate>,
+  calorieTarget?: number
+) => {
+  if (!calorieTarget || calorieTarget <= 0 || !meals.length) {
+    return meals;
+  }
+
+  const optimized = meals.map(meal => ({
+    ...meal,
+    dishes: meal.dishes.map(dish => ({ ...dish }))
+  }));
+
+  const mealCalorieTargets = computeMealCalorieTargets(calorieTarget, optimized);
+
+  mealCalorieTargets.forEach((mealTarget, mealType) => {
+    const meal = optimized.find(item => item.mealType === mealType);
+    if (!meal || !meal.dishes.length) return;
+
+    adjustMealServingsTowardTarget(
+      meal,
+      dishesById,
+      mealTarget,
+      getMealCalorieTolerance(
+        mealTarget,
+        calorieTarget,
+        MEAL_CALORIE_TOLERANCE
+      )
+    );
+  });
+
+  const { minServings, maxServings } = MEAL_RECOMMENDATION_PROMPT_CONFIG;
+  const maxIterations = 80;
+
+  for (let iteration = 0; iteration < maxIterations; iteration += 1) {
+    const total = getMealsTotalCalories(optimized, dishesById);
+    const diff = calorieTarget - total;
+
+    if (Math.abs(diff) <= MEAL_CALORIE_TOLERANCE) {
+      break;
+    }
+
+    const adjustable = optimized.flatMap(meal =>
+      meal.dishes.map(dish => ({
+        meal,
+        dish,
+        caloriesPerServing: getDishCaloriesPerServing(
+          dishesById.get(dish.dishId)
+        )
+      }))
+    );
+
+    const candidates = adjustable
+      .filter(item => item.caloriesPerServing > 0)
+      .sort((left, right) => {
+        if (diff > 0) {
+          return right.caloriesPerServing - left.caloriesPerServing;
+        }
+        return left.caloriesPerServing - right.caloriesPerServing;
+      });
+
+    let adjusted = false;
+    for (const target of candidates) {
+      const nextServings =
+        diff > 0
+          ? target.dish.servings + 1
+          : target.dish.servings - 1;
+
+      if (nextServings < minServings || nextServings > maxServings) {
+        continue;
+      }
+
+      target.dish.servings = nextServings;
+      adjusted = true;
+      break;
+    }
+
+    if (!adjusted) {
+      break;
+    }
+  }
+
+  return optimized;
+};
+
+const buildRegenerationNotes = (
+  currentDayDishIds: Set<string>,
+  dishesById: Map<string, DishCandidate>
+) => {
+  if (!currentDayDishIds.size) {
+    return undefined;
+  }
+
+  const dishNames = Array.from(currentDayDishIds)
+    .map(id => dishesById.get(id)?.name ?? id)
+    .slice(0, 12);
+
+  return [
+    '- User requested a new meal plan for the same day.',
+    `- Avoid reusing these dishes unless necessary: ${dishNames.join(', ')}.`,
+    '- Pick different combinations and servings when possible.'
+  ].join('\n');
 };
 
 const getDateExerciseJitter = (exerciseId: string, targetDate: Date) => {
@@ -1644,7 +1930,15 @@ const scoreDishForMeal = (
     score -= Math.min(18, recentCount * 6);
   }
 
-  score += getDateDishJitter(dish._id, rankingContext.targetDate);
+  if (rankingContext.currentDayDishIds.has(dish._id)) {
+    score -= 45;
+  }
+
+  score += getDateDishJitter(
+    dish._id,
+    rankingContext.targetDate,
+    rankingContext.regenerationSeed
+  );
 
   return score;
 };
@@ -1743,6 +2037,7 @@ const buildPromptCatalog = (
       tags: dish.tags,
       totalTimeMinutes: getDishTotalTime(dish),
       defaultServings: dish.servings ?? 1,
+      calories: calculateDishCalories(dish),
       blockedByAllergen: false,
       nutrients: (dish.nutrition?.nutrients ?? [])
         .filter(
@@ -2153,6 +2448,21 @@ const invokeAi = async (prompt: string): Promise<AiInvocationResult> => {
   return { text, usage };
 };
 
+const invokeMealRecommendationAi = async (
+  prompt: string
+): Promise<AiInvocationResult> => {
+  const response = await mealRecommendationModel.invoke([
+    { role: 'user', content: prompt }
+  ]);
+  const text = normalizeContent(response.content);
+  const usage = normalizeUsageMetadata(
+    (response as any)?.usage_metadata ??
+      (response as any)?.response_metadata?.tokenUsage
+  );
+
+  return { text, usage };
+};
+
 const invokeEvaluationAi = async (
   prompt: string
 ): Promise<AiInvocationResult> => {
@@ -2231,7 +2541,9 @@ const materializeMeals = ({
   mealSlots,
   aiSelection,
   dishesById,
-  candidatesByMealType
+  candidatesByMealType,
+  regenerationSeed = 0,
+  currentDayDishIds = new Set<string>()
 }: {
   mealSlots: MealSlot[];
   aiSelection: Array<{
@@ -2240,6 +2552,8 @@ const materializeMeals = ({
   }> | null;
   dishesById: Map<string, DishCandidate>;
   candidatesByMealType: Map<string, DishCandidate[]>;
+  regenerationSeed?: number;
+  currentDayDishIds?: Set<string>;
 }) => {
   const usedDishIds = new Set<string>();
 
@@ -2294,9 +2608,19 @@ const materializeMeals = ({
 
     if (selectedDishRows.length < dishCount) {
       const fallbackCandidates = candidatesByMealType.get(slot.mealType) ?? [];
+      const withoutCurrentDay = fallbackCandidates.filter(
+        dish => !currentDayDishIds.has(dish._id)
+      );
+      const fallbackPool =
+        withoutCurrentDay.length >= dishCount
+          ? withoutCurrentDay
+          : fallbackCandidates;
+      const orderedFallback = regenerationSeed
+        ? seededShuffle(fallbackPool, regenerationSeed + index)
+        : fallbackPool;
 
       // Phase 1: prefer unused dishes to reduce same-day repetition.
-      for (const dish of fallbackCandidates) {
+      for (const dish of orderedFallback) {
         if (selectedDishRows.length >= dishCount) break;
         if (usedDishIds.has(dish._id)) continue;
         addDishToMeal(dish, normalizeServings(1, dish.servings));
@@ -2309,7 +2633,7 @@ const materializeMeals = ({
       }
 
       // Phase 3: final fallback allows repeats to satisfy dishCount.
-      for (const dish of fallbackCandidates) {
+      for (const dish of orderedFallback) {
         if (selectedDishRows.length >= dishCount) break;
         addDishToMeal(dish, normalizeServings(1, dish.servings));
       }
@@ -2503,7 +2827,11 @@ const toScheduleMealPayloads = (
     mealType: meal.mealType,
     dishes: meal.dishes.map(dish => {
       const dishCandidate = dishesById.get(dish.dishId);
-      const energy = calculateDishCalories(dishCandidate);
+      const caloriesPerServing = calculateDishCalories(dishCandidate);
+      const energy =
+        caloriesPerServing > 0
+          ? Math.round(caloriesPerServing * dish.servings)
+          : undefined;
 
       return {
         dishId: dish.dishId,
