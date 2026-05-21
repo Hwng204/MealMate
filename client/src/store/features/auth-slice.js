@@ -8,17 +8,32 @@ import {
   resetAuthQueue,
   startLogout
 } from '~/lib/api-client';
+import apiClient from '~/lib/api-client';
 import {
   clearAuthTokens,
   getStoredAccessToken,
   saveAccessToken
 } from '~/lib/auth-tokens';
 
+const fetchCurrentUser = async accessToken => {
+  try {
+    const response = await apiClient.get('/api/users/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    return response.data.data;
+  } catch (error) {
+    return null;
+  }
+};
+
 export const initializeAuth = createAsyncThunk(
   'auth/initializeAuth',
   async () => {
     try {
-      const accessToken = getStoredAccessToken();
+      let accessToken = getStoredAccessToken();
 
       if (!accessToken) {
         try {
@@ -31,17 +46,20 @@ export const initializeAuth = createAsyncThunk(
         }
       }
 
-      const decoded = jwtDecode(accessToken);
+      let decoded = jwtDecode(accessToken);
       const currentTime = Date.now() / 1000;
 
       if (decoded.exp && decoded.exp < currentTime) {
         const { accessToken: newAccessToken } = await refreshAccessToken();
         saveAccessToken(newAccessToken);
-        const newDecoded = jwtDecode(newAccessToken);
-        return { accessToken: newAccessToken, user: newDecoded };
+        accessToken = newAccessToken;
+        decoded = jwtDecode(newAccessToken);
       }
 
-      return { accessToken, user: decoded };
+      const profile = await fetchCurrentUser(accessToken);
+      const user = profile || decoded;
+
+      return { accessToken, user };
     } catch (error) {
       clearAuthTokens();
       return null;

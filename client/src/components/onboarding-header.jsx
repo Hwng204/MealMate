@@ -33,20 +33,13 @@ const OnboardingHeader = () => {
           >
             <div className='relative flex h-17 w-17 items-center justify-center bg-transparent'>
               <img
-                src='/logo2.png'
+                src='/logo.png'
                 alt='Logo'
-                className='h-full w-full object-contain scale-[1.8]'
+                className='h-full w-full object-contain scale-[4]'
               />
             </div>
 
-            <div className='flex flex-col leading-none'>
-              <span className='text-2xl font-black tracking-tight text-primary'>
-                Meal<span className='text-foreground'>Meat</span>
-              </span>
-              <span className='text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5'>
-                Healthy Life
-              </span>
-            </div>
+            
           </Link>
         </div>
 
