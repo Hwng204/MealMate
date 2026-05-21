@@ -107,7 +107,15 @@ function transformVietnameseSearchFilter(
   const transformed: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(filter)) {
-    transformed[key] = key.startsWith('$') ? value : transformValue(value);
+    if (key.startsWith('$')) {
+      transformed[key] = Array.isArray(value)
+        ? value.map(v => (typeof v === 'object' && v !== null ? transformVietnameseSearchFilter(v) : transformValue(v)))
+        : transformValue(value);
+    } else if (key === '_id' || key.endsWith('._id') || key.toLowerCase().endsWith('id')) {
+      transformed[key] = value;
+    } else {
+      transformed[key] = transformValue(value);
+    }
   }
 
   return transformed;

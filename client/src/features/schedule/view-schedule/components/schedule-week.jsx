@@ -21,7 +21,7 @@ export default function ScheduleWeek({
 
   const handleCreateEmptyDay = readOnly
     ? undefined
-    : createSchedule;
+    : (data) => createSchedule({ ...data, userId });
 
   const docs = useMemo(
     () => (Array.isArray(data?.docs) ? data.docs : []),

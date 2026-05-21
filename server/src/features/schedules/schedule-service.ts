@@ -730,7 +730,18 @@ export const ScheduleService = {
         ...activeRelations.map(relation => relation.userId)
       ];
 
-      scopedFilter = { ...filter, 'user._id': { $in: clientIds } };
+      const stringClientIds = clientIds.map(id => id.toString());
+      const filterObj = filter as Record<string, any>;
+      if (filterObj['user._id']) {
+        const requestedId = typeof filterObj['user._id'] === 'string' ? filterObj['user._id'] : filterObj['user._id'].toString();
+        if (!stringClientIds.includes(requestedId)) {
+          scopedFilter = { ...filter, 'user._id': { $in: [] } };
+        } else {
+          scopedFilter = { ...filter };
+        }
+      } else {
+        scopedFilter = { ...filter, 'user._id': { $in: clientIds } };
+      }
     } else {
       scopedFilter = { ...filter, 'user._id': userId };
     }

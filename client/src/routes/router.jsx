@@ -404,6 +404,12 @@ const router = createBrowserRouter([
                       '~/app/nutritionist/classes/[id]/students/[memberId]/page'
                     )
                 )
+              },
+              {
+                path: ':id/students/:memberId/schedules/day/:scheduleId/nutrition',
+                Component: lazy(
+                  () => import('~/app/schedules/[id]/nutrition/page')
+                )
               }
             ]
           },

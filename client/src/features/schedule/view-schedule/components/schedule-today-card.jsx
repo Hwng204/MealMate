@@ -10,7 +10,7 @@ import {
   HiSparkles
 } from 'react-icons/hi';
 import { IoCafe, IoFastFood, IoLeaf, IoMoon, IoSunny } from 'react-icons/io5';
-import { Link } from 'react-router';
+import { Link, useParams } from 'react-router';
 
 import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
 import { formatDateVI } from '~/lib/utils';
@@ -76,6 +76,7 @@ export default function ScheduleTodayCard({
   onDishClick,
   memberProfile
 }) {
+  const params = useParams();
   const { data: profile } = useProfileForPage();
   const [openAlternativeDishModal, setOpenAlternativeDishModal] =
     useState(false);
@@ -313,7 +314,11 @@ export default function ScheduleTodayCard({
           />
 
           <Link
-            to={`/schedules/day/${schedule._id}/nutrition`}
+            to={
+              params.id && params.memberId
+                ? `/nutritionist/classes/${params.id}/students/${params.memberId}/schedules/day/${schedule._id}/nutrition`
+                : `/schedules/day/${schedule._id}/nutrition`
+            }
             className='mt-10 flex w-full items-center justify-center gap-2 rounded-[20px] bg-primary py-4 text-[12px] font-black tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98]'
           >
             PHÂN TÍCH DINH DƯỠNG
