@@ -2,6 +2,7 @@ import createHttpError from 'http-errors';
 import { HydratedDocument } from 'mongoose';
 
 import { CERTIFICATE_STATUS } from '~/shared/constants/certificate-status';
+import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
 import { ROLE } from '~/shared/constants/role';
 import { TOKEN_TYPE } from '~/shared/constants/token-type';
 import { AuthModel, UserModel } from '~/shared/database/models';
@@ -353,6 +354,11 @@ const createNewUser = async (
     role: data.role,
     isActive: true
   };
+
+  // Set membership level for nutritionists to EXPERT_CLASS on signup
+  if (data.role === ROLE.NUTRITIONIST) {
+    userToCreate.membershipLevel = MEMBERSHIP_LEVEL.EXPERT_CLASS;
+  }
 
   if (nutritionistProfile) {
     userToCreate.nutritionistProfile = nutritionistProfile;

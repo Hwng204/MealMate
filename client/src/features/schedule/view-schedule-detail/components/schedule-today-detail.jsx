@@ -12,7 +12,11 @@ export default function ScheduleTodayDetail({ scheduleId, memberProfile }) {
 
   return (
     <div className='space-y-6 p-1'>
-      <ScheduleOverviewCard schedule={schedule} totalCalories={totalCalories} />
+      <ScheduleOverviewCard
+        schedule={schedule}
+        memberProfile={memberProfile}
+        totalCalories={totalCalories}
+      />
 
       {memberProfile && (
         <StudentDietRestrictionsTable member={memberProfile} />

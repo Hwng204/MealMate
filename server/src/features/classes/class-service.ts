@@ -63,7 +63,7 @@ const countWorkoutSchedules = (schedules: ScheduleLike[]) =>
 const buildMemberProgressPayload = async (memberId: string) => {
   const member = await UserModel.findById(memberId)
     .select(
-      'name email avatar weightRecord goal height bodyfat gender dob diet allergens blockDishes'
+      'name email avatar weightRecord goal height bodyfat gender dob diet allergens blockDishes aiTokens aiDailyTokenLimit nutritionTarget membershipLevel assignedNutritionist'
     )
     .populate('blockDishes', 'name image');
 

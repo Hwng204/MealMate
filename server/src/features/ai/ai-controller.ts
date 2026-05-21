@@ -30,8 +30,8 @@ const isNutritionistClassMember = async (
 ) => {
   return Boolean(
     await ClassModel.exists({
-      nutritionist: nutritionistId,
-      'members.user': clientId
+      nutritionistId,
+      members: clientId
     })
   );
 };
@@ -88,7 +88,12 @@ export const AiController = {
       targetUserId = payload.userId;
     }
 
-    const result = await AiService.recommendDailyMeals(targetUserId, currentUserId, payload);
+    const billingUserId = currentUserId;
+    const result = await AiService.recommendDailyMeals(
+      targetUserId,
+      billingUserId,
+      payload
+    );
 
     res
       .status(200)
@@ -125,7 +130,12 @@ export const AiController = {
       targetUserId = payload.userId;
     }
 
-    const result = await AiService.recommendDailyWorkout(targetUserId, currentUserId, payload);
+    const billingUserId = currentUserId;
+    const result = await AiService.recommendDailyWorkout(
+      targetUserId,
+      billingUserId,
+      payload
+    );
 
     res
       .status(200)

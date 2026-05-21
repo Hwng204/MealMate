@@ -73,7 +73,8 @@ export default function ScheduleTodayCard({
   onGenerateAI,
   isGeneratingAI,
   readOnly = false,
-  onDishClick
+  onDishClick,
+  memberProfile
 }) {
   const { data: profile } = useProfileForPage();
   const [openAlternativeDishModal, setOpenAlternativeDishModal] =
@@ -81,9 +82,11 @@ export default function ScheduleTodayCard({
   const [selectedDishForAlternative, setSelectedDishForAlternative] =
     useState(null);
 
-  const targetCalories = profile?.nutritionTarget?.caloriesTarget ?? undefined;
-  const remainingTokens = profile?.aiTokens;
-  const dailyTokenLimit = profile?.aiDailyTokenLimit;
+  // Use student profile for diet target / restrictions, but use current profile for AI token balance when a nutritionist is viewing a student.
+  const displayProfile = memberProfile || profile;
+  const targetCalories = displayProfile?.nutritionTarget?.caloriesTarget ?? undefined;
+  const remainingTokens = profile?.aiTokens ?? displayProfile?.aiTokens;
+  const dailyTokenLimit = profile?.aiDailyTokenLimit ?? displayProfile?.aiDailyTokenLimit;
 
   return (
     <div className='rounded-[32px] border border-border bg-card p-6 shadow-sm'>
