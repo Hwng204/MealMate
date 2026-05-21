@@ -232,20 +232,12 @@ export function AdminSidebar({ ...props }) {
     <Sidebar collapsible='icon' {...props}>
       <SidebarHeader className='transition-all duration-300 ease-in-out'>
         <div className='flex items-center gap-2 transition-all duration-300 ease-in-out group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0'>
-          <div className='flex aspect-square size-8 items-center justify-center transition-all duration-300 ease-in-out'>
+          <div className='flex aspect-square size-30 items-center justify-center transition-all duration-200 ease-in-out'>
             <img
-              src='/logo2.png'
+              src='/logo.png'
               alt='MealMeat Logo'
-              className='h-8 w-8 object-contain'
+              className='h-30 w-30 object-contain'
             />
-          </div>
-          <div className='grid flex-1 text-left text-sm leading-tight transition-all duration-300 ease-in-out group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 overflow-hidden'>
-            <span className='truncate font-semibold transition-all duration-300 ease-in-out'>
-              MealMeat
-            </span>
-            <span className='truncate text-xs transition-all duration-300 ease-in-out'>
-              Admin Panel
-            </span>
           </div>
         </div>
       </SidebarHeader>
