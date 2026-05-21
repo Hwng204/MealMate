@@ -7,7 +7,7 @@ import {
 
 import InfoItem from './info-item';
 
-export default function ScheduleOverviewCard({ schedule, totalCalories }) {
+export default function ScheduleOverviewCard({ schedule, memberProfile, totalCalories }) {
   return (
     <div className='relative overflow-hidden rounded-3xl border bg-card p-6 shadow-md'>
       <h3 className='mb-6 flex items-center gap-3 text-lg font-black tracking-tight text-foreground'>
@@ -21,7 +21,7 @@ export default function ScheduleOverviewCard({ schedule, totalCalories }) {
         <InfoItem
           icon={<HiOutlineUser size={18} />}
           label='Người dùng'
-          value={schedule?.user?.name || '--'}
+          value={memberProfile?.name || schedule?.user?.name || '--'}
           colorClass='text-green-light'
         />
 

@@ -25,7 +25,7 @@ import {
 import { MdOutlineLocalDining, MdOutlineMonitorWeight } from 'react-icons/md';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { useProfile } from '~/features/users/view-profile/api/view-profile';
+import { useUserDetail } from '~/features/users/view-user-detail/api/view-user-detail';
 import { findByLabel, formatDateVI, formatValue } from '~/lib/utils';
 
 import { useScheduleDetail } from '../api/view-schedule-detail';
@@ -47,7 +47,7 @@ export default function ScheduleNutritionContent() {
   const navigate = useNavigate();
 
   const { data: schedule } = useScheduleDetail(id);
-  const { data: profile } = useProfile();
+  const { data: profile } = useUserDetail(schedule?.user?._id);
 
   const targetCalories = profile?.nutritionTarget?.caloriesTarget ?? 0;
   const targetProtein = profile?.nutritionTarget?.proteinTarget ?? 0;

@@ -32,20 +32,21 @@ export const useRecommendDailyWorkout = ({ onSuccess } = {}) => {
   return useMutation({
     mutationFn: recommendDailyWorkout,
 
-    onSuccess: res => {
+    onSuccess: (res, variables) => {
       const nextSchedule = res?.data;
+      const scheduleId = variables?.scheduleId || nextSchedule?.scheduleId;
 
-      if (nextSchedule?.scheduleId) {
+      if (scheduleId) {
         queryClient.setQueriesData({ queryKey: QUERY_KEYS.SCHEDULES }, old => {
           if (!old) return old;
 
           if (Array.isArray(old)) {
             return old.map(item =>
-              item?._id === nextSchedule.scheduleId
+              item?._id === scheduleId
                 ? {
                     ...item,
                     ...nextSchedule,
-                    _id: nextSchedule.scheduleId
+                    _id: scheduleId
                   }
                 : item
             );
@@ -56,41 +57,38 @@ export const useRecommendDailyWorkout = ({ onSuccess } = {}) => {
           return {
             ...old,
             docs: oldDocs.map(item =>
-              item?._id === nextSchedule.scheduleId
+              item?._id === scheduleId
                 ? {
                     ...item,
                     ...nextSchedule,
-                    _id: nextSchedule.scheduleId
+                    _id: scheduleId
                   }
                 : item
             )
           };
         });
 
-        queryClient.setQueryData(
-          QUERY_KEYS.SCHEDULE(nextSchedule.scheduleId),
-          old => {
-            if (!old) {
-              return {
-                ...nextSchedule,
-                _id: nextSchedule.scheduleId
-              };
-            }
-
+        queryClient.setQueryData(QUERY_KEYS.SCHEDULE(scheduleId), old => {
+          if (!old) {
             return {
-              ...old,
               ...nextSchedule,
-              _id: nextSchedule.scheduleId
+              _id: scheduleId
             };
           }
-        );
+
+          return {
+            ...old,
+            ...nextSchedule,
+            _id: scheduleId
+          };
+        });
 
         queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.SCHEDULES
         });
 
         queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.SCHEDULE(nextSchedule.scheduleId)
+          queryKey: QUERY_KEYS.SCHEDULE(scheduleId)
         });
       }
 

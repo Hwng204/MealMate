@@ -1,6 +1,7 @@
 export const MEMBERSHIP_LEVEL = {
   NORMAL: 'Tài khoản thường',
   VIP: 'Tài khoản VIP',
+  EXPERT_CLASS: 'Tài khoản chuyên gia Lớp học',
   EXPERT_BASIC: 'Tài khoản chuyên gia Basic',
   EXPERT_STANDARD: 'Tài khoản chuyên gia Standard',
   EXPERT_PREMIUM: 'Tài khoản chuyên gia Premium'
@@ -14,6 +15,7 @@ export const USER_PURCHASABLE_MEMBERSHIPS = [
 ] as const satisfies readonly MembershipLevel[];
 
 export const NUTRITIONIST_PURCHASABLE_MEMBERSHIPS = [
+  MEMBERSHIP_LEVEL.EXPERT_CLASS,
   MEMBERSHIP_LEVEL.EXPERT_BASIC,
   MEMBERSHIP_LEVEL.EXPERT_STANDARD,
   MEMBERSHIP_LEVEL.EXPERT_PREMIUM
@@ -27,6 +29,7 @@ export const NUTRITIONIST_CLIENT_LIMITS: Record<
   (typeof NUTRITIONIST_PURCHASABLE_MEMBERSHIPS)[number],
   number
 > = {
+  [MEMBERSHIP_LEVEL.EXPERT_CLASS]: 100,
   [MEMBERSHIP_LEVEL.EXPERT_BASIC]: 5,
   [MEMBERSHIP_LEVEL.EXPERT_STANDARD]: 10,
   [MEMBERSHIP_LEVEL.EXPERT_PREMIUM]: 20
@@ -49,14 +52,6 @@ export const isExpertMembership = (
   !!level &&
   EXPERT_MEMBERSHIP_LEVELS.includes(level as (typeof EXPERT_MEMBERSHIP_LEVELS)[number]);
 
-export const NUTRITIONIST_CLASS_LIMITS: Record<
-  (typeof NUTRITIONIST_PURCHASABLE_MEMBERSHIPS)[number],
-  number
-> = {
-  [MEMBERSHIP_LEVEL.EXPERT_BASIC]: 5,
-  [MEMBERSHIP_LEVEL.EXPERT_STANDARD]: 10,
-  [MEMBERSHIP_LEVEL.EXPERT_PREMIUM]: 20
-};
 
 export const isPaidMembership = (
   level: string | null | undefined

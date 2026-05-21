@@ -590,18 +590,23 @@ export const UserService = {
   removeBlockIngredient: async (userId: string, ingredientId: string) => {
     return removeFromUserArrayField(userId, 'blockIngredients', ingredientId);
   },
-  createUser: async (data: CreateUserRequest) => {
-    const existingUser = await UserModel.findOne({ email: data.email });
-    if (existingUser) {
-      throw createHttpError(400, 'Email đã được sử dụng');
-    }
+    createUser: async (data: CreateUserRequest) => {
+      const existingUser = await UserModel.findOne({ email: data.email });
+      if (existingUser) {
+        throw createHttpError(400, 'Email đã được sử dụng');
+      }
 
-    const newUser = await UserModel.create(data);
-    if (!newUser) {
-      throw createHttpError(500, 'Không thể tạo người dùng');
-    }
+      // If the user is a nutritionist and no membership level is set, set to EXPERT_CLASS
+      if (data.role === ROLE.NUTRITIONIST && !(data as any).membershipLevel) {
+        (data as any).membershipLevel = MEMBERSHIP_LEVEL.EXPERT_CLASS;
+      }   
 
-    const password = generatePassword.generate({
+      const newUser = await UserModel.create(data);
+      if (!newUser) {
+        throw createHttpError(500, 'Không thể tạo người dùng');
+      }
+
+      const password = generatePassword.generate({
       length: 12,
       numbers: true,
       symbols: true,
@@ -1090,6 +1095,9 @@ export const UserService = {
     return saveNutritionistProfile(user, data);
   },
 
+  // TODO: Certificate verification is currently disabled for testing.
+  // Enable when certification management is ready.
+  /*
   approveCertificate: async (userId: string) => {
     const user = await UserModel.findById(userId);
 
@@ -1120,7 +1128,17 @@ export const UserService = {
 
     return user;
   },
+  */
 
+   /*
+   approveCertificate: async (userId: string) => {
+     throw createHttpError(503, 'Tính năng phê duyệt chứng chỉ đang được nâng cấp');
+   },
+   */
+
+  // TODO: Certificate verification is currently disabled for testing.
+  // Enable when certification management is ready.
+  /*
   rejectCertificate: async (userId: string, data: RejectCertificateRequest) => {
     const user = await UserModel.findById(userId);
 
@@ -1156,7 +1174,15 @@ export const UserService = {
 
     return user;
   },
+  */
 
+  rejectCertificate: async (userId: string, data: RejectCertificateRequest) => {
+    throw createHttpError(503, 'Tính năng từ chối chứng chỉ đang được nâng cấp');
+  },
+
+  // TODO: Certificate verification is currently disabled for testing.
+  // Enable when certification management is ready.
+  /*
   toggleCertificateVisibility: async (
     userId: string,
     showCertificate: boolean
@@ -1179,6 +1205,14 @@ export const UserService = {
     }
 
     return setCertificateVisibility(user, showCertificate);
+  }
+  */
+
+  toggleCertificateVisibility: async (
+    userId: string,
+    showCertificate: boolean
+  ) => {
+    throw createHttpError(503, 'Tính năng ẩn/hiện chứng chỉ đang được nâng cấp');
   }
 };
 

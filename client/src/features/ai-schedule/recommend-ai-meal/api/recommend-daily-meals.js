@@ -14,18 +14,53 @@ const recommendDailyMeals = async ({ date, userId }) => {
   return response.data;
 };
 
-export const useRecommendDailyMeals = ({ onSuccess, scheduleId } = {}) => {
+export const useRecommendDailyMeals = ({ onSuccess } = {}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: recommendDailyMeals,
 
-    onSuccess: async res => {
+    onSuccess: async (res, variables) => {
+      const nextSchedule = res?.data;
+      const scheduleId = variables?.scheduleId || nextSchedule?.scheduleId;
+
+      if (nextSchedule?.scheduleId) {
+        queryClient.setQueriesData({ queryKey: QUERY_KEYS.SCHEDULES }, old => {
+          if (!old) return old;
+
+          if (Array.isArray(old)) {
+            return old.map(item =>
+              item?._id === nextSchedule.scheduleId
+                ? { ...item, ...nextSchedule, _id: nextSchedule.scheduleId }
+                : item
+            );
+          }
+
+          const oldDocs = Array.isArray(old?.docs) ? old.docs : [];
+
+          return {
+            ...old,
+            docs: oldDocs.map(item =>
+              item?._id === nextSchedule.scheduleId
+                ? { ...item, ...nextSchedule, _id: nextSchedule.scheduleId }
+                : item
+            )
+          };
+        });
+      }
+
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.SCHEDULES
       });
 
       if (scheduleId) {
+        queryClient.setQueryData(QUERY_KEYS.SCHEDULE(scheduleId), old => {
+          if (!old) {
+            return { ...nextSchedule, _id: scheduleId };
+          }
+          return { ...old, ...nextSchedule, _id: scheduleId };
+        });
+
         await queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.SCHEDULE(scheduleId)
         });

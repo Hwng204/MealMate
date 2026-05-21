@@ -61,7 +61,11 @@ export default function ScheduleToday({
     if (!schedule?._id) return;
 
     generateAI(
-      { date: format(selectedDate, 'yyyy-MM-dd'), userId },
+      {
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        userId,
+        scheduleId: schedule._id
+      },
       {
         onSuccess: async () => {
           await Promise.all([
@@ -85,7 +89,8 @@ export default function ScheduleToday({
 
     generateWorkoutAI({
       date: format(selectedDate, 'yyyy-MM-dd'),
-      userId
+      userId,
+      scheduleId: schedule._id
     });
   };
 
@@ -136,6 +141,7 @@ export default function ScheduleToday({
               isGeneratingAI={isGeneratingAI}
               readOnly={readOnly}
               onDishClick={onDishClick}
+              memberProfile={memberProfile}
             />
           </div>
 
