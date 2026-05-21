@@ -14,7 +14,7 @@ const WeekDishCard = ({ dish, readOnly, onDishClick, children }) => {
   const className =
     'flex h-full flex-col overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] transition-all duration-500 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_15px_35px_rgb(0,0,0,0.10)]';
 
-  if (readOnly) {
+  if (onDishClick) {
     return (
       <button
         type='button'

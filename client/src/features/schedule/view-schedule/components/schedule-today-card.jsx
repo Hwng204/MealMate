@@ -224,7 +224,7 @@ export default function ScheduleTodayCard({
                       </div>
                     )}
 
-                    {readOnly ? (
+                    {onDishClick ? (
                       <button
                         type='button'
                         onClick={() => onDishClick?.(dish.dishId)}
