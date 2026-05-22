@@ -10,7 +10,8 @@ export default function DayScheduleContent({
   handleCreate,
   getSmallMealIcon,
   readOnly = false,
-  onDishClick
+  onDishClick,
+  onExerciseClick
 }) {
   if (schedule) {
     return (
@@ -21,7 +22,7 @@ export default function DayScheduleContent({
           readOnly={readOnly}
           onDishClick={onDishClick}
         />
-        <ScheduleDayWorkoutsCompact schedule={schedule} />
+        <ScheduleDayWorkoutsCompact schedule={schedule} onExerciseClick={onExerciseClick} />
       </>
     );
   }

@@ -2,6 +2,7 @@ import { addDays, addWeeks, startOfWeek, subDays, subWeeks } from 'date-fns';
 import { useState } from 'react';
 
 import DishDetailDialog from '~/features/classes/components/dish-detail-dialog';
+import ExerciseDetailDialog from '~/features/classes/components/exercise-detail-dialog';
 import { formatScheduleTitle } from '~/lib/utils';
 
 import ScheduleHeader from './schedule-header';
@@ -16,6 +17,7 @@ export default function NutritionistSchedulePanel({ userId, memberProfile }) {
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
   const [dishDialogId, setDishDialogId] = useState(null);
+  const [exerciseDialogId, setExerciseDialogId] = useState(null);
 
   const selectedDateForHeader = view === 'day' ? date : weekStart;
 
@@ -49,6 +51,7 @@ export default function NutritionistSchedulePanel({ userId, memberProfile }) {
               userId={userId}
               readOnly={false}
               onDishClick={setDishDialogId}
+              onExerciseClick={setExerciseDialogId}
               memberProfile={memberProfile}
             />
           </div>
@@ -69,6 +72,7 @@ export default function NutritionistSchedulePanel({ userId, memberProfile }) {
               userId={userId}
               readOnly={false}
               onDishClick={setDishDialogId}
+              onExerciseClick={setExerciseDialogId}
             />
           </div>
         </>
@@ -79,6 +83,14 @@ export default function NutritionistSchedulePanel({ userId, memberProfile }) {
         open={Boolean(dishDialogId)}
         onOpenChange={open => {
           if (!open) setDishDialogId(null);
+        }}
+      />
+
+      <ExerciseDetailDialog
+        exerciseId={exerciseDialogId}
+        open={Boolean(exerciseDialogId)}
+        onOpenChange={open => {
+          if (!open) setExerciseDialogId(null);
         }}
       />
     </div>

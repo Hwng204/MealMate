@@ -29,7 +29,8 @@ export default function ScheduleWeekCard({
   isCreating,
   onCreateEmptyDay,
   readOnly = false,
-  onDishClick
+  onDishClick,
+  onExerciseClick
 }) {
   const isDayToday = isToday(date);
 
@@ -129,6 +130,7 @@ export default function ScheduleWeekCard({
           getSmallMealIcon={getSmallMealIcon}
           readOnly={readOnly}
           onDishClick={onDishClick}
+          onExerciseClick={onExerciseClick}
         />
       </div>
     </div>

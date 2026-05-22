@@ -21,7 +21,8 @@ export default function ScheduleTodayWorkout({
   onAddWorkout,
   onGenerateWorkoutAI,
   isGeneratingWorkoutAI,
-  readOnly = false
+  readOnly = false,
+  onExerciseClick
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -146,7 +147,13 @@ export default function ScheduleTodayWorkout({
                 return (
                   <div
                     key={item.exerciseId || index}
-                    onClick={() => navigate(`/exercises/${item.exerciseId}`)}
+                    onClick={() => {
+                      if (onExerciseClick) {
+                        onExerciseClick(item.exerciseId);
+                      } else {
+                        navigate(`/exercises/${item.exerciseId}`);
+                      }
+                    }}
                     className='group flex cursor-pointer items-center justify-between rounded-xl px-4 py-4 transition-all duration-200 hover:bg-orange-50/40'
                   >
                     <div className='flex min-w-0 flex-1 items-center gap-4'>
