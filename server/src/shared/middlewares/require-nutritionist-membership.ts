@@ -29,6 +29,8 @@ export const requireNutritionistMembership = async (
     return next(createHttpError(403, 'Chỉ chuyên gia mới có quyền truy cập'));
   }
 
+  // TODO: Tạm thời tắt yêu cầu phải có gói chuyên gia (trả phí) để test
+  /*
   if (!isExpertMembership(user.membershipLevel)) {
     return next(
       createHttpError(403, 'Bạn cần mua gói chuyên gia để sử dụng chức năng này')
@@ -54,6 +56,7 @@ export const requireNutritionistMembership = async (
       );
     }
   }
+  */
 
   next();
 };

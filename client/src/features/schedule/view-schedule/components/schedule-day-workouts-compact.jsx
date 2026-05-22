@@ -1,6 +1,6 @@
 import { CheckCircle2, Circle, Dumbbell } from 'lucide-react';
 
-export default function ScheduleDayWorkoutsCompact({ schedule }) {
+export default function ScheduleDayWorkoutsCompact({ schedule, onExerciseClick }) {
   const workouts = Array.isArray(schedule?.workout) ? schedule.workout : [];
   if (!workouts.length) return null;
 
@@ -16,7 +16,10 @@ export default function ScheduleDayWorkoutsCompact({ schedule }) {
         {workouts.map(item => (
           <li
             key={item.exerciseId}
-            className='flex items-center gap-2 text-xs text-foreground'
+            onClick={() => onExerciseClick?.(item.exerciseId)}
+            className={`flex items-center gap-2 text-xs text-foreground transition-colors ${
+              onExerciseClick ? 'cursor-pointer hover:text-orange-600' : ''
+            }`}
           >
             {item.isCompleted ? (
               <CheckCircle2 className='h-3.5 w-3.5 shrink-0 text-primary' />

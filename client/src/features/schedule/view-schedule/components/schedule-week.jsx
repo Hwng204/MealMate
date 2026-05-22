@@ -10,7 +10,8 @@ export default function ScheduleWeek({
   startOfSelectedWeek,
   userId,
   readOnly = false,
-  onDishClick
+  onDishClick,
+  onExerciseClick
 }) {
   const scheduleParams = { limit: 1000 };
   if (userId) {
@@ -44,6 +45,7 @@ export default function ScheduleWeek({
           onCreateEmptyDay={handleCreateEmptyDay}
           readOnly={readOnly}
           onDishClick={onDishClick}
+          onExerciseClick={onExerciseClick}
         />
       ))}
     </div>

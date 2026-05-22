@@ -21,6 +21,7 @@ export default function ScheduleToday({
   userId,
   readOnly = false,
   onDishClick,
+  onExerciseClick,
   memberProfile
 }) {
   const queryClient = useQueryClient();
@@ -160,11 +161,16 @@ export default function ScheduleToday({
             onAddWorkout={handleOpenAddWorkout}
             onGenerateWorkoutAI={handleGenerateWorkoutAI}
             isGeneratingWorkoutAI={isGeneratingWorkoutAI}
+            onExerciseClick={onExerciseClick}
           />
         )}
 
         {readOnly && schedule.workout?.length > 0 && (
-          <ScheduleTodayWorkout schedule={schedule} readOnly />
+          <ScheduleTodayWorkout 
+            schedule={schedule} 
+            readOnly 
+            onExerciseClick={onExerciseClick} 
+          />
         )}
       </div>
 

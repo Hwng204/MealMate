@@ -1095,9 +1095,6 @@ export const UserService = {
     return saveNutritionistProfile(user, data);
   },
 
-  // TODO: Certificate verification is currently disabled for testing.
-  // Enable when certification management is ready.
-  /*
   approveCertificate: async (userId: string) => {
     const user = await UserModel.findById(userId);
 
@@ -1128,17 +1125,7 @@ export const UserService = {
 
     return user;
   },
-  */
 
-   /*
-   approveCertificate: async (userId: string) => {
-     throw createHttpError(503, 'Tính năng phê duyệt chứng chỉ đang được nâng cấp');
-   },
-   */
-
-  // TODO: Certificate verification is currently disabled for testing.
-  // Enable when certification management is ready.
-  /*
   rejectCertificate: async (userId: string, data: RejectCertificateRequest) => {
     const user = await UserModel.findById(userId);
 
@@ -1174,15 +1161,7 @@ export const UserService = {
 
     return user;
   },
-  */
 
-  rejectCertificate: async (userId: string, data: RejectCertificateRequest) => {
-    throw createHttpError(503, 'Tính năng từ chối chứng chỉ đang được nâng cấp');
-  },
-
-  // TODO: Certificate verification is currently disabled for testing.
-  // Enable when certification management is ready.
-  /*
   toggleCertificateVisibility: async (
     userId: string,
     showCertificate: boolean
@@ -1205,14 +1184,6 @@ export const UserService = {
     }
 
     return setCertificateVisibility(user, showCertificate);
-  }
-  */
-
-  toggleCertificateVisibility: async (
-    userId: string,
-    showCertificate: boolean
-  ) => {
-    throw createHttpError(503, 'Tính năng ẩn/hiện chứng chỉ đang được nâng cấp');
   }
 };
 
