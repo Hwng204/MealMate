@@ -56,7 +56,7 @@ const plans = [
   {
     name: 'Standard',
     category: 'B2B',
-    price: '630k',
+    price: '700k',
     period: '/ tháng',
     desc: 'Quản lý tối đa 10 học viên',
     features: [
@@ -66,13 +66,13 @@ const plans = [
       'Chat trực tiếp hỗ trợ học viên'
     ],
     highlight: true,
-    amount: 630000,
+    amount: 700000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_STANDARD
   },
   {
     name: 'Premium',
     category: 'B2B',
-    price: '1.190k',
+    price: '1.400k',
     period: '/ tháng',
     desc: 'Quản lý tối đa 20 học viên',
     features: [
@@ -82,7 +82,7 @@ const plans = [
       'Chat trực tiếp hỗ trợ học viên'
     ],
     highlight: false,
-    amount: 1190000,
+    amount: 1400000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_PREMIUM
   }
 ];
