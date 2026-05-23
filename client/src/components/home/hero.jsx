@@ -51,14 +51,14 @@ const Hero = () => {
               <HiOutlineArrowRight className='text-lg transition-transform duration-200 group-hover:translate-x-1' />
             </Link>
 
-            <a
+            {/* <a
               href='https://www.youtube.com/watch?v=7uLCm3g_CLM'
               target='_blank'
               rel='noopener noreferrer'
               className='inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-6 text-sm font-bold text-emerald-900 shadow-sm transition-colors duration-200 hover:bg-neutral-50 sm:h-14 sm:px-8 sm:text-base'
             >
               Xem cách hoạt động
-            </a>
+            </a> */}
           </div>
         </div>
       </div>
