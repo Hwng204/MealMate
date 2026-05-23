@@ -15,6 +15,8 @@ connectDB();
 registerAllAchievementHandlers();
 registerAllEventHandlers();
 
+app.set('trust proxy', 1);
+
 configurePassport();
 app.use(passport.initialize());
 
