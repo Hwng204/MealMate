@@ -8,15 +8,13 @@ const Footer = () => {
       <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
         <div className='grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3'>
           
-          <div className='flex flex-col items-start space-y-4'>
-            <Link to='/' className='inline-flex items-center'>
-              <div className='flex h-16 w-32 items-center justify-center rounded-xl bg-white/30 p-2'>
-                <img
-                  src='/logo.png'
-                  alt='Logo'
-                  className='h-full w-full object-contain'
-                />
-              </div>
+          <div className='flex flex-col items-start space-y-2'>
+            <Link to='/' className='inline-block border-0 outline-none focus:outline-none focus:border-0'>
+              <img
+                src='/logo.png'
+                alt='Logo'
+                className='h-20 w-auto object-contain border-0 outline-none'
+              />
             </Link>
             <p className='max-w-xs text-sm leading-relaxed text-neutral-800/90'>
               Nền tảng gợi ý bữa ăn và dinh dưỡng thông minh, đồng hành cùng bạn
@@ -59,7 +57,7 @@ const Footer = () => {
                 className='mt-4 inline-flex items-center gap-2 text-sm font-medium text-neutral-900 hover:opacity-70 transition'
               >
                 <Mail className='h-4 w-4 shrink-0' />
-                contact@mealmeat.vn
+                mealmatemanagement@gmail.com
               </a>
             </div>
 
