@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { GiMedicines } from 'react-icons/gi';
 import {
   HiArrowLeft,
@@ -25,7 +26,7 @@ import {
 import { MdOutlineLocalDining, MdOutlineMonitorWeight } from 'react-icons/md';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { useUserDetail } from '~/features/users/view-user-detail/api/view-user-detail';
+import apiClient from '~/lib/api-client';
 import { findByLabel, formatDateVI, formatValue } from '~/lib/utils';
 
 import { useScheduleDetail } from '../api/view-schedule-detail';
@@ -43,11 +44,28 @@ import NutritionSectionHeader from './nutrition-section-header';
 import { NutritionTable, TopDishesCard } from './nutrition-tables';
 
 export default function ScheduleNutritionContent() {
-  const { id } = useParams();
+  const { id, scheduleId, memberId } = useParams();
   const navigate = useNavigate();
 
-  const { data: schedule } = useScheduleDetail(id);
-  const { data: profile } = useUserDetail(schedule?.user?._id);
+  const targetScheduleId = scheduleId || id;
+  const { data: schedule } = useScheduleDetail(targetScheduleId);
+
+  const { data: profile } = useQuery({
+    queryKey: ['nutrition-target', schedule?.user?._id],
+    queryFn: async () => {
+      const userId = schedule?.user?._id;
+      if (!userId) return null;
+      if (memberId) {
+        const res = await apiClient.get(
+          `/api/nutritionist-clients/my-clients/${userId}`
+        );
+        return res.data.data;
+      }
+      const res = await apiClient.get('/api/users/me');
+      return res.data.data;
+    },
+    enabled: !!schedule?.user?._id
+  });
 
   const targetCalories = profile?.nutritionTarget?.caloriesTarget ?? 0;
   const targetProtein = profile?.nutritionTarget?.proteinTarget ?? 0;
