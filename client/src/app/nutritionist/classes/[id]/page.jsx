@@ -94,6 +94,9 @@ const ClassDetailContent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [nutritionAnalysisOpen, setNutritionAnalysisOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
   const { data: classDetail } = useClassDetail(id);
   const { data: memberData, refetch: refetchMembers } = useClassMembers(id, { limit: 100 });
   const { mutate: removeMember, isPending: isRemoving } = useRemoveClassMember({
@@ -110,9 +113,12 @@ const ClassDetailContent = () => {
   const activeCount = filteredMembers.length;
 
   const handleDeleteClass = () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa lớp học này không?')) {
-      deleteClass(id);
-    }
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    deleteClass(id);
+    setDeleteConfirmOpen(false);
   };
 
   return (
@@ -183,32 +189,42 @@ const ClassDetailContent = () => {
                         </div>
                         <Progress value={progress} />
                       </div>
-                      <div className='flex items-center gap-1'>
-                        <Button asChild variant='outline' size='sm'>
-                          <Link
-                            to={`/nutritionist/classes/${id}/students/${member._id}`}
-                          >
-                            Xem
-                          </Link>
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          disabled={isRemoving}
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                'Bạn có chắc chắn muốn xóa học viên này khỏi lớp không?'
-                              )
-                            ) {
-                              removeMember(member._id);
-                            }
-                          }}
-                          title='Xóa học viên'
-                        >
-                          <Trash2 className='h-4 w-4 text-destructive' />
-                        </Button>
-                      </div>
+                       <div className='flex items-center gap-1'>
+                         <Button asChild variant='outline' size='sm'>
+                           <Link
+                             to={`/nutritionist/classes/${id}/students/${member._id}`}
+                           >
+                             Xem
+                           </Link>
+                         </Button>
+                         <Button
+                           variant='outline'
+                           size='sm'
+                           onClick={() => {
+                             setSelectedMember(member);
+                             setNutritionAnalysisOpen(true);
+                           }}
+                         >
+                           Phân tích dinh dưỡng
+                         </Button>
+                         <Button
+                           variant='ghost'
+                           size='icon'
+                           disabled={isRemoving}
+                           onClick={() => {
+                             if (
+                               window.confirm(
+                                 'Bạn có chắc chắn muốn xóa học viên này khỏi lớp không?'
+                               )
+                             ) {
+                               removeMember(member._id);
+                             }
+                           }}
+                           title='Xóa học viên'
+                         >
+                           <Trash2 className='h-4 w-4 text-destructive' />
+                         </Button>
+                       </div>
                     </div>
                   );
                 })}
@@ -287,9 +303,47 @@ const ClassDetailContent = () => {
             </CardContent>
           </Card>
         </aside>
-      </div>
-    </div>
-  );
+       </div>
+       <Dialog open={nutritionAnalysisOpen} onOpenChange={setNutritionAnalysisOpen}>
+         <DialogContent className='w-96'>
+           <DialogHeader>
+             <DialogTitle>Phân tích dinh dưỡng cho {selectedMember?.name}</DialogTitle>
+           </DialogHeader>
+           <div className='space-y-4'>
+             <p>Chi tiết phân tích dinh dưỡng sẽ được hiển thị ở đây.</p>
+           </div>
+           <DialogFooter>
+             <Button onClick={() => setNutritionAnalysisOpen(false)}>Đóng</Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+
+       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+         <DialogContent>
+           <DialogHeader>
+             <DialogTitle>Xác nhận kết thúc lớp học</DialogTitle>
+           </DialogHeader>
+           <div className='space-y-4'>
+             <p>Bạn có chắc chắn muốn xóa lớp học này không?</p>
+             <p className='text-sm text-muted-foreground'>Hành động này không thể được hoàn tác.</p>
+           </div>
+           <DialogFooter>
+             <Button variant='outline' onClick={() => setDeleteConfirmOpen(false)}>
+               Hủy
+             </Button>
+             <Button
+               variant='destructive'
+               onClick={handleConfirmDelete}
+               disabled={isDeleting}
+             >
+               {isDeleting && <Spinner className='mr-2 h-4 w-4' />}
+               Xóa
+             </Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+     </div>
+   );
 };
 
 const Page = () => (
