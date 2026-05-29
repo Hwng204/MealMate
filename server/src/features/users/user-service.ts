@@ -258,10 +258,10 @@ const saveNutritionistProfile = async (
 
 const getNutritionistClientLimit = (membershipLevel?: string | null) =>
   membershipLevel &&
-  membershipLevel in NUTRITIONIST_CLIENT_LIMITS
+    membershipLevel in NUTRITIONIST_CLIENT_LIMITS
     ? NUTRITIONIST_CLIENT_LIMITS[
-        membershipLevel as keyof typeof NUTRITIONIST_CLIENT_LIMITS
-      ]
+    membershipLevel as keyof typeof NUTRITIONIST_CLIENT_LIMITS
+    ]
     : 0;
 
 const isNutritionistAssignedToClient = async (
@@ -590,23 +590,23 @@ export const UserService = {
   removeBlockIngredient: async (userId: string, ingredientId: string) => {
     return removeFromUserArrayField(userId, 'blockIngredients', ingredientId);
   },
-    createUser: async (data: CreateUserRequest) => {
-      const existingUser = await UserModel.findOne({ email: data.email });
-      if (existingUser) {
-        throw createHttpError(400, 'Email đã được sử dụng');
-      }
+  createUser: async (data: CreateUserRequest) => {
+    const existingUser = await UserModel.findOne({ email: data.email });
+    if (existingUser) {
+      throw createHttpError(400, 'Email đã được sử dụng');
+    }
 
-      // If the user is a nutritionist and no membership level is set, set to EXPERT_CLASS
-      if (data.role === ROLE.NUTRITIONIST && !(data as any).membershipLevel) {
-        (data as any).membershipLevel = MEMBERSHIP_LEVEL.EXPERT_CLASS;
-      }   
+    // If the user is a nutritionist and no membership level is set, set to EXPERT_CLASS
+    if (data.role === ROLE.NUTRITIONIST && !(data as any).membershipLevel) {
+      (data as any).membershipLevel = MEMBERSHIP_LEVEL.EXPERT_CLASS;
+    }
 
-      const newUser = await UserModel.create(data);
-      if (!newUser) {
-        throw createHttpError(500, 'Không thể tạo người dùng');
-      }
+    const newUser = await UserModel.create(data);
+    if (!newUser) {
+      throw createHttpError(500, 'Không thể tạo người dùng');
+    }
 
-      const password = generatePassword.generate({
+    const password = generatePassword.generate({
       length: 12,
       numbers: true,
       symbols: true,
@@ -664,7 +664,8 @@ export const UserService = {
       {
         ...filter,
         role: ROLE.NUTRITIONIST,
-        'certificate.status': CERTIFICATE_STATUS.APPROVED
+        'certificate.status': CERTIFICATE_STATUS.APPROVED,
+        isActive: true
       },
       { ...options, select: 'name avatar role certificate nutritionistProfile' }
     );
