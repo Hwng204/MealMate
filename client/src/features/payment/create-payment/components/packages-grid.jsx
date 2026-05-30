@@ -26,7 +26,7 @@ const plans = [
   {
     name: 'Premium',
     category: 'B2C',
-    price: '89k',
+    price: '89.000đ',
     period: '/ tháng',
     desc: 'Tối ưu hóa sức khỏe toàn diện',
     features: [
@@ -40,7 +40,7 @@ const plans = [
   {
     name: 'Basic',
     category: 'B2B',
-    price: '375k',
+    price: '375.000đ',
     period: '/ tháng',
     desc: 'Quản lý tối đa 5 học viên',
     features: [
@@ -56,7 +56,7 @@ const plans = [
   {
     name: 'Standard',
     category: 'B2B',
-    price: '700k',
+    price: '700.000đ',
     period: '/ tháng',
     desc: 'Quản lý tối đa 10 học viên',
     features: [
@@ -72,7 +72,7 @@ const plans = [
   {
     name: 'Premium',
     category: 'B2B',
-    price: '1.400k',
+    price: '1.400.000đ',
     period: '/ tháng',
     desc: 'Quản lý tối đa 20 học viên',
     features: [
@@ -125,7 +125,7 @@ const PackagesGrid = () => {
     } catch (err) {
       toast.error(
         err?.response?.data?.message ||
-          'Tạo thanh toán thất bại, vui lòng thử lại'
+        'Tạo thanh toán thất bại, vui lòng thử lại'
       );
     }
   };
