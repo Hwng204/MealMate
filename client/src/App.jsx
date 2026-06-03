@@ -11,6 +11,7 @@ import router from '~/routes/router';
 import store from '~/store/index';
 
 import FeedbackChatWidget from './features/feedback/create-feedback/components/feedback-chat-widget';
+import ChatWidget from './features/chats/components/chat-widget';
 
 const App = () => {
   return (
@@ -33,6 +34,7 @@ const App = () => {
           />
         )}
         <FeedbackChatWidget />
+        <ChatWidget />
       </QueryClientProvider>
     </Provider>
   );

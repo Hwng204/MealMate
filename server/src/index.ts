@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+import http from 'http';
+import { initSocket } from '~/shared/socket';
 
 import app from './app';
 dotenv.config();
@@ -27,7 +29,10 @@ const onError = (error: NodeJS.ErrnoException): void => {
 const url = new URL(SERVER_URL ?? 'http://localhost:3000');
 const port = Number(process.env.PORT) || Number(url.port) || 3000;
 
-const server = app.listen(port, () => {
+const httpServer = http.createServer(app);
+initSocket(httpServer);
+
+const server = httpServer.listen(port, () => {
   console.log(`Server is Fire at ${SERVER_URL}`);
 });
 

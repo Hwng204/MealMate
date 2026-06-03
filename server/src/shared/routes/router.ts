@@ -18,6 +18,7 @@ import postRoute from '~/features/posts/post-route';
 import reviewRoute from '~/features/reviews/review-route';
 import scheduleRoute from '~/features/schedules/schedule-route';
 import userRoute from '~/features/users/user-route';
+import chatRoute from '~/features/chats/chat-route';
 
 const router = Router();
 
@@ -39,5 +40,6 @@ router.use('/ai', aiRoute);
 router.use('/ai-evaluation', aiEvaluationRoute);
 router.use('/payments', paymentRoute);
 router.use('/exercises', exerciseRouter);
+router.use('/chats', chatRoute);
 
 export default router;
