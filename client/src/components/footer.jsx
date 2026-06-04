@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className='mt-auto w-full bg-[#a9c894] text-neutral-900'>
       <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
         <div className='grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3'>
-          
+
           <div className='flex flex-col items-start space-y-2'>
             <Link to='/' className='inline-block border-0 outline-none focus:outline-none focus:border-0'>
               <img
@@ -89,7 +89,7 @@ const Footer = () => {
 
         <div className='mt-12 border-t border-neutral-900/10 pt-8'>
           <p className='text-center text-xs font-medium text-neutral-800/60'>
-            © {new Date().getFullYear()} MealMeat. Đồng hành cùng sức khỏe Việt.
+            © {new Date().getFullYear()} MealMate. Đồng hành cùng sức khỏe Việt.
           </p>
         </div>
       </div>
