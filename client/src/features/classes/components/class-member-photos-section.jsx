@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { Camera, ImageIcon } from 'lucide-react';
+import { Camera, ImageIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
@@ -10,27 +11,33 @@ import {
   DialogHeader,
   DialogTitle
 } from '~/components/ui/dialog';
+import { Calendar } from '~/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Spinner } from '~/components/ui/spinner';
 import apiClient from '~/lib/api-client';
 import { QUERY_KEYS } from '~/lib/query-keys';
+import { cn } from '~/lib/utils';
 
 const MAX_PHOTOS = 10;
 
-const fetchPhotos = async ({ classId, memberId, asNutritionist }) => {
+const fetchPhotos = async ({ classId, memberId, asNutritionist, dateStr }) => {
   const url = asNutritionist
     ? `/api/classes/${classId}/members/${memberId}/progress-photos`
     : `/api/classes/${classId}/progress-photos`;
-  const response = await apiClient.get(url);
+  const response = await apiClient.get(url, { params: { date: dateStr } });
   return response.data.data;
 };
 
-const uploadPhotos = async ({ classId, files }) => {
+const uploadPhotos = async ({ classId, files, dateStr }) => {
   const formData = new FormData();
   files.forEach(file => formData.append('images', file));
   const response = await apiClient.post(
     `/api/classes/${classId}/progress-photos`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
+    { 
+      headers: { 'Content-Type': 'multipart/form-data' },
+      params: { date: dateStr }
+    }
   );
   return response.data.data;
 };
@@ -43,17 +50,19 @@ export default function ClassMemberPhotosSection({
 }) {
   const inputRef = useRef(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [date, setDate] = useState(new Date());
   const queryClient = useQueryClient();
 
-  const photoKey = QUERY_KEYS.CLASS_MEMBER_PHOTOS(classId, memberId, asNutritionist);
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const photoKey = QUERY_KEYS.CLASS_MEMBER_PHOTOS(classId, memberId, asNutritionist, dateStr);
 
   const { data, isLoading } = useQuery({
     queryKey: photoKey,
-    queryFn: () => fetchPhotos({ classId, memberId, asNutritionist })
+    queryFn: () => fetchPhotos({ classId, memberId, asNutritionist, dateStr })
   });
 
   const { mutate: upload, isPending: isUploading } = useMutation({
-    mutationFn: files => uploadPhotos({ classId, files }),
+    mutationFn: files => uploadPhotos({ classId, files, dateStr }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: photoKey });
     }
@@ -73,8 +82,33 @@ export default function ClassMemberPhotosSection({
   return (
     <>
       <Card>
-        <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-3'>
-          <CardTitle className='text-base'>Ảnh tiến độ</CardTitle>
+        <CardHeader className='flex flex-col space-y-3 pb-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'>
+          <div className='flex items-center gap-4'>
+            <CardTitle className='text-base'>Ảnh tiến độ</CardTitle>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className={cn(
+                    'w-[130px] justify-start text-left font-normal',
+                    !date && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {date ? format(date, 'dd/MM/yyyy') : <span>Chọn ngày</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-auto p-0'>
+                <Calendar
+                  mode='single'
+                  selected={date}
+                  onSelect={d => d && setDate(d)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           {canUpload && remaining > 0 && (
             <>
               <input
@@ -129,8 +163,8 @@ export default function ClassMemberPhotosSection({
             <div className='flex h-28 max-w-[200px] flex-col items-center justify-center rounded-xl border border-dashed text-center text-xs text-muted-foreground'>
               <ImageIcon className='mb-2 h-6 w-6' />
               {canUpload
-                ? 'Chưa có ảnh. Chụp ảnh để gửi cho PT.'
-                : 'Học viên chưa gửi ảnh.'}
+                ? 'Chưa có ảnh trong ngày này.'
+                : 'Học viên chưa gửi ảnh ngày này.'}
             </div>
           )}
         </CardContent>
@@ -139,7 +173,7 @@ export default function ClassMemberPhotosSection({
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
         <DialogContent className='max-w-3xl'>
           <DialogHeader>
-            <DialogTitle>Ảnh tiến độ ({images.length})</DialogTitle>
+            <DialogTitle>Ảnh tiến độ ngày {format(date, 'dd/MM/yyyy')} ({images.length})</DialogTitle>
           </DialogHeader>
           <div className='grid grid-cols-5 gap-3'>
             {Array.from({ length: MAX_PHOTOS }).map((_, index) => {

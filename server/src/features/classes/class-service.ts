@@ -625,7 +625,8 @@ export const ClassService = {
     classId: string,
     memberId: string,
     requesterId: string,
-    requesterRole: string
+    requesterRole: string,
+    dateStr?: string
   ) => {
     if (
       !validateObjectId(classId) ||
@@ -646,7 +647,8 @@ export const ClassService = {
       throw createHttpError(403, 'Bạn không có quyền xem ảnh này');
     }
 
-    const doc = await ClassMemberPhotoModel.findOne({ classId, memberId });
+    const targetDate = dateStr || new Date().toLocaleDateString('en-CA');
+    const doc = await ClassMemberPhotoModel.findOne({ classId, memberId, date: targetDate });
     return {
       images: doc?.images || [],
       maxPhotos: MAX_CLASS_MEMBER_PHOTOS
@@ -656,7 +658,8 @@ export const ClassService = {
   uploadMemberProgressPhotos: async (
     classId: string,
     memberId: string,
-    files: Express.Multer.File[]
+    files: Express.Multer.File[],
+    dateStr?: string
   ) => {
     if (!validateObjectId(classId) || !validateObjectId(memberId)) {
       throw createHttpError(400, 'Định dạng ID không hợp lệ');
@@ -668,13 +671,14 @@ export const ClassService = {
       throw createHttpError(400, 'Vui lòng chọn ít nhất một ảnh');
     }
 
-    let doc = await ClassMemberPhotoModel.findOne({ classId, memberId });
+    const targetDate = dateStr || new Date().toLocaleDateString('en-CA');
+    let doc = await ClassMemberPhotoModel.findOne({ classId, memberId, date: targetDate });
     const currentCount = doc?.images?.length || 0;
 
     if (currentCount >= MAX_CLASS_MEMBER_PHOTOS) {
       throw createHttpError(
         400,
-        `Bạn chỉ có thể gửi tối đa ${MAX_CLASS_MEMBER_PHOTOS} ảnh`
+        `Bạn chỉ có thể gửi tối đa ${MAX_CLASS_MEMBER_PHOTOS} ảnh trong ngày này`
       );
     }
 
@@ -687,7 +691,7 @@ export const ClassService = {
       const file = filesToUpload[i];
       const uploadResult = await uploadImage(file.buffer, {
         folder: 'class-progress-photos',
-        public_id: `${classId}-${memberId}-${Date.now()}-${i}`
+        public_id: `${classId}-${memberId}-${targetDate}-${Date.now()}-${i}`
       });
 
       if (!uploadResult.success || !uploadResult.data) {
@@ -704,6 +708,7 @@ export const ClassService = {
       doc = await ClassMemberPhotoModel.create({
         classId,
         memberId,
+        date: targetDate,
         images: newImages
       });
     } else {

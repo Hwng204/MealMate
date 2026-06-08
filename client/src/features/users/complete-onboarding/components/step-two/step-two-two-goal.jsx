@@ -61,7 +61,7 @@ export function StepTwoTwoGoal({ control }) {
       if (isNaN(wGoal) || isNaN(wCurrent)) return;
 
       if (wGoal < wCurrent) target = USER_TARGET.LOSE_FAT;
-      else if (wGoal > wCurrent) target = USER_TARGET.BUILD_MUSCLE;
+      else if (wGoal > wCurrent) target = USER_TARGET.GAIN_WEIGHT;
       else target = USER_TARGET.MAINTAIN_WEIGHT;
 
       if (target !== goalTarget) {

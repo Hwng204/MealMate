@@ -865,7 +865,7 @@ export const UserService = {
       }
 
       adjustment = -deficit;
-    } else if (data.goal?.target === USER_TARGET.BUILD_MUSCLE) {
+    } else if (data.goal?.target === USER_TARGET.BUILD_MUSCLE || data.goal?.target === USER_TARGET.GAIN_WEIGHT) {
       adjustment = 420;
     }
 
