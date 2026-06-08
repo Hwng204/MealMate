@@ -18,11 +18,12 @@ export const QUERY_KEYS = {
     memberId
   ],
   CLASS_MY_PROGRESS: classId => ['class-my-progress', classId],
-  CLASS_MEMBER_PHOTOS: (classId, memberId, asNutritionist) => [
+  CLASS_MEMBER_PHOTOS: (classId, memberId, asNutritionist, dateStr) => [
     'class-member-photos',
     classId,
     memberId,
-    asNutritionist
+    asNutritionist,
+    dateStr
   ],
   DISHES: ['dishes'],
   DISH: id => ['dish', id],

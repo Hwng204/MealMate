@@ -14,6 +14,11 @@ const classMemberPhotoSchema = new Schema(
       required: true,
       index: true
     },
+    date: {
+      type: String,
+      required: true,
+      index: true
+    },
     images: [
       {
         url: { type: String, required: true },
@@ -24,7 +29,7 @@ const classMemberPhotoSchema = new Schema(
   { timestamps: true }
 );
 
-classMemberPhotoSchema.index({ classId: 1, memberId: 1 }, { unique: true });
+classMemberPhotoSchema.index({ classId: 1, memberId: 1, date: 1 }, { unique: true });
 
 export type ClassMemberPhoto = InferSchemaType<typeof classMemberPhotoSchema>;
 

@@ -121,9 +121,8 @@ export function UpdateNutritionTarget() {
 
         if (!isNaN(wGoal) && !isNaN(wCurrent)) {
           if (wGoal < wCurrent) target = USER_TARGET.LOSE_FAT;
-          else if (wGoal > wCurrent) target = USER_TARGET.BUILD_MUSCLE;
+          else if (wGoal > wCurrent) target = USER_TARGET.GAIN_WEIGHT;
           else target = USER_TARGET.MAINTAIN_WEIGHT;
-
           if (target !== form.watch('goal.target')) {
             form.setValue('goal.target', target);
           }

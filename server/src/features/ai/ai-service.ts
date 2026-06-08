@@ -1155,7 +1155,7 @@ const getCandidateDishesFromMongo = async (
 };
 
 const toDishRagGoalHints = (target?: string) => {
-  if (target === USER_TARGET.BUILD_MUSCLE) {
+  if (target === USER_TARGET.BUILD_MUSCLE || target === USER_TARGET.GAIN_WEIGHT) {
     return [NUTRITION_FOCUS.HIGH_PROTEIN];
   }
   if (target === USER_TARGET.LOSE_FAT) {
@@ -1343,7 +1343,7 @@ const getCandidateExercisesFromMongo = async (
 };
 
 const toExerciseRagGoalTypeHints = (target?: string) => {
-  if (target === USER_TARGET.BUILD_MUSCLE) {
+  if (target === USER_TARGET.BUILD_MUSCLE || target === USER_TARGET.GAIN_WEIGHT) {
     return Array.from(MUSCLE_GOAL_TYPES);
   }
   if (target === USER_TARGET.LOSE_FAT) {
@@ -1899,7 +1899,7 @@ const scoreDishForMeal = (
   }
 
   if (dish.nutritionFocus.includes(NUTRITION_FOCUS.HIGH_PROTEIN)) {
-    score += user.goal?.target === USER_TARGET.BUILD_MUSCLE ? 8 : 2;
+    score += (user.goal?.target === USER_TARGET.BUILD_MUSCLE || user.goal?.target === USER_TARGET.GAIN_WEIGHT) ? 8 : 2;
   }
 
   if (
@@ -1969,7 +1969,7 @@ const scoreExerciseForUser = (
     if (distance === 1) score += 4;
   }
 
-  if (user.goal?.target === USER_TARGET.BUILD_MUSCLE) {
+  if (user.goal?.target === USER_TARGET.BUILD_MUSCLE || user.goal?.target === USER_TARGET.GAIN_WEIGHT) {
     if (MUSCLE_GOAL_TYPES.has(exercise.type)) score += 6;
   }
 

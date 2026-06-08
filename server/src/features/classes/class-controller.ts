@@ -194,6 +194,7 @@ export const ClassController = {
   },
 
   getMemberProgressPhotos: async (req: Request, res: Response) => {
+    const dateStr = req.query.date as string;
     const requesterId = req.user!._id.toString();
     const requesterRole = req.user!.role;
     const classId = req.params.id;
@@ -203,13 +204,15 @@ export const ClassController = {
       classId,
       memberId,
       requesterId,
-      requesterRole
+      requesterRole,
+      dateStr
     );
 
     res.status(200).json(ApiResponse.success('Lấy ảnh tiến độ thành công', result));
   },
 
   uploadMemberProgressPhotos: async (req: Request, res: Response) => {
+    const dateStr = req.query.date as string;
     const userId = req.user!._id.toString();
     const classId = req.params.id;
     const files = (req.files as Express.Multer.File[]) || [];
@@ -217,7 +220,8 @@ export const ClassController = {
     const result = await ClassService.uploadMemberProgressPhotos(
       classId,
       userId,
-      files
+      files,
+      dateStr
     );
 
     res.status(200).json(ApiResponse.success('Tải ảnh thành công', result));
