@@ -5,6 +5,8 @@ import {
   Crown,
   RefreshCw,
   TrendingUp,
+  Users,
+  UserCheck,
   Wallet
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -281,17 +283,17 @@ const Dashboard = () => {
       tone: 'warning'
     },
     {
-      title: 'Nâng cấp hoàn thành',
-      value: formatNumber(overview.totalCompletedUpgrades),
-      description: 'Số giao dịch thanh toán thành công',
-      icon: CheckCircle2,
+      title: 'Số lượng người dùng',
+      value: formatNumber(overview.totalUsers),
+      description: 'Tổng số người dùng hệ thống',
+      icon: Users,
       tone: 'success'
     },
     {
-      title: 'Tổng tài khoản VIP',
-      value: formatNumber(overview.totalVipUsers),
-      description: 'Người dùng đang có gói VIP',
-      icon: Crown,
+      title: 'Số lượng chuyên gia',
+      value: formatNumber(overview.totalNutritionists),
+      description: 'Tổng số chuyên gia dinh dưỡng',
+      icon: UserCheck,
       tone: 'vip'
     }
   ];

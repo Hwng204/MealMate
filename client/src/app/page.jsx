@@ -6,6 +6,7 @@ import Hero from '~/components/home/hero';
 import NutritionistList from '~/components/home/nutritionist-list';
 import PackagesSection from '~/components/home/package-section';
 import Stats from '~/components/home/stats';
+import SupportBubble from '~/components/home/support-bubble';
 
 const Page = () => {
   const { hash } = useLocation();
@@ -33,6 +34,7 @@ const Page = () => {
       <PackagesSection />
       <Stats />
       <NutritionistList />
+      <SupportBubble />
     </div>
   );
 };

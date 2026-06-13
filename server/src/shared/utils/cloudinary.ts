@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
+import { Readable } from 'stream';
 
 cloudinary.config({
   cloudinary_url: process.env.CLOUDINARY_URL
@@ -32,19 +33,18 @@ export const uploadImage = async (
 
     if (Buffer.isBuffer(file)) {
       result = await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            uploadOptions,
-            (
-              error: UploadApiErrorResponse | undefined,
-              result: UploadApiResponse | undefined
-            ) => {
-              if (error) reject(error);
-              else if (result) resolve(result);
-              else reject(new Error('Upload failed'));
-            }
-          )
-          .end(file);
+        const stream = cloudinary.uploader.upload_stream(
+          uploadOptions,
+          (
+            error: UploadApiErrorResponse | undefined,
+            result: UploadApiResponse | undefined
+          ) => {
+            if (error) reject(error);
+            else if (result) resolve(result);
+            else reject(new Error('Upload failed'));
+          }
+        );
+        Readable.from(file).pipe(stream);
       });
     } else {
       result = await cloudinary.uploader.upload(file, uploadOptions);
@@ -180,19 +180,18 @@ export const uploadCertificate = async (
 
   try {
     const result: UploadApiResponse = await new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          certOptions,
-          (
-            error: UploadApiErrorResponse | undefined,
-            result: UploadApiResponse | undefined
-          ) => {
-            if (error) reject(error);
-            else if (result) resolve(result);
-            else reject(new Error('Upload failed'));
-          }
-        )
-        .end(file);
+      const stream = cloudinary.uploader.upload_stream(
+        certOptions,
+        (
+          error: UploadApiErrorResponse | undefined,
+          result: UploadApiResponse | undefined
+        ) => {
+          if (error) reject(error);
+          else if (result) resolve(result);
+          else reject(new Error('Upload failed'));
+        }
+      );
+      Readable.from(file).pipe(stream);
     });
 
     return { success: true, data: result };
@@ -260,19 +259,18 @@ export const uploadExerciseTutorial = async (
 
   try {
     const result: UploadApiResponse = await new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          tutorialOptions,
-          (
-            error: UploadApiErrorResponse | undefined,
-            result: UploadApiResponse | undefined
-          ) => {
-            if (error) reject(error);
-            else if (result) resolve(result);
-            else reject(new Error('Upload failed'));
-          }
-        )
-        .end(file);
+      const stream = cloudinary.uploader.upload_stream(
+        tutorialOptions,
+        (
+          error: UploadApiErrorResponse | undefined,
+          result: UploadApiResponse | undefined
+        ) => {
+          if (error) reject(error);
+          else if (result) resolve(result);
+          else reject(new Error('Upload failed'));
+        }
+      );
+      Readable.from(file).pipe(stream);
     });
 
     return { success: true, data: result };

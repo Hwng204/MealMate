@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Camera, ImageIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
@@ -65,6 +66,10 @@ export default function ClassMemberPhotosSection({
     mutationFn: files => uploadPhotos({ classId, files, dateStr }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: photoKey });
+      toast.success('Tải ảnh lên thành công');
+    },
+    onError: error => {
+      toast.error(error.response?.data?.message || 'Tải ảnh lên thất bại. File ảnh có thể quá lớn.');
     }
   });
 

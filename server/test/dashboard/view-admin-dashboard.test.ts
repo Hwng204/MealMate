@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DashboardService } from '~/features/dashboard/dashboard-service';
 import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
 import { PAYMENT_STATUS } from '~/shared/constants/payment-status';
+import { ROLE } from '~/shared/constants/role';
 import { PaymentModel, UserModel } from '~/shared/database/models';
 
 vi.mock('~/shared/database/models', () => ({
@@ -89,7 +90,7 @@ describe('DashboardService.viewAdminDashboard', () => {
   describe('business logic', () => {
     it('should return summarized overview and status breakdown', async () => {
       mockAggregate.mockResolvedValue(mockStatusMetrics as any);
-      mockCountDocuments.mockResolvedValueOnce(15); // totalVipUsers
+      mockCountDocuments.mockResolvedValueOnce(15); // totalNutritionists
       mockCountDocuments.mockResolvedValueOnce(100); // totalUsers
 
       const result = await DashboardService.viewAdminDashboard({
@@ -97,10 +98,10 @@ describe('DashboardService.viewAdminDashboard', () => {
       });
 
       expect(result.period).toBe('allTime');
-      expect(result.overview.totalRevenue).toBe(6000);
+      expect(result.overview.totalRevenue).toBe(5000);
       expect(result.overview.totalUpgrades).toBe(14);
       expect(result.overview.totalCompletedUpgrades).toBe(8);
-      expect(result.overview.totalVipUsers).toBe(15);
+      expect(result.overview.totalNutritionists).toBe(15);
       expect(result.overview.totalUsers).toBe(100);
       expect(result.statusBreakdown).toHaveLength(3);
 
@@ -114,7 +115,7 @@ describe('DashboardService.viewAdminDashboard', () => {
         ])
       );
       expect(mockCountDocuments).toHaveBeenNthCalledWith(1, {
-        membershipLevel: MEMBERSHIP_LEVEL.VIP
+        role: ROLE.NUTRITIONIST
       });
       expect(mockCountDocuments).toHaveBeenNthCalledWith(2, {});
     });

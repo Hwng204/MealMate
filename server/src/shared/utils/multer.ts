@@ -13,7 +13,7 @@ export const createUpload = (options?: {
   return multer({
     storage,
     fileFilter: options?.fileFilter || defaultFileFilter,
-    limits: options?.limits || { fileSize: 5 * 1024 * 1024 }
+    limits: options?.limits || { fileSize: 20 * 1024 * 1024 }
   });
 };
 
@@ -46,7 +46,10 @@ export const handleMultipleImagesUpload = (
   fieldName: string,
   maxCount: number
 ) => {
-  return uploadMultiple(fieldName, maxCount, { fileFilter: imageFileFilter });
+  return uploadMultiple(fieldName, maxCount, { 
+    fileFilter: imageFileFilter,
+    limits: { fileSize: 20 * 1024 * 1024 }
+  });
 };
 
 const imageFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
