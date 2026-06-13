@@ -2,6 +2,7 @@ import createHttpError from 'http-errors';
 
 import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
 import { PAYMENT_STATUS } from '~/shared/constants/payment-status';
+import { ROLE } from '~/shared/constants/role';
 import {
   CollectionModel,
   DishModel,
@@ -20,9 +21,9 @@ export const DashboardService = {
     const { period, createdAtFilter } = resolveRange(query);
     const baseFilter = buildPaymentBaseFilter(createdAtFilter);
 
-    const [statusMetrics, totalVipUsers, totalUsers] = await Promise.all([
+    const [statusMetrics, totalNutritionists, totalUsers] = await Promise.all([
       paymentMetricsAggregation(baseFilter),
-      UserModel.countDocuments({ membershipLevel: MEMBERSHIP_LEVEL.VIP }),
+      UserModel.countDocuments({ role: ROLE.NUTRITIONIST }),
       UserModel.countDocuments({})
     ]);
 
@@ -32,7 +33,7 @@ export const DashboardService = {
     return buildAdminDashboardResponse(
       period,
       statusBreakdown,
-      totalVipUsers,
+      totalNutritionists,
       totalUsers
     );
   },
@@ -179,18 +180,20 @@ const sumMetrics = (
 const buildAdminDashboardResponse = (
   period: string,
   statusBreakdown: ReturnType<typeof buildStatusBreakdown>,
-  totalVipUsers: number,
+  totalNutritionists: number,
   totalUsers: number
 ) => ({
   period,
   overview: {
-    totalRevenue: sumMetrics(statusBreakdown, 'revenue'),
+    totalRevenue:
+      statusBreakdown.find(item => item.status === PAYMENT_STATUS.COMPLETED)
+        ?.revenue ?? 0,
     totalUpgrades: sumMetrics(statusBreakdown, 'upgradeCount'),
     totalCompletedUpgrades: sumMetrics(
       statusBreakdown,
       'completedUpgradeCount'
     ),
-    totalVipUsers,
+    totalNutritionists,
     totalUsers
   },
   statusBreakdown: statusBreakdown.map(({ status, count, revenue }) => ({
