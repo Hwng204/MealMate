@@ -33,7 +33,8 @@ import {
   updateRestrictionsSchema,
   updateScheduleSettingsSchema,
   updateUserRequestSchema,
-  uploadCertificateRequestSchema
+  uploadCertificateRequestSchema,
+  nutritionistReviewRequestSchema
 } from './user-dto';
 
 const router = Router();
@@ -313,6 +314,25 @@ router.delete(
   authenticate(),
   authorize([ROLE.ADMIN]),
   asyncHandler(UserController.deleteUser)
+);
+
+router.get(
+  '/:id/reviews/me',
+  authenticate(),
+  asyncHandler(UserController.viewMyNutritionistReview)
+);
+
+router.get(
+  '/:id/reviews',
+  asyncHandler(UserController.viewNutritionistReviews)
+);
+
+router.post(
+  '/:id/reviews',
+  authenticate(),
+  authorize([ROLE.USER]),
+  validate(nutritionistReviewRequestSchema.shape),
+  asyncHandler(UserController.submitNutritionistReview)
 );
 
 export default router;

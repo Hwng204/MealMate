@@ -37,6 +37,7 @@ export const QUERY_KEYS = {
   ACHIEVEMENTS: ['achievements'],
   NUTRITIONISTS: ['nutritionists'],
   NUTRITIONIST: id => ['nutritionist', id],
+  NUTRITIONIST_REVIEWS: id => ['nutritionist-reviews', id],
   NUTRITIONIST_CLIENTS: ['nutritionist-clients'],
   NUTRITIONIST_CLIENT: userId => ['nutritionist-client', userId],
   NUTRITIONIST_CLIENT_DASHBOARD: userId => [

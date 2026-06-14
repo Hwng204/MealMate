@@ -14,6 +14,8 @@ import { Button } from '~/components/ui/button';
 
 import { useNutritionistDetail } from '../api/view-nutritionist-detail';
 
+import { NutritionistReviews } from './nutritionist-reviews';
+
 const formatDate = iso =>
   iso
     ? new Date(iso).toLocaleDateString('vi-VN', {
@@ -323,6 +325,9 @@ export default function NutritionistDetail({ id }) {
             </div>
           </div>
         </div>
+
+        {/* Thêm phần hiển thị đánh giá chuyên gia bên dưới thông tin */}
+        <NutritionistReviews id={id} />
       </div>
     </div>
   );

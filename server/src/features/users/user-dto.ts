@@ -352,3 +352,11 @@ export const updateNutritionistProfileSchema = z.object({
 export type UpdateNutritionistProfile = z.infer<
   typeof updateNutritionistProfileSchema
 >;
+
+export const nutritionistReviewRequestSchema = z.object({
+  classId: z.string().trim().min(1, 'ID lớp học không được để trống'),
+  rating: z.coerce.number().min(1).max(10),
+  comment: z.string().trim().min(1, 'Bình luận không được để trống')
+});
+
+export type NutritionistReviewRequest = z.infer<typeof nutritionistReviewRequestSchema>;

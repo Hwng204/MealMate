@@ -11,6 +11,7 @@ import ClassProgressStats from '~/features/classes/components/class-progress-sta
 import StudentWeightSection from '~/features/classes/components/student-weight-section';
 import { useClassDetail, useMyClassProgress } from '~/features/classes/api/classes';
 import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
+import { ReviewNutritionistDialog } from '~/features/users/view-nutritionist-detail/components/review-nutritionist-dialog';
 
 const calculateAge = dob => {
   if (!dob) return 0;
@@ -53,13 +54,23 @@ const ClassDetailContent = () => {
 
       <Card>
         <CardHeader className='pb-2'>
-          <div className='flex flex-wrap items-center gap-2'>
-            <CardTitle>{classDetail.className}</CardTitle>
-            <Badge>{classDetail.isActive ? 'Đang học' : 'Đã đóng'}</Badge>
+          <div className='flex flex-wrap items-center justify-between gap-4'>
+            <div>
+              <div className='flex flex-wrap items-center gap-2'>
+                <CardTitle>{classDetail.className}</CardTitle>
+                <Badge>{classDetail.isActive ? 'Đang học' : 'Đã đóng'}</Badge>
+              </div>
+              <p className='text-sm text-muted-foreground mt-1'>
+                {classDetail.description || 'Lớp học với chuyên gia dinh dưỡng'}
+              </p>
+            </div>
+            {!classDetail.isActive && (
+              <ReviewNutritionistDialog 
+                nutritionistId={classDetail.nutritionistId?._id || classDetail.nutritionistId}
+                classId={classId}
+              />
+            )}
           </div>
-          <p className='text-sm text-muted-foreground'>
-            {classDetail.description || 'Lớp học với chuyên gia dinh dưỡng'}
-          </p>
         </CardHeader>
         <CardContent className='space-y-4'>
           <ClassProgressStats

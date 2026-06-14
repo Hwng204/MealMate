@@ -448,5 +448,39 @@ export const UserController = {
       .json(
         ApiResponse.success('Cập nhật hiển thị chứng chỉ thành công', result)
       );
+  },
+
+  submitNutritionistReview: async (req: Request, res: Response) => {
+    const userId = req.user?._id.toString();
+    const nutritionistId = req.params.id;
+    const data = req.body;
+
+    const result = await UserService.submitNutritionistReview(userId, nutritionistId, data);
+
+    res
+      .status(201)
+      .json(ApiResponse.success('Đánh giá chuyên gia thành công', result));
+  },
+
+  viewMyNutritionistReview: async (req: Request, res: Response) => {
+    const nutritionistId = req.params.id;
+    const userId = req.user._id.toString();
+
+    const result = await UserService.viewMyNutritionistReview(userId, nutritionistId);
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Lấy đánh giá của tôi thành công', result));
+  },
+
+  viewNutritionistReviews: async (req: Request, res: Response) => {
+    const nutritionistId = req.params.id;
+    const parsed = parseQuery(req.query);
+
+    const result = await UserService.viewNutritionistReviews(nutritionistId, parsed);
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Lấy danh sách đánh giá thành công', result));
   }
 };
