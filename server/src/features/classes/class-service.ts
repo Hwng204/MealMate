@@ -214,7 +214,7 @@ export const ClassService = {
     const options = buildPaginateOptions(parsed);
 
     const result = await ClassModel.paginate(
-      { ...filter, members: userId, isActive: true },
+      { ...filter, members: userId },
       {
         ...options,
         populate: [{ path: 'nutritionistId', select: 'name email avatar' }]
@@ -606,12 +606,8 @@ export const ClassService = {
       throw createHttpError(403, 'Bạn không có quyền xóa lớp học này');
     }
 
-    await UserModel.updateMany(
-      { _id: { $in: classDoc.members } },
-      { $pull: { enrolledClasses: classDoc._id } }
-    );
-
-    await ClassModel.findByIdAndDelete(classId);
+    classDoc.isActive = false;
+    await classDoc.save();
 
     eventBus.emit(EVENTS.CLASS_DELETED, {
       classId: classDoc._id.toString(),

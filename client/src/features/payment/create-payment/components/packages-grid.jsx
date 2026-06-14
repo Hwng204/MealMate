@@ -7,82 +7,84 @@ import { ROLE } from '~/constants/role';
 import { useCreatePayment } from '../api/create-payment';
 import PackageCard from './package-card';
 
-const plans = [
+const b2cPlans = [
   {
-    name: 'Cơ bản',
-    category: 'B2C',
-    price: '0đ',
-    desc: 'Bắt đầu hành trình sống khỏe',
-    features: [
-      'AI gợi ý bữa ăn theo từng ngày',
-      'Theo dõi lịch trình ăn uống',
-      'Tính toán Calories & Dinh dưỡng',
-      'Lưu món ăn yêu thích'
-    ],
-    highlight: false,
-    amount: 0,
-    targetMembership: MEMBERSHIP_LEVEL.NORMAL
-  },
-  {
-    name: 'Premium',
-    category: 'B2C',
+    name: 'Premium Cá Nhân',
     price: '89.000đ',
-    period: '/ tháng',
+    period: '/ 1 tháng',
     desc: 'Tối ưu hóa sức khỏe toàn diện',
+    badge: 'Phổ biến',
+    colorTheme: 'orange',
     features: [
-      'AI gợi ý bữa ăn & tập luyện theo tuần',
-      'Tự động tạo danh sách mua sắm'
+      'AI gợi ý bữa ăn và tập luyện theo tuần',
+      'Tự động tạo danh sách mua sắm',
+      'Thêm token tạo lịch trình ăn uống'
     ],
-    highlight: true,
     amount: 89000,
     targetMembership: MEMBERSHIP_LEVEL.VIP
-  },
+  }
+];
+
+const b2bPlans = [
   {
-    name: 'Basic',
-    category: 'B2B',
-    price: '375.000đ',
-    period: '/ tháng',
-    desc: 'Quản lý tối đa 5 học viên',
+    name: 'BASIC',
+    price: '349.000đ',
+    period: '/ 1 tháng',
+    desc: 'Khởi đầu đơn giản – Hiệu quả',
+    badge: 'Tiết kiệm 22% (so với gói tháng)',
+    colorTheme: 'emerald',
     features: [
-      'Cấp tài khoản Premium cho 5 học viên',
-      'Theo dõi lịch trình ăn uống & tập luyện',
-      'Điều chỉnh chế độ ăn & bài tập học viên',
-      'Chat trực tiếp hỗ trợ học viên'
+      'Quản lý học viên không giới hạn',
+      'Tạo và theo dõi lịch tập',
+      'Lên kế hoạch dinh dưỡng cơ bản',
+      'Theo dõi tiến độ (cân nặng, số đo, hình ảnh)',
+      'Thư viện bài tập & thực đơn mẫu',
+      'Nhắc lịch tập & ăn uống cho học viên',
+      'Hỗ trợ qua email'
     ],
-    highlight: false,
-    amount: 375000,
+    amount: 349000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_BASIC
   },
   {
-    name: 'Standard',
-    category: 'B2B',
-    price: '700.000đ',
-    period: '/ tháng',
-    desc: 'Quản lý tối đa 10 học viên',
+    name: 'STANDARD',
+    price: '990.000đ',
+    period: '/ 3 tháng',
+    desc: 'Tối ưu công việc – Nâng cao hiệu suất',
+    badge: 'Tiết kiệm 16% (so với gói tháng)',
+    colorTheme: 'blue',
     features: [
-      'Cấp tài khoản Premium cho 10 học viên',
-      'Theo dõi lịch trình ăn uống & tập luyện',
-      'Điều chỉnh chế độ ăn & bài tập học viên',
-      'Chat trực tiếp hỗ trợ học viên'
+      'Phân tích chỉ số chuyên sâu',
+      'Cá nhân hóa kế hoạch dinh dưỡng & tập luyện',
+      'Báo cáo tiến độ chi tiết',
+      'Ghi chú & đánh giá học viên',
+      'Chat AI hỗ trợ tư vấn dinh dưỡng & tập luyện',
+      'Tạo trang giới thiệu PT cá nhân',
+      'Quản lý gói dịch vụ & thanh toán cho học viên',
+      'Ưu tiên hỗ trợ 1-1',
+      'Cập nhật tính năng mới sớm nhất'
     ],
-    highlight: true,
-    amount: 700000,
+    amount: 990000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_STANDARD
   },
   {
-    name: 'Premium',
-    category: 'B2B',
-    price: '1.400.000đ',
-    period: '/ tháng',
-    desc: 'Quản lý tối đa 20 học viên',
+    name: 'PREMIUM',
+    price: '2.100.000đ',
+    period: '/ 6 tháng',
+    desc: 'Toàn diện – Chuyên nghiệp – Dẫn đầu',
+    badge: 'Tiết kiệm 22% (so với gói tháng)',
+    colorTheme: 'orange',
     features: [
-      'Cấp tài khoản Premium cho 20 học viên',
-      'Theo dõi lịch trình ăn uống & tập luyện',
-      'Điều chỉnh chế độ ăn & bài tập học viên',
-      'Chat trực tiếp hỗ trợ học viên'
+      'AI gợi ý thực đơn & bài tập thông minh',
+      'Xây dựng thương hiệu cá nhân trên MealMate',
+      'Dedicated Support (hỗ trợ riêng)',
+      'Logo đối tác nổi bật trên website',
+      'Banner quảng bá trên trang chủ MealMate',
+      'Đồng hành trong các chiến dịch Marketing',
+      'Ưu tiên giới thiệu khách hàng tiềm năng',
+      'Workshop & sự kiện cộng đồng đồng tổ chức',
+      'Ưu tiên trải nghiệm các tính năng mới'
     ],
-    highlight: false,
-    amount: 1400000,
+    amount: 2100000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_PREMIUM
   }
 ];
@@ -131,16 +133,20 @@ const PackagesGrid = () => {
   };
 
   return (
-    <div className='mx-auto max-w-7xl space-y-16 px-4 py-8'>
+    <div className='mx-auto max-w-7xl space-y-16 px-4'>
       {showB2C && (
         <section>
-          <h2 className='mb-8 text-center text-3xl font-bold text-neutral-900'>
-            Dành cho Cá nhân
-          </h2>
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:mx-auto lg:max-w-3xl'>
-            {plans
-              .filter(p => p.category === 'B2C')
-              .map(plan => (
+          <div className='text-center max-w-4xl mx-auto mb-8 md:mb-12'>
+            <h2 className='text-2xl sm:text-3xl md:text-5xl font-black text-neutral-900 tracking-tight'>
+              BẢNG GIÁ DÀNH CHO <span className='text-orange-600'>CÁ NHÂN</span>
+            </h2>
+            <p className='text-sm sm:text-base md:text-lg text-neutral-600 mt-3 md:mt-4'>
+              Trải nghiệm các tính năng AI để nâng cao sức khoẻ của bạn mỗi ngày.
+            </p>
+          </div>
+          <div className='flex justify-center'>
+            <div className='w-full max-w-md'>
+              {b2cPlans.map(plan => (
                 <PackageCard
                   key={`b2c-${plan.name}`}
                   plan={plan}
@@ -148,26 +154,30 @@ const PackagesGrid = () => {
                   isLoading={isPending}
                 />
               ))}
+            </div>
           </div>
         </section>
       )}
 
       {showB2B && (
         <section className={showB2C ? 'border-t border-neutral-200 pt-16' : ''}>
-          <h2 className='mb-8 text-center text-3xl font-bold text-neutral-900'>
-            Dành cho Chuyên gia
-          </h2>
+          <div className='text-center max-w-4xl mx-auto mb-8 md:mb-12'>
+            <h2 className='text-2xl sm:text-3xl md:text-5xl font-black text-neutral-900 tracking-tight'>
+              BẢNG GIÁ DÀNH CHO <span className='text-emerald-700'>PHÒNG GYM</span>
+            </h2>
+            <p className='text-sm sm:text-base md:text-lg text-neutral-600 mt-3 md:mt-4'>
+              MealMate đồng hành cùng PT nâng cao chuyên môn, quản lý học viên hiệu quả và phát triển sự nghiệp bền vững.
+            </p>
+          </div>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            {plans
-              .filter(p => p.category === 'B2B')
-              .map(plan => (
-                <PackageCard
-                  key={`b2b-${plan.name}`}
-                  plan={plan}
-                  onSelect={handleSelectPlan}
-                  isLoading={isPending}
-                />
-              ))}
+            {b2bPlans.map(plan => (
+              <PackageCard
+                key={`b2b-${plan.name}`}
+                plan={plan}
+                onSelect={handleSelectPlan}
+                isLoading={isPending}
+              />
+            ))}
           </div>
         </section>
       )}

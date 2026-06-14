@@ -291,15 +291,17 @@ const ClassDetailContent = () => {
                 <CalendarDays className='mr-2 h-4 w-4' />
                 Chia sẻ lịch tập
               </Button>
-              <Button
-                variant='destructive'
-                className='w-full justify-start'
-                onClick={handleDeleteClass}
-                disabled={isDeleting}
-              >
-                <Trash2 className='mr-2 h-4 w-4' />
-                Kết thúc lớp học
-              </Button>
+              {classDetail.isActive && (
+                <Button
+                  variant='destructive'
+                  className='w-full justify-start'
+                  onClick={handleDeleteClass}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className='mr-2 h-4 w-4' />
+                  Kết thúc lớp học
+                </Button>
+              )}
             </CardContent>
           </Card>
         </aside>
@@ -324,7 +326,7 @@ const ClassDetailContent = () => {
              <DialogTitle>Xác nhận kết thúc lớp học</DialogTitle>
            </DialogHeader>
            <div className='space-y-4'>
-             <p>Bạn có chắc chắn muốn xóa lớp học này không?</p>
+             <p>Bạn có chắc chắn muốn kết thúc lớp học này không?</p>
              <p className='text-sm text-muted-foreground'>Hành động này không thể được hoàn tác.</p>
            </div>
            <DialogFooter>
@@ -337,7 +339,7 @@ const ClassDetailContent = () => {
                disabled={isDeleting}
              >
                {isDeleting && <Spinner className='mr-2 h-4 w-4' />}
-               Xóa
+               Kết thúc
              </Button>
            </DialogFooter>
          </DialogContent>

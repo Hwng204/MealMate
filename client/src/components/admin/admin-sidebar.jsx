@@ -232,7 +232,10 @@ export function AdminSidebar({ ...props }) {
     <Sidebar collapsible='icon' {...props}>
       <SidebarHeader className='transition-all duration-300 ease-in-out'>
         <div className='flex items-center gap-2 transition-all duration-300 ease-in-out group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0'>
-          <div className='flex aspect-square size-30 items-center justify-center transition-all duration-200 ease-in-out'>
+          <div 
+            className='flex aspect-square size-30 items-center justify-center transition-all duration-200 ease-in-out cursor-pointer'
+            onClick={() => navigate('/')}
+          >
             <img
               src='/logo.png'
               alt='MealMeat Logo'

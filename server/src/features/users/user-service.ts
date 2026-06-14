@@ -1,7 +1,7 @@
 import type { QueryOptions } from '@quarks/mongoose-query-parser';
 import generatePassword from 'generate-password';
 import createHttpError from 'http-errors';
-import type { HydratedDocument, PaginateResult } from 'mongoose';
+import mongoose, { type HydratedDocument, type PaginateResult } from 'mongoose';
 
 import {
   getDailyTokenLimit,
@@ -1185,6 +1185,98 @@ export const UserService = {
     }
 
     return setCertificateVisibility(user, showCertificate);
+  },
+
+  submitNutritionistReview: async (
+    userId: string,
+    nutritionistId: string,
+    data: { classId: string; rating: number; comment: string }
+  ) => {
+    if (!validateObjectId(userId) || !validateObjectId(nutritionistId) || !validateObjectId(data.classId)) {
+      throw createHttpError(400, 'Định dạng ID không hợp lệ');
+    }
+
+    const nutritionist = await UserModel.findById(nutritionistId);
+    if (!nutritionist || nutritionist.role !== ROLE.NUTRITIONIST) {
+      throw createHttpError(404, 'Không tìm thấy chuyên gia');
+    }
+
+    const { ClassModel } = await import('~/shared/database/models');
+    const classDoc = await ClassModel.findById(data.classId);
+    
+    if (!classDoc) {
+      throw createHttpError(404, 'Không tìm thấy lớp học');
+    }
+
+    if (classDoc.nutritionistId.toString() !== nutritionistId) {
+      throw createHttpError(400, 'Lớp học không thuộc về chuyên gia này');
+    }
+
+    if (classDoc.isActive) {
+      throw createHttpError(400, 'Chỉ có thể đánh giá khi lớp học đã kết thúc');
+    }
+
+    if (!classDoc.members.map(m => m.toString()).includes(userId)) {
+      throw createHttpError(403, 'Bạn không phải là thành viên của lớp học này');
+    }
+
+    const review = await import('~/shared/database/models').then(m => m.NutritionistReviewModel.findOneAndUpdate(
+      { userId, nutritionistId },
+      {
+        userId,
+        nutritionistId,
+        classId: data.classId,
+        rating: data.rating,
+        comment: data.comment
+      },
+      { new: true, upsert: true }
+    ));
+
+    return review;
+  },
+
+  viewMyNutritionistReview: async (userId: string, nutritionistId: string) => {
+    if (!validateObjectId(userId) || !validateObjectId(nutritionistId)) {
+      throw createHttpError(400, 'Định dạng ID không hợp lệ');
+    }
+
+    const { NutritionistReviewModel } = await import('~/shared/database/models');
+    
+    const review = await NutritionistReviewModel.findOne({ userId, nutritionistId });
+    return review;
+  },
+
+  viewNutritionistReviews: async (
+    nutritionistId: string,
+    parsed: QueryOptions
+  ) => {
+    if (!validateObjectId(nutritionistId)) {
+      throw createHttpError(400, 'Định dạng ID không hợp lệ');
+    }
+
+    const { NutritionistReviewModel } = await import('~/shared/database/models');
+    
+    const { filter = {} } = parsed;
+    const options = buildPaginateOptions(parsed);
+
+    const result = await NutritionistReviewModel.paginate(
+      { ...filter, nutritionistId },
+      {
+        ...options,
+        populate: [{ path: 'userId', select: 'name avatar' }]
+      }
+    );
+
+    // Calculate average rating
+    const stats = await NutritionistReviewModel.aggregate([
+      { $match: { nutritionistId: new mongoose.Types.ObjectId(nutritionistId) } },
+      { $group: { _id: null, avgRating: { $avg: '$rating' }, totalReviews: { $sum: 1 } } }
+    ]);
+
+    return {
+      ...result,
+      stats: stats[0] || { avgRating: 0, totalReviews: 0 }
+    };
   }
 };
 
