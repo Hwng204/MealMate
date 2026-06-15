@@ -9,7 +9,7 @@ import {
 
 const SupportBubble = () => {
   return (
-    <div className='fixed bottom-6 left-6 z-50'>
+    <div className='fixed bottom-6 right-6 z-50'>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -20,7 +20,7 @@ const SupportBubble = () => {
             <span className='sr-only'>Hỗ trợ khách hàng</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-64 p-2' align='start' sideOffset={10}>
+        <PopoverContent className='w-64 p-2' align='end' sideOffset={10}>
           <div className='flex flex-col gap-2'>
             <div className='px-2 py-1.5 pb-3 border-b'>
               <p className='font-semibold text-sm'>Liên hệ tư vấn</p>

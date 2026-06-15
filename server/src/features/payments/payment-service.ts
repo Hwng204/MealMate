@@ -148,7 +148,7 @@ export const PaymentService = {
     });
 
     const expiredPendingPayments: InstanceType<typeof PaymentModel>[] = [];
-    let hasActivePendingPayment = false;
+    let activePendingPayment: InstanceType<typeof PaymentModel> | null = null;
 
     for (const pendingPayment of pendingPayments) {
       const paymentLink = await payOS.paymentRequests.get(
@@ -158,7 +158,7 @@ export const PaymentService = {
       if (paymentLink.status === 'EXPIRED') {
         expiredPendingPayments.push(pendingPayment);
       } else {
-        hasActivePendingPayment = true;
+        activePendingPayment = pendingPayment;
       }
     }
 
@@ -171,11 +171,8 @@ export const PaymentService = {
       }
     }
 
-    if (hasActivePendingPayment) {
-      throw createHttpError(
-        409,
-        'Bạn đang có giao dịch chờ thanh toán. Vui lòng hoàn tất hoặc hủy giao dịch hiện tại trước khi tạo giao dịch mới.'
-      );
+    if (activePendingPayment) {
+      return activePendingPayment.checkoutUrl;
     }
 
     const orderCode = generateOrderCode();
@@ -188,10 +185,10 @@ export const PaymentService = {
     const paymentLinkData: CreatePaymentLinkRequest = {
       orderCode,
       amount: data.amount,
-      description: data.description,
+      description: data.description ? data.description.substring(0, 25) : '',
       items: [
         {
-          name: data.description,
+          name: data.description || 'Thanh toan don hang',
           quantity: 1,
           price: data.amount
         }
