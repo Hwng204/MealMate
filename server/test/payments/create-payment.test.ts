@@ -93,7 +93,7 @@ describe('PaymentService.createPayment (UC98)', () => {
       });
     });
 
-    it('should throw 400 when trying to downgrade VIP to normal', async () => {
+    it('should throw 403 when trying to downgrade VIP to normal as it is not purchasable', async () => {
       mockFindUser.mockResolvedValue({
         role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.VIP
@@ -105,8 +105,8 @@ describe('PaymentService.createPayment (UC98)', () => {
           userId
         )
       ).rejects.toMatchObject({
-        status: 400,
-        message: 'Không thể hạ cấp từ VIP xuống tài khoản thường'
+        status: 403,
+        message: 'Gói này chỉ dành cho chuyên gia. Vui lòng chọn gói Premium cá nhân.'
       });
     });
 
@@ -126,7 +126,7 @@ describe('PaymentService.createPayment (UC98)', () => {
       });
     });
 
-    it('should throw 409 when user has active pending payment', async () => {
+    it('should return checkoutUrl of existing pending payment instead of throwing an error', async () => {
       mockFindUser.mockResolvedValue({
         role: ROLE.USER,
         membershipLevel: MEMBERSHIP_LEVEL.NORMAL
@@ -135,18 +135,14 @@ describe('PaymentService.createPayment (UC98)', () => {
         {
           _id: 'pending-payment',
           orderCode: 900000123,
+          checkoutUrl: 'https://pay.os/123',
           save: vi.fn()
         }
       ] as any);
       mockGetPayLink.mockResolvedValue({ status: 'PENDING' } as any);
 
-      await expect(
-        PaymentService.createPayment(validData, userId)
-      ).rejects.toMatchObject({
-        status: 409,
-        message:
-          'Bạn đang có giao dịch chờ thanh toán. Vui lòng hoàn tất hoặc hủy giao dịch hiện tại trước khi tạo giao dịch mới.'
-      });
+      const result = await PaymentService.createPayment(validData, userId);
+      expect(result).toBe('https://pay.os/123');
     });
 
     it('should cancel expired pending payment and continue creating new payment', async () => {
