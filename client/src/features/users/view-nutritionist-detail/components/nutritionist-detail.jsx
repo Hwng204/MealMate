@@ -19,10 +19,10 @@ import { NutritionistReviews } from './nutritionist-reviews';
 const formatDate = iso =>
   iso
     ? new Date(iso).toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
     : null;
 
 export default function NutritionistDetail({ id }) {
@@ -172,7 +172,7 @@ export default function NutritionistDetail({ id }) {
                 )}
               </div>
 
-              <div className='rounded-[28px] border border-border/70 bg-background p-5 shadow-sm md:p-6'>
+              {/* <div className='rounded-[28px] border border-border/70 bg-background p-5 shadow-sm md:p-6'>
                 <div className='mb-5 flex items-center gap-2'>
                   <div className='flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary'>
                     <FileBadge2 className='h-5 w-5' />
@@ -271,7 +271,7 @@ export default function NutritionistDetail({ id }) {
                     Chưa có thông tin chứng chỉ
                   </div>
                 )}
-              </div>
+              </div> */}
             </div>
 
             <div className='space-y-6'>

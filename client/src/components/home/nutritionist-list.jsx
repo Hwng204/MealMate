@@ -61,13 +61,13 @@ const NutritionistCard = ({ nutritionist }) => {
             </div>
           )}
 
-          {profile?.professionalBio && (
+          {/* {profile?.professionalBio && (
             <div className='rounded-2xl border border-border/70 bg-background px-4 py-4 text-left'>
               <p className='line-clamp-4 text-sm leading-7 text-muted-foreground'>
                 {profile.professionalBio}
               </p>
             </div>
-          )}
+          )} */}
         </div>
 
         <Button
