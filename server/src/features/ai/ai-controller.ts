@@ -8,7 +8,8 @@ import { ApiResponse } from '~/shared/utils';
 import type {
   AskAgentRequest,
   RecommendDailyMealsRequest,
-  RecommendDailyWorkoutRequest
+  RecommendDailyWorkoutRequest,
+  RecommendWeeklyMealsRequest
 } from './ai-dto';
 import { AiService } from './ai-service';
 
@@ -49,6 +50,40 @@ const isActiveNutritionistClient = async (
   );
 };
 
+const resolveTargetUserId = async (
+  req: Request,
+  payload: { userId?: string }
+): Promise<string> => {
+  const currentUserId = req.user?._id?.toString();
+  const role = req.user?.role;
+
+  if (!currentUserId) {
+    throw createHttpError(401, 'Unauthorized');
+  }
+
+  if (!payload.userId || payload.userId === currentUserId) {
+    return currentUserId;
+  }
+
+  if (role !== ROLE.ADMIN && role !== ROLE.NUTRITIONIST) {
+    throw createHttpError(403, 'Bạn không có quyền tạo lịch cho người dùng này');
+  }
+
+  if (role === ROLE.NUTRITIONIST) {
+    const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
+      isNutritionistAssignedToClient(currentUserId, payload.userId),
+      isNutritionistClassMember(currentUserId, payload.userId),
+      isActiveNutritionistClient(currentUserId, payload.userId)
+    ]);
+
+    if (!isAssigned && !isClassMember && !isActiveClient) {
+      throw createHttpError(403, 'Bạn không có quyền tạo lịch cho học viên này');
+    }
+  }
+
+  return payload.userId;
+};
+
 export const AiController = {
   askAgent: async (req: Request, res: Response) => {
     const payload = req.body as AskAgentRequest;
@@ -60,38 +95,16 @@ export const AiController = {
 
   recommendDailyMeals: async (req: Request, res: Response) => {
     const currentUserId = req.user?._id?.toString();
-    const role = req.user?.role;
-    
     if (!currentUserId) {
       throw createHttpError(401, 'Unauthorized');
     }
 
     const payload = req.body as RecommendDailyMealsRequest;
-    let targetUserId = currentUserId;
+    const targetUserId = await resolveTargetUserId(req, payload);
 
-    if (payload.userId) {
-      if (role !== ROLE.ADMIN && role !== ROLE.NUTRITIONIST) {
-        throw createHttpError(403, 'Bạn không có quyền tạo lịch cho người dùng này');
-      }
-
-      if (role === ROLE.NUTRITIONIST) {
-        const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
-          isNutritionistAssignedToClient(currentUserId, payload.userId),
-          isNutritionistClassMember(currentUserId, payload.userId),
-          isActiveNutritionistClient(currentUserId, payload.userId)
-        ]);
-
-        if (!isAssigned && !isClassMember && !isActiveClient) {
-          throw createHttpError(403, 'Bạn không có quyền tạo lịch cho học viên này');
-        }
-      }
-      targetUserId = payload.userId;
-    }
-
-    const billingUserId = currentUserId;
     const result = await AiService.recommendDailyMeals(
       targetUserId,
-      billingUserId,
+      currentUserId,
       payload
     );
 
@@ -102,43 +115,44 @@ export const AiController = {
 
   recommendDailyWorkout: async (req: Request, res: Response) => {
     const currentUserId = req.user?._id?.toString();
-    const role = req.user?.role;
-
     if (!currentUserId) {
       throw createHttpError(401, 'Unauthorized');
     }
 
     const payload = req.body as RecommendDailyWorkoutRequest;
-    let targetUserId = currentUserId;
+    const targetUserId = await resolveTargetUserId(req, payload);
 
-    if (payload.userId) {
-      if (role !== ROLE.ADMIN && role !== ROLE.NUTRITIONIST) {
-        throw createHttpError(403, 'Bạn không có quyền tạo lịch cho người dùng này');
-      }
-
-      if (role === ROLE.NUTRITIONIST) {
-        const [isAssigned, isClassMember, isActiveClient] = await Promise.all([
-          isNutritionistAssignedToClient(currentUserId, payload.userId),
-          isNutritionistClassMember(currentUserId, payload.userId),
-          isActiveNutritionistClient(currentUserId, payload.userId)
-        ]);
-
-        if (!isAssigned && !isClassMember && !isActiveClient) {
-          throw createHttpError(403, 'Bạn không có quyền tạo lịch cho học viên này');
-        }
-      }
-      targetUserId = payload.userId;
-    }
-
-    const billingUserId = currentUserId;
     const result = await AiService.recommendDailyWorkout(
       targetUserId,
-      billingUserId,
+      currentUserId,
       payload
     );
 
     res
       .status(200)
       .json(ApiResponse.success('Tạo gợi ý bài tập thành công', result));
+  },
+
+  recommendWeeklyMeals: async (req: Request, res: Response) => {
+    const payload = req.body as RecommendWeeklyMealsRequest;
+    const currentUserId = req.user?._id?.toString();
+    const targetUserId = currentUserId ?? payload.userId;
+
+    if (!targetUserId) {
+      throw createHttpError(
+        400,
+        'Cần đăng nhập hoặc truyền userId trong body để gợi ý bữa ăn tuần'
+      );
+    }
+
+    const result = await AiService.recommendWeeklyMeals(
+      targetUserId,
+      currentUserId ?? targetUserId,
+      payload
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Tạo gợi ý bữa ăn tuần thành công', result));
   }
 };

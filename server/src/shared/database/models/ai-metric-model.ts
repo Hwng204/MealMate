@@ -9,7 +9,12 @@ const aiMetricSchema = new Schema(
     },
     endpoint: {
       type: String,
-      enum: ['ask_agent', 'recommend_daily_meals', 'recommend_daily_workout'],
+      enum: [
+        'ask_agent',
+        'recommend_daily_meals',
+        'recommend_daily_workout',
+        'recommend_weekly_meals'
+      ],
       required: true
     },
     requestId: { type: String },

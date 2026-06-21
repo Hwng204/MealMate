@@ -27,6 +27,13 @@ export const mealRecommendationModel = new ChatGoogleGenerativeAI({
   maxOutputTokens: 2048
 });
 
+export const weeklyMealRecommendationModel = new ChatGoogleGenerativeAI({
+  apiKey: googleApiKey,
+  model: 'gemini-2.5-flash-lite',
+  temperature: 0.65,
+  maxOutputTokens: 16384
+});
+
 export const agent = createAgent({
   model,
   systemPrompt: agentConfig.systemPrompt

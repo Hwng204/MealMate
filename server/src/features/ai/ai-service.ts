@@ -7,7 +7,8 @@ import {
   agentConfig,
   evaluationAgent,
   evaluationConfig,
-  mealRecommendationModel
+  mealRecommendationModel,
+  weeklyMealRecommendationModel
 } from '~/shared/config/ai-agent';
 import {
   type AiQuotaEndpoint,
@@ -15,6 +16,7 @@ import {
   getDailyTokenLimit,
   getNextQuotaResetAt,
   getReserveTokenRangeForEndpoint,
+  isUnlimitedQuotaEndpoint,
   resolveMembershipLevel
 } from '~/shared/config/ai-quota';
 import { ragConfig } from '~/shared/config/rag';
@@ -52,10 +54,13 @@ import type {
   DailyMealRecommendationResponse,
   DailyWorkoutRecommendationResponse,
   RecommendDailyMealsRequest,
-  RecommendDailyWorkoutRequest
+  RecommendDailyWorkoutRequest,
+  RecommendWeeklyMealsRequest,
+  WeeklyMealRecommendationResponse
 } from './ai-dto';
 import {
   aiMealRecommendationSchema,
+  aiWeeklyMealRecommendationSchema,
   aiWorkoutRecommendationSchema
 } from './ai-dto';
 import type {
@@ -69,7 +74,9 @@ import exerciseRecommendationPrompt, {
   EXERCISE_RECOMMENDATION_PROMPT_CONFIG
 } from './exercise-recommendation-prompt';
 import mealRecommendationPrompt, {
-  MEAL_RECOMMENDATION_PROMPT_CONFIG
+  MEAL_RECOMMENDATION_PROMPT_CONFIG,
+  MEAL_WEEKLY_RECOMMENDATION_PROMPT_CONFIG,
+  mealRecommendationWeeklyPrompt
 } from './meal-recommendation-prompt';
 import {
   calculateDishCalories,
@@ -255,7 +262,8 @@ type AiResponseMeta = {
 type AiMetricEndpoint =
   | 'ask_agent'
   | 'recommend_daily_meals'
-  | 'recommend_daily_workout';
+  | 'recommend_daily_workout'
+  | 'recommend_weekly_meals';
 
 type RagDishDocument = {
   metadata?: {
@@ -799,6 +807,306 @@ export const AiService = {
       });
       throw error;
     }
+  },
+
+  recommendWeeklyMeals: async (
+    userId: string,
+    billingUserId: string,
+    payload: RecommendWeeklyMealsRequest
+  ): Promise<WeeklyMealRecommendationResponse> => {
+    let reservation: AiQuotaReservation | null = null;
+    let aiInvocation: AiInvocationResult | null = null;
+    const startedAt = Date.now();
+    const requestId = randomUUID();
+    const createdScheduleIds: string[] = [];
+
+    try {
+      const user = await getUserProfileForRecommendation(userId);
+      const weekStartDate = payload.weekStartDate;
+      const weekDays = buildWeekDays(weekStartDate);
+
+      const recentMealContext = await getRecentMealDishContext(
+        userId,
+        weekStartDate,
+        MEAL_HISTORY_LOOKBACK_DAYS
+      );
+
+      const referenceMealSlots = buildMealSlots(user.mealSettings);
+      const dishRetrieval = await getCandidateDishes(user, referenceMealSlots);
+      const candidateDishes = dishRetrieval.dishes;
+      console.log(
+        `[RAG] Weekly meal retrieval mode=${dishRetrieval.mode}, ragMatchedDishIds=${dishRetrieval.ragMatchedDishIds ?? 'N/A'}, candidateDishesAfterHardFilters=${candidateDishes.length}, recentDistinctDishes(${recentMealContext.lookbackDays}d)=${recentMealContext.distinctDishCount}`
+      );
+
+      if (!candidateDishes.length) {
+        throw createHttpError(
+          404,
+          'Không có món ăn phù hợp với hồ sơ người dùng hiện tại'
+        );
+      }
+
+      const dishesById = new Map(candidateDishes.map(dish => [dish._id, dish]));
+      const candidatesByDayAndMealType = new Map<
+        number,
+        Map<string, DishCandidate[]>
+      >();
+
+      weekDays.forEach((day, dayIndex) => {
+        const dayCandidates = new Map<string, DishCandidate[]>();
+        const daySeed = ((Date.now() + dayIndex * 977) | 0) || 1;
+
+        referenceMealSlots.forEach((slot, slotIndex) => {
+          const ranked = pickCandidatesForMeal(slot, candidateDishes, user, {
+            targetDate: day.date,
+            recentDishCounts: recentMealContext.dishCounts,
+            regenerationSeed: daySeed + slotIndex * 31,
+            currentDayDishIds: new Set<string>()
+          });
+          dayCandidates.set(slot.mealType, ranked);
+        });
+
+        candidatesByDayAndMealType.set(dayIndex, dayCandidates);
+      });
+
+      const dailyCalorieTarget = user.nutritionTarget?.caloriesTarget;
+      const weekDaysForPrompt = weekDays.map((day, dayIndex) => ({
+        dayIndex,
+        dateISO: day.date.toISOString(),
+        dayOfWeek: day.dayOfWeek,
+        mealSlots: toMealSlotsForPrompt(referenceMealSlots, dailyCalorieTarget)
+      }));
+
+      const dishCatalog = buildWeeklyPromptCatalog(
+        weekDaysForPrompt,
+        candidatesByDayAndMealType,
+        dishesById
+      );
+
+      const inputForPrompt = buildPromptInput(user);
+      const retrievalSummary = buildWeeklyRetrievalSummary(
+        candidateDishes.length,
+        weekDays,
+        candidatesByDayAndMealType,
+        dishRetrieval.mode,
+        dishRetrieval.ragMatchedDishIds,
+        recentMealContext
+      );
+
+      const prompt = mealRecommendationWeeklyPrompt(inputForPrompt, {
+        weekStartDateISO: weekStartDate.toISOString(),
+        weekDays: weekDaysForPrompt,
+        dishCatalog,
+        retrievalSummary
+      });
+
+      const estimatedReserve = estimateReserveTokensForPrompt(
+        'recommend_weekly_meals',
+        prompt
+      );
+      console.log(
+        `[AI_QUOTA] endpoint=recommend_weekly_meals promptChars=${prompt.length} estimatedReserve=${estimatedReserve}`
+      );
+      reservation = await reserveAiTokensForRecommendation(
+        billingUserId,
+        'recommend_weekly_meals',
+        estimatedReserve
+      );
+      aiInvocation = await invokeWeeklyMealRecommendationAi(prompt);
+      console.log(
+        `[AiInvocation] endpoint=recommend_weekly_meals textLength=${aiInvocation.text.length} totalTokens=${aiInvocation.usage.totalTokens}`
+      );
+
+      const quotaSettlement = await settleAiTokenUsage(
+        billingUserId,
+        reservation,
+        aiInvocation.usage
+      );
+      const aiMeta: AiResponseMeta = {
+        usage: aiInvocation.usage,
+        reservation,
+        settlement: quotaSettlement
+      };
+      const aiSelection = parseAiWeeklySelection(aiInvocation.text);
+      if (!aiSelection) {
+        throw createHttpError(
+          500,
+          'LLM trả về kết quả không hợp lệ cho kế hoạch bữa ăn tuần'
+        );
+      }
+
+      const orderedSelection = reorderWeeklySelectionByDate(aiSelection, weekDays);
+
+      const weekMeals: WeekDayMaterialized[] = [];
+      for (let dayIndex = 0; dayIndex < weekDays.length; dayIndex += 1) {
+        const day = weekDays[dayIndex];
+        const aiDay = orderedSelection[dayIndex];
+        const candidatesByMealType =
+          candidatesByDayAndMealType.get(dayIndex) ?? new Map();
+
+        const materialized = materializeMeals({
+          mealSlots: referenceMealSlots,
+          aiSelection: aiDay?.meals ?? null,
+          dishesById,
+          candidatesByMealType,
+          regenerationSeed: dayIndex + 1,
+          currentDayDishIds: new Set<string>()
+        });
+
+        weekMeals.push({
+          dayIndex,
+          date: day.date,
+          dayOfWeek: day.dayOfWeek,
+          meals: materialized
+        });
+      }
+
+      const enforcementResult = enforceWeeklyConstraints(
+        weekMeals,
+        candidatesByDayAndMealType,
+        dishesById
+      );
+      console.log(
+        `[WeeklyConstraint] allowedDishes=${enforcementResult.allowedDishCount} maxAllowedViolations=${MAX_ALLOWED_WEEKLY_VIOLATIONS}`
+      );
+
+      const emptyMeals = weekMeals.flatMap(day =>
+        day.meals
+          .filter(meal => meal.dishes.length === 0)
+          .map(meal => `${day.dayOfWeek}/${meal.mealType}`)
+      );
+      if (emptyMeals.length > 0) {
+        throw createHttpError(
+          500,
+          `Không thể tạo đủ món ăn cho các bữa: ${emptyMeals.join(', ')}`
+        );
+      }
+
+      if (enforcementResult.allowedDishCount > MAX_ALLOWED_WEEKLY_VIOLATIONS) {
+        throw createHttpError(
+          500,
+          `Không thể đảm bảo đa dạng món ăn trong tuần (${enforcementResult.allowedDishCount} vi phạm > ${MAX_ALLOWED_WEEKLY_VIOLATIONS} cho phép). Vui lòng thêm món ăn yêu thích hoặc bỏ bớt hạn chế.`
+        );
+      }
+
+      const weeklyCalorieTarget = dailyCalorieTarget;
+      if (weeklyCalorieTarget) {
+        for (const day of weekMeals) {
+          const optimized = optimizeMealsForCalorieTarget(
+            day.meals,
+            dishesById,
+            weeklyCalorieTarget
+          );
+          day.meals = optimized as WeekDayMaterialized['meals'];
+        }
+      }
+
+      const allUniqueDishIds = new Set<string>();
+      weekMeals.forEach(day => {
+        day.meals.forEach(meal => {
+          meal.dishes.forEach(dish => allUniqueDishIds.add(dish.dishId));
+        });
+      });
+
+      const weeklyDishes = await DishModel.find({
+        _id: { $in: Array.from(allUniqueDishIds) }
+      })
+        .select('nutrition')
+        .lean();
+      const weeklyDishNutritionMap = new Map<string, DishNutrition>(
+        weeklyDishes.map(dish => [
+          dish._id.toString(),
+          (dish as any).nutrition ?? null
+        ])
+      );
+
+      const saveResults = await Promise.allSettled(
+        weekMeals.map(async day => {
+          const scheduleMeals = toScheduleMealPayloads(day.meals, dishesById);
+          const schedule = await upsertScheduleMeals({
+            user,
+            date: day.date,
+            dayOfWeek: day.dayOfWeek,
+            meals: scheduleMeals
+          });
+          return {
+            dayIndex: day.dayIndex,
+            schedule
+          };
+        })
+      );
+
+      const failedSave = saveResults.find(r => r.status === 'rejected');
+      if (failedSave) {
+        const successfulIds = saveResults
+          .filter((r): r is PromiseFulfilledResult<{ dayIndex: number; schedule: any }> => r.status === 'fulfilled')
+          .map(r => r.value.schedule._id.toString());
+        await rollbackSchedules(successfulIds);
+        throw (failedSave as PromiseRejectedResult).reason;
+      }
+
+      const dayResponses: DailyMealRecommendationResponse[] = [];
+      for (const result of saveResults as PromiseFulfilledResult<{
+        dayIndex: number;
+        schedule: any;
+      }>[]) {
+        const { dayIndex, schedule } = result.value;
+        const scheduleId = schedule._id.toString();
+        createdScheduleIds.push(scheduleId);
+        const response = await toWeeklyRecommendedScheduleResponse(
+          schedule.toObject(),
+          aiMeta,
+          weeklyDishNutritionMap
+        );
+        dayResponses.push(response);
+      }
+
+      dayResponses.sort((a, b) => {
+        const dayA = weekMeals.findIndex(d => d.dayOfWeek === a.dayOfWeek);
+        const dayB = weekMeals.findIndex(d => d.dayOfWeek === b.dayOfWeek);
+        return dayA - dayB;
+      });
+
+      await MetricsCollector.logMetric({
+        sourceType: 'production',
+        endpoint: 'recommend_weekly_meals',
+        requestId,
+        userId,
+        status: 'success',
+        latencyMs: Date.now() - startedAt,
+        inputTokens: aiMeta.usage.inputTokens,
+        outputTokens: aiMeta.usage.outputTokens,
+        estimatedCostUsd: estimateAiCostUsd(aiMeta.usage.totalTokens),
+        qualityMetadata: {
+          daysCount: dayResponses.length,
+          allowedViolations: enforcementResult.allowedDishCount,
+          maxAllowedViolations: MAX_ALLOWED_WEEKLY_VIOLATIONS,
+          qualityEvaluated: false
+        }
+      });
+
+      return {
+        weekStartDate: weekStartDate.toISOString(),
+        weekEndDate: weekDays[weekDays.length - 1].date.toISOString(),
+        days: dayResponses
+      };
+    } catch (error) {
+      if (reservation && !aiInvocation) {
+        await refundReservedAiTokens(userId, reservation);
+      }
+      if (createdScheduleIds.length > 0) {
+        await rollbackSchedules(createdScheduleIds);
+      }
+      await MetricsCollector.logMetric({
+        sourceType: 'production',
+        endpoint: 'recommend_weekly_meals',
+        requestId,
+        userId,
+        status: 'failed',
+        latencyMs: Date.now() - startedAt,
+        errorMessage: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
   }
 };
 
@@ -883,6 +1191,13 @@ const reserveAiTokensForRecommendation = async (
     Math.min(reserveRange.max, toNonNegativeInt(requestedReserveTokens))
   );
 
+  if (isUnlimitedQuotaEndpoint(endpoint)) {
+    return {
+      endpoint,
+      reservedTokens: reserveTokens
+    };
+  }
+
   const changedByExpiry = applyMembershipExpiryIfNeeded(user, now);
   const changedByRefresh = refreshDailyQuotaIfNeeded(user, now);
   const normalizedTokens = toNonNegativeInt(user.aiTokens);
@@ -912,6 +1227,10 @@ const refundReservedAiTokens = async (
   userId: string,
   reservation: AiQuotaReservation
 ) => {
+  if (isUnlimitedQuotaEndpoint(reservation.endpoint)) {
+    return;
+  }
+
   await UserModel.findByIdAndUpdate(userId, {
     $inc: { aiTokens: reservation.reservedTokens }
   });
@@ -929,7 +1248,7 @@ const settleAiTokenUsage = async (
     reservation.reservedTokens - chargedTokens
   );
 
-  if (refundedTokens > 0) {
+  if (refundedTokens > 0 && !isUnlimitedQuotaEndpoint(reservation.endpoint)) {
     await UserModel.findByIdAndUpdate(userId, {
       $inc: { aiTokens: refundedTokens }
     });
@@ -2463,6 +2782,21 @@ const invokeMealRecommendationAi = async (
   return { text, usage };
 };
 
+const invokeWeeklyMealRecommendationAi = async (
+  prompt: string
+): Promise<AiInvocationResult> => {
+  const response = await weeklyMealRecommendationModel.invoke([
+    { role: 'user', content: prompt }
+  ]);
+  const text = normalizeContent(response.content);
+  const usage = normalizeUsageMetadata(
+    (response as any)?.usage_metadata ??
+      (response as any)?.response_metadata?.tokenUsage
+  );
+
+  return { text, usage };
+};
+
 const invokeEvaluationAi = async (
   prompt: string
 ): Promise<AiInvocationResult> => {
@@ -2517,16 +2851,63 @@ const extractJson = (value: string): unknown => {
     .trim();
 
   const direct = tryParseJson(cleaned);
-  if (direct !== null) return direct;
+  if (direct !== null) {
+    if (Array.isArray(direct)) return direct;
+    if (direct && typeof direct === 'object') {
+      const unwrapped = unwrapArrayFromObject(direct as Record<string, unknown>);
+      if (unwrapped !== null) return unwrapped;
+    }
+    return direct;
+  }
 
   const startIndex = cleaned.indexOf('[');
   const endIndex = cleaned.lastIndexOf(']');
-  if (startIndex < 0 || endIndex < 0 || endIndex <= startIndex) {
-    return null;
+  if (startIndex >= 0 && endIndex > startIndex) {
+    const arrayExtracted = tryParseJson(cleaned.slice(startIndex, endIndex + 1));
+    if (arrayExtracted !== null) return arrayExtracted;
   }
 
-  const extracted = cleaned.slice(startIndex, endIndex + 1);
-  return tryParseJson(extracted);
+  const objStart = cleaned.indexOf('{');
+  const objEnd = cleaned.lastIndexOf('}');
+  if (objStart >= 0 && objEnd > objStart) {
+    const objExtracted = cleaned.slice(objStart, objEnd + 1);
+    const objParsed = tryParseJson(objExtracted);
+    if (
+      objParsed &&
+      typeof objParsed === 'object' &&
+      !Array.isArray(objParsed)
+    ) {
+      const unwrapped = unwrapArrayFromObject(objParsed as Record<string, unknown>);
+      if (unwrapped !== null) return unwrapped;
+    }
+  }
+
+  return null;
+};
+
+const unwrapArrayFromObject = (obj: Record<string, unknown>): unknown => {
+  const candidateKeys = [
+    'days',
+    'weekPlan',
+    'week',
+    'plan',
+    'data',
+    'meals',
+    'result',
+    'items'
+  ];
+  for (const key of candidateKeys) {
+    const value = obj[key];
+    if (Array.isArray(value) && value.length > 0) {
+      return value;
+    }
+  }
+  for (const value of Object.values(obj)) {
+    if (Array.isArray(value) && value.length > 0) {
+      return value;
+    }
+  }
+  return null;
 };
 
 const tryParseJson = (value: string): unknown => {
@@ -3152,6 +3533,174 @@ const toAiRecommendedScheduleResponse = (
   }));
 };
 
+const buildTotalNutritionFromScheduleData = (
+  scheduleObj: any,
+  dishNutritionMap: Map<string, DishNutrition>
+): {
+  nutrients: NutritionItem[];
+  minerals: NutritionItem[];
+  vitamins: NutritionItem[];
+} => {
+  const totalNutrients = new Map<string, NutritionItem>();
+  const totalMinerals = new Map<string, NutritionItem>();
+  const totalVitamins = new Map<string, NutritionItem>();
+
+  (scheduleObj.meals ?? []).forEach((meal: any) => {
+    (meal.dishes ?? []).forEach((dish: any) => {
+      const dishId = dish.dishId?.toString();
+      if (!dishId) return;
+      const servings =
+        typeof dish.servings === 'number' && Number.isFinite(dish.servings)
+          ? dish.servings
+          : 1;
+      const nutrition = dishNutritionMap.get(dishId);
+      if (!nutrition) return;
+
+      addNutritionItemsTotal(totalNutrients, nutrition.nutrients, servings);
+      addNutritionItemsTotal(totalMinerals, nutrition.minerals, servings);
+      addNutritionItemsTotal(totalVitamins, nutrition.vitamins, servings);
+    });
+  });
+
+  return {
+    nutrients: Array.from(totalNutrients.values()).map(item => ({
+      label: item.label ?? undefined,
+      value: item.value ?? undefined,
+      unit: item.unit ?? undefined
+    })),
+    minerals: Array.from(totalMinerals.values()).map(item => ({
+      label: item.label ?? undefined,
+      value: item.value ?? undefined,
+      unit: item.unit ?? undefined
+    })),
+    vitamins: Array.from(totalVitamins.values()).map(item => ({
+      label: item.label ?? undefined,
+      value: item.value ?? undefined,
+      unit: item.unit ?? undefined
+    }))
+  };
+};
+
+const toWeeklyRecommendedScheduleResponse = (
+  scheduleObj: any,
+  aiMeta: AiResponseMeta,
+  dishNutritionMap: Map<string, DishNutrition>
+): DailyMealRecommendationResponse => {
+  const sanitizedMeals: DailyMealRecommendationResponse['meals'] = [];
+  (scheduleObj.meals ?? []).forEach((meal: any) => {
+    const dishes: DailyMealRecommendationResponse['meals'][number]['dishes'] =
+      [];
+    (meal.dishes ?? []).forEach((dish: any) => {
+      const dishId = dish.dishId?.toString();
+      if (!dishId) return;
+
+      dishes.push({
+        dishId,
+        name: dish.name,
+        energy: typeof dish.energy === 'number' ? dish.energy : undefined,
+        servings: typeof dish.servings === 'number' ? dish.servings : 1,
+        image: dish.image ?? undefined,
+        isEaten: dish.isEaten ?? false
+      });
+    });
+
+    sanitizedMeals.push({
+      mealType: meal.mealType,
+      notes: meal.notes ?? undefined,
+      dishes
+    });
+  });
+
+  const sanitizedWorkout: DailyMealRecommendationResponse['workout'] = [];
+  (scheduleObj.workout ?? []).forEach((item: any) => {
+    const exerciseId = item.exerciseId?.toString();
+    if (!exerciseId) return;
+
+    sanitizedWorkout.push({
+      exerciseId,
+      exerciseName: item.exerciseName,
+      exerciseType: item.exerciseType,
+      exerciseTutorial: item.exerciseTutorial ?? '',
+      logType: item.logType,
+      distanceTarget: item.distanceTarget
+        ? {
+            value: item.distanceTarget.value,
+            unit: item.distanceTarget.unit
+          }
+        : undefined,
+      weightAndRepsTarget: item.weightAndRepsTarget
+        ? {
+            reps: item.weightAndRepsTarget.reps,
+            sets: item.weightAndRepsTarget.sets,
+            weight:
+              typeof item.weightAndRepsTarget.weight === 'number'
+                ? item.weightAndRepsTarget.weight
+                : undefined
+          }
+        : undefined,
+      durationTarget: item.durationTarget
+        ? { seconds: item.durationTarget.seconds }
+        : undefined,
+      isCompleted: item.isCompleted ?? false
+    });
+  });
+
+  const dateIso = toIsoString(scheduleObj.date) ?? new Date().toISOString();
+  const totalNutrition = buildTotalNutritionFromScheduleData(
+    scheduleObj,
+    dishNutritionMap
+  );
+
+  return {
+    scheduleId: scheduleObj._id.toString(),
+    date: dateIso,
+    dayOfWeek: scheduleObj.dayOfWeek ?? getDayOfWeek(new Date(dateIso)),
+    user: {
+      _id: scheduleObj.user?._id?.toString() ?? '',
+      name: scheduleObj.user?.name ?? ''
+    },
+    meals: sanitizedMeals,
+    workout: sanitizedWorkout,
+    totalNutrition: {
+      nutrients: totalNutrition.nutrients.map(n => ({
+        label: n.label ?? undefined,
+        value: n.value ?? undefined,
+        unit: n.unit ?? undefined
+      })),
+      minerals: totalNutrition.minerals.map(n => ({
+        label: n.label ?? undefined,
+        value: n.value ?? undefined,
+        unit: n.unit ?? undefined
+      })),
+      vitamins: totalNutrition.vitamins.map(n => ({
+        label: n.label ?? undefined,
+        value: n.value ?? undefined,
+        unit: n.unit ?? undefined
+      }))
+    },
+    notes: scheduleObj.notes ?? undefined,
+    createdAt: toIsoString(scheduleObj.createdAt),
+    updatedAt: toIsoString(scheduleObj.updatedAt),
+    aiUsage: {
+      endpoint: aiMeta.reservation.endpoint,
+      provider: agentConfig.provider,
+      model: agentConfig.model,
+      inputTokens: aiMeta.usage.inputTokens,
+      outputTokens: aiMeta.usage.outputTokens,
+      totalTokens: aiMeta.usage.totalTokens,
+      reservedTokens: aiMeta.reservation.reservedTokens,
+      chargedTokens: aiMeta.settlement.chargedTokens,
+      refundedTokens: aiMeta.settlement.refundedTokens
+    },
+    aiQuota: {
+      membershipLevel: aiMeta.settlement.membershipLevel,
+      dailyTokenLimit: aiMeta.settlement.dailyTokenLimit,
+      remainingTokens: aiMeta.settlement.remainingTokens,
+      quotaResetAt: toIsoString(aiMeta.settlement.quotaResetAt)
+    }
+  };
+};
+
 const normalizeContent = (content: unknown): string => {
   if (typeof content === 'string') {
     return content;
@@ -3179,4 +3728,463 @@ const normalizeContent = (content: unknown): string => {
   }
 
   return String(content);
+};
+
+type WeekDayMaterialized = {
+  dayIndex: number;
+  date: Date;
+  dayOfWeek: string;
+  meals: Array<{
+    mealType: string;
+    dishes: Array<{
+      dishId: string;
+      name: string;
+      servings: number;
+      image?: string;
+      nutrition: DishNutrition;
+    }>;
+  }>;
+};
+
+const MAX_ALLOWED_WEEKLY_VIOLATIONS = 2;
+
+const buildWeekDays = (weekStartDate: Date) => {
+  const days: Array<{ date: Date; dayOfWeek: string }> = [];
+  for (let i = 0; i < 7; i += 1) {
+    const date = new Date(weekStartDate);
+    date.setUTCDate(date.getUTCDate() + i);
+    days.push({
+      date,
+      dayOfWeek: getDayOfWeek(date)
+    });
+  }
+  return days;
+};
+
+const collectDayDishIds = (day: WeekDayMaterialized): Set<string> => {
+  const ids = new Set<string>();
+  day.meals.forEach(meal => {
+    meal.dishes.forEach(dish => ids.add(dish.dishId));
+  });
+  return ids;
+};
+
+const collectMealDishIds = (
+  meal: WeekDayMaterialized['meals'][number]
+): Set<string> => new Set(meal.dishes.map(dish => dish.dishId));
+
+const findReplacementForMealType = (
+  mealType: string,
+  excludedDishIds: Set<string>,
+  candidatesByMealType: Map<string, DishCandidate[]>
+): DishCandidate | null => {
+  const candidates = candidatesByMealType.get(mealType) ?? [];
+  for (const candidate of candidates) {
+    if (excludedDishIds.has(candidate._id)) continue;
+    return candidate;
+  }
+  return null;
+};
+
+const replaceDishInMeal = (
+  day: WeekDayMaterialized,
+  mealIndex: number,
+  dishIndex: number,
+  replacement: DishCandidate,
+  servings: number
+) => {
+  const meal = day.meals[mealIndex];
+  meal.dishes[dishIndex] = {
+    dishId: replacement._id,
+    name: replacement.name,
+    servings,
+    image: replacement.image,
+    nutrition: replacement.nutrition ?? null
+  };
+};
+
+const enforceWeeklyConstraints = (
+  weekMeals: WeekDayMaterialized[],
+  candidatesByDayAndMealType: Map<
+    number,
+    Map<string, DishCandidate[]>
+  >,
+  dishesById: Map<string, DishCandidate>
+) => {
+  const allowedDishes = new Set<string>();
+  const dishCounts = new Map<string, number>();
+
+  const recount = () => {
+    dishCounts.clear();
+    weekMeals.forEach(day => {
+      day.meals.forEach(meal => {
+        meal.dishes.forEach(dish => {
+          dishCounts.set(dish.dishId, (dishCounts.get(dish.dishId) ?? 0) + 1);
+        });
+      });
+    });
+  };
+
+  recount();
+
+  const isAllowed = (dishId: string) => allowedDishes.has(dishId);
+
+  const passNoConsecutive = (): boolean => {
+    let changed = false;
+    for (let d = 0; d < weekMeals.length - 1; d += 1) {
+      const prevIds = collectDayDishIds(weekMeals[d]);
+      const currentDay = weekMeals[d + 1];
+      const nextIds =
+        d + 2 < weekMeals.length
+          ? collectDayDishIds(weekMeals[d + 2])
+          : new Set<string>();
+      const dayCandidates =
+        candidatesByDayAndMealType.get(d + 1) ?? new Map();
+
+      currentDay.meals.forEach((meal, mealIndex) => {
+        meal.dishes.forEach((dish, dishIndex) => {
+          if (!prevIds.has(dish.dishId)) return;
+          if (isAllowed(dish.dishId)) return;
+          if (meal.dishes.length <= 1) {
+            allowedDishes.add(dish.dishId);
+            return;
+          }
+
+          const inMealIds = collectMealDishIds(meal);
+          const excluded = new Set<string>(inMealIds);
+          prevIds.forEach(id => excluded.add(id));
+          nextIds.forEach(id => excluded.add(id));
+          allowedDishes.forEach(id => excluded.add(id));
+
+          const replacement = findReplacementForMealType(
+            meal.mealType,
+            excluded,
+            dayCandidates
+          );
+          if (replacement) {
+            replaceDishInMeal(
+              currentDay,
+              mealIndex,
+              dishIndex,
+              replacement,
+              dish.servings
+            );
+            changed = true;
+          } else {
+            allowedDishes.add(dish.dishId);
+          }
+        });
+      });
+    }
+    return changed;
+  };
+
+  const passMax3 = (): boolean => {
+    recount();
+    let changed = false;
+    const overflowing = Array.from(dishCounts.entries())
+      .filter(([, count]) => count > 3)
+      .sort((left, right) => right[1] - left[1]);
+
+    for (const [dishId, count] of overflowing) {
+      if (isAllowed(dishId)) continue;
+      let excess = count - 3;
+
+      const occurrences: Array<{
+        dayIdx: number;
+        mealIdx: number;
+        dishIdx: number;
+      }> = [];
+      weekMeals.forEach((day, dayIdx) => {
+        day.meals.forEach((meal, mealIdx) => {
+          meal.dishes.forEach((dish, dishIdx) => {
+            if (dish.dishId === dishId) {
+              occurrences.push({ dayIdx, mealIdx, dishIdx });
+            }
+          });
+        });
+      });
+
+      for (let i = occurrences.length - 1; i >= 0 && excess > 0; i -= 1) {
+        const occ = occurrences[i];
+        const day = weekMeals[occ.dayIdx];
+        const meal = day.meals[occ.mealIdx];
+        const dish = meal.dishes[occ.dishIdx];
+        if (dish.dishId !== dishId) continue;
+        if (meal.dishes.length <= 1) {
+          allowedDishes.add(dishId);
+          break;
+        }
+
+        const inMealIds = collectMealDishIds(meal);
+        const adjacentIds = new Set<string>();
+        if (occ.dayIdx > 0) {
+          collectDayDishIds(weekMeals[occ.dayIdx - 1]).forEach(id =>
+            adjacentIds.add(id)
+          );
+        }
+        if (occ.dayIdx < weekMeals.length - 1) {
+          collectDayDishIds(weekMeals[occ.dayIdx + 1]).forEach(id =>
+            adjacentIds.add(id)
+          );
+        }
+        const excluded = new Set<string>(inMealIds);
+        adjacentIds.forEach(id => excluded.add(id));
+        allowedDishes.forEach(id => excluded.add(id));
+
+        const candidatesForDay =
+          candidatesByDayAndMealType.get(occ.dayIdx) ?? new Map();
+        const replacement = findReplacementForMealType(
+          meal.mealType,
+          excluded,
+          candidatesForDay
+        );
+
+        if (
+          replacement &&
+          (dishCounts.get(replacement._id) ?? 0) < 3
+        ) {
+          replaceDishInMeal(
+            day,
+            occ.mealIdx,
+            occ.dishIdx,
+            replacement,
+            dish.servings
+          );
+          changed = true;
+          excess -= 1;
+          recount();
+        } else {
+          allowedDishes.add(dishId);
+          break;
+        }
+      }
+    }
+    return changed;
+  };
+
+  for (let iter = 0; iter < 10; iter += 1) {
+    const changedConsecutive = passNoConsecutive();
+    const changedMax3 = passMax3();
+    if (!changedConsecutive && !changedMax3) break;
+  }
+
+  recount();
+
+  const finalViolations = new Set<string>();
+  for (let d = 0; d < weekMeals.length - 1; d += 1) {
+    const prevIds = collectDayDishIds(weekMeals[d]);
+    weekMeals[d + 1].meals.forEach(meal => {
+      meal.dishes.forEach(dish => {
+        if (prevIds.has(dish.dishId)) {
+          finalViolations.add(dish.dishId);
+        }
+      });
+    });
+  }
+  dishCounts.forEach((count, dishId) => {
+    if (count > 3) finalViolations.add(dishId);
+  });
+
+  return {
+    allowedDishCount: finalViolations.size,
+    allowedDishes: Array.from(finalViolations)
+  };
+};
+
+const buildWeeklyPromptCatalog = (
+  weekDaysForPrompt: Array<{
+    dayIndex: number;
+    mealSlots: IMealSlotPromptInput[];
+  }>,
+  candidatesByDayAndMealType: Map<
+    number,
+    Map<string, DishCandidate[]>
+  >,
+  dishesById: Map<string, DishCandidate>
+): IDishCatalogPromptInput[] => {
+  const catalogByDishId = new Map<string, IDishCatalogPromptInput>();
+  const mealTypesByDishId = new Map<string, Set<string>>();
+
+  weekDaysForPrompt.forEach(day => {
+    const dayCandidates =
+      candidatesByDayAndMealType.get(day.dayIndex) ?? new Map();
+    day.mealSlots.forEach(slot => {
+      const candidates = dayCandidates.get(slot.mealType) ?? [];
+      candidates.slice(0, 25).forEach((dish: DishCandidate) => {
+        if (!mealTypesByDishId.has(dish._id)) {
+          mealTypesByDishId.set(dish._id, new Set());
+        }
+        mealTypesByDishId.get(dish._id)?.add(slot.mealType);
+      });
+    });
+  });
+
+  for (const [dishId, mealTypes] of mealTypesByDishId.entries()) {
+    const dish = dishesById.get(dishId);
+    if (!dish) continue;
+
+    catalogByDishId.set(dishId, {
+      id: dishId,
+      name: dish.name,
+      categories: dish.categories,
+      nutritionFocus: dish.nutritionFocus,
+      tags: dish.tags,
+      totalTimeMinutes: getDishTotalTime(dish),
+      defaultServings: dish.servings ?? 1,
+      calories: calculateDishCalories(dish),
+      blockedByAllergen: false,
+      nutrients: (dish.nutrition?.nutrients ?? [])
+        .filter(
+          item =>
+            typeof item.label === 'string' &&
+            typeof item.unit === 'string' &&
+            typeof item.value === 'number'
+        )
+        .map(item => ({
+          label: item.label as string,
+          unit: item.unit as string,
+          value: item.value as number
+        })),
+      suggestedMealTypes: Array.from(mealTypes)
+    });
+
+    if (catalogByDishId.size >= MEAL_WEEKLY_RECOMMENDATION_PROMPT_CONFIG.maxCatalogItems) {
+      break;
+    }
+  }
+
+  return Array.from(catalogByDishId.values());
+};
+
+const buildWeeklyRetrievalSummary = (
+  totalCandidates: number,
+  weekDays: Array<{ dayOfWeek: string }>,
+  candidatesByDayAndMealType: Map<
+    number,
+    Map<string, DishCandidate[]>
+  >,
+  mode: DishRetrievalMode,
+  ragMatchedDishIds?: number,
+  recentMealContext?: RecentMealDishContext
+) => {
+  const detail = weekDays
+    .map((day, dayIndex) => {
+      const dayCandidates =
+        candidatesByDayAndMealType.get(dayIndex) ?? new Map();
+      const counts = Array.from(dayCandidates.entries())
+        .map(
+          ([mealType, candidates]) =>
+            `- ${mealType}: ${candidates.length} candidates`
+        )
+        .join('\n');
+      return `${day.dayOfWeek}:\n${counts}`;
+    })
+    .join('\n');
+
+  const modeText =
+    mode === 'rag_vector_search'
+      ? 'Current retrieval mode: RAG vector search + hard filters.'
+      : 'Current retrieval mode: direct MongoDB filtering (RAG disabled or fallback).';
+  const ragCountText =
+    typeof ragMatchedDishIds === 'number'
+      ? `RAG matched dish IDs before hard filters: ${ragMatchedDishIds}.`
+      : null;
+  const recentContextText = recentMealContext
+      ? `Recent history window: ${recentMealContext.lookbackDays} days; distinct dishes=${recentMealContext.distinctDishCount}; total dish picks=${recentMealContext.totalDishPicks}.`
+      : null;
+  const recentDishHintText =
+    recentMealContext && recentMealContext.recentDishNames.length
+      ? `Recently used dishes (de-prioritize): ${recentMealContext.recentDishNames.join(', ')}.`
+      : null;
+
+  return [
+    modeText,
+    ...(ragCountText ? [ragCountText] : []),
+    ...(recentContextText ? [recentContextText] : []),
+    ...(recentDishHintText ? [recentDishHintText] : []),
+    `Total candidates after hard filters: ${totalCandidates}.`,
+    'Per-day candidate counts:',
+    detail
+  ].join('\n');
+};
+
+const parseAiWeeklySelection = (
+  aiText: string
+): Array<{ date: string; dayOfWeek: string; meals: Array<{ mealType: string; dishes: Array<{ dishId: string; servings?: number }> }> }> | null => {
+  const parsedJson = extractJson(aiText);
+  if (!parsedJson) {
+    console.error(
+      `[WeeklyLLM] extractJson returned null. Raw LLM text (first 500 chars): ${aiText.slice(0, 500)}`
+    );
+    return null;
+  }
+
+  const parsed = aiWeeklyMealRecommendationSchema.safeParse(parsedJson);
+  if (!parsed.success) {
+    const issues = parsed.error.issues
+      .slice(0, 5)
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join('; ');
+    console.error(
+      `[WeeklyLLM] Zod validation failed: ${issues}. Parsed JSON (first 500 chars): ${JSON.stringify(parsedJson).slice(0, 500)}`
+    );
+    return null;
+  }
+
+  return parsed.data;
+};
+
+type WeeklyAiDay = {
+  date: string;
+  dayOfWeek: string;
+  meals: Array<{ mealType: string; dishes: Array<{ dishId: string; servings?: number }> }>;
+};
+
+const reorderWeeklySelectionByDate = (
+  selection: WeeklyAiDay[],
+  weekDays: Array<{ date: Date }>
+): WeeklyAiDay[] => {
+  const expectedKeys = weekDays.map(day => day.date.toISOString().slice(0, 10));
+
+  const matchedByKey = new Map<string, WeeklyAiDay>();
+  selection.forEach(day => {
+    const key = String(day.date ?? '').slice(0, 10);
+    if (key && !matchedByKey.has(key)) {
+      matchedByKey.set(key, day);
+    }
+  });
+
+  let mismatched = 0;
+  const reordered = weekDays.map((day, idx) => {
+    const key = expectedKeys[idx];
+    const match = matchedByKey.get(key);
+    if (match) return match;
+    mismatched += 1;
+    return selection[idx] ?? selection[0] ?? {
+      date: day.date.toISOString(),
+      dayOfWeek: '',
+      meals: []
+    };
+  });
+
+  if (mismatched > 0) {
+    console.warn(
+      `[WeeklyLLM] ${mismatched}/7 days had mismatched date from LLM; used fallback ordering.`
+    );
+  }
+
+  return reordered;
+};
+
+const rollbackSchedules = async (scheduleIds: string[]) => {
+  if (!scheduleIds.length) return;
+  try {
+    await ScheduleModel.deleteMany({ _id: { $in: scheduleIds } });
+  } catch (error) {
+    console.error(
+      `[WeeklyRollback] Failed to rollback schedules ${scheduleIds.join(', ')}:`,
+      error
+    );
+  }
 };
