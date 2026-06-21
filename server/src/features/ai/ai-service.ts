@@ -48,6 +48,11 @@ import {
 } from '~/shared/database/models';
 import { createRagVectorStore } from '~/shared/utils';
 
+import {
+  resolveWorkoutFocus,
+  type WorkoutFocus
+} from './workout-focus';
+
 import type {
   AskAgentRequest,
   AskAgentResponse,
@@ -226,6 +231,8 @@ type RecentWorkoutExerciseContext = {
 type WorkoutRankingContext = {
   targetDate: Date;
   recentExerciseCounts: Map<string, number>;
+  focusMuscleGroups?: string[];
+  preferredExerciseTypes?: string[];
 };
 
 type AiUsageMetadata = {
@@ -689,6 +696,10 @@ export const AiService = {
 
       const targetDate = payload.date;
       const dayOfWeek = getDayOfWeek(targetDate);
+      const workoutFocus: WorkoutFocus = resolveWorkoutFocus(targetDate);
+      console.log(
+        `[WorkoutFocus] date=${targetDate.toISOString().slice(0, 10)} dayOfWeek=${dayOfWeek} focus=${workoutFocus.key} muscles=[${workoutFocus.primaryMuscleGroups.join(',')}] intensity=${workoutFocus.intensity}`
+      );
       const mealContext = await getMealContextForDate(userId, targetDate);
       const recentWorkoutContext = await getRecentWorkoutExerciseContext(
         userId,
@@ -711,7 +722,9 @@ export const AiService = {
 
       const rankedExercises = rankCandidateExercises(candidateExercises, user, {
         targetDate,
-        recentExerciseCounts: recentWorkoutContext.exerciseCounts
+        recentExerciseCounts: recentWorkoutContext.exerciseCounts,
+        focusMuscleGroups: workoutFocus.primaryMuscleGroups,
+        preferredExerciseTypes: workoutFocus.preferredExerciseTypes
       });
       const recentExerciseIds = new Set(
         Array.from(recentWorkoutContext.exerciseCounts.keys())
@@ -720,13 +733,17 @@ export const AiService = {
         rankedExercises,
         recentExerciseIds
       );
+      const prioritizedExercises = prioritizeExercisesByFocus(
+        diversifiedExercises,
+        workoutFocus.primaryMuscleGroups
+      );
       const targetExerciseCount = resolveTargetExerciseCount(
         payload.maxExercises,
         user.activityLevel,
-        diversifiedExercises.length
+        prioritizedExercises.length
       );
 
-      const exerciseCatalog = buildExerciseCatalog(diversifiedExercises);
+      const exerciseCatalog = buildExerciseCatalog(prioritizedExercises);
       const inputForPrompt = buildWorkoutPromptInput(user);
       const retrievalSummary = buildWorkoutRetrievalSummary(
         candidateExercises.length,
@@ -742,7 +759,8 @@ export const AiService = {
         dayOfWeek,
         targetExerciseCount,
         exerciseCatalog,
-        retrievalSummary
+        retrievalSummary,
+        focus: workoutFocus
       });
 
       const estimatedReserve = estimateReserveTokensForPrompt(
@@ -2304,6 +2322,21 @@ const scoreExerciseForUser = (
     score += 1;
   }
 
+  if (rankingContext.focusMuscleGroups && rankingContext.focusMuscleGroups.length > 0) {
+    const matchedMuscles = exercise.muscles.filter(m =>
+      rankingContext.focusMuscleGroups!.includes(m)
+    ).length;
+    if (matchedMuscles > 0) {
+      score += matchedMuscles * 12;
+    }
+  }
+
+  if (rankingContext.preferredExerciseTypes && rankingContext.preferredExerciseTypes.length > 0) {
+    if (rankingContext.preferredExerciseTypes.includes(exercise.type)) {
+      score += 10;
+    }
+  }
+
   const recentCount =
     rankingContext.recentExerciseCounts.get(exercise._id) ?? 0;
   if (recentCount > 0) {
@@ -2668,6 +2701,31 @@ const diversifyExercisesByRecency = (
   });
 
   return [...fresh, ...recent];
+};
+
+const prioritizeExercisesByFocus = (
+  exercises: ExerciseCandidate[],
+  focusMuscleGroups: string[]
+): ExerciseCandidate[] => {
+  if (!focusMuscleGroups || focusMuscleGroups.length === 0) {
+    return exercises;
+  }
+
+  const focusMatched: ExerciseCandidate[] = [];
+  const other: ExerciseCandidate[] = [];
+
+  exercises.forEach(exercise => {
+    const hasFocusMuscle = exercise.muscles.some(m =>
+      focusMuscleGroups.includes(m)
+    );
+    if (hasFocusMuscle) {
+      focusMatched.push(exercise);
+    } else {
+      other.push(exercise);
+    }
+  });
+
+  return [...focusMatched, ...other];
 };
 
 const buildWorkoutRetrievalSummary = (
