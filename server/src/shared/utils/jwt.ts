@@ -35,7 +35,7 @@ export const generateToken = (
   payload: JwtPayload
 ): { accessToken: string; refreshToken: string } => {
   const accessToken = jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '15m'
+    expiresIn: '30m'
   });
   const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
     expiresIn: '7d'

@@ -50,6 +50,35 @@ export type RecommendDailyWorkoutRequest = z.infer<
   typeof recommendDailyWorkoutRequestSchema
 >;
 
+const weekStartDateSchema = z
+  .string({ message: 'weekStartDate là bắt buộc' })
+  .trim()
+  .min(1, 'weekStartDate là bắt buộc')
+  .transform((val, ctx) => {
+    const date = new Date(val);
+    if (Number.isNaN(date.getTime())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'weekStartDate không đúng định dạng ngày'
+      });
+      return z.NEVER;
+    }
+    return date;
+  })
+  .refine(
+    date => date.getUTCDay() === 1,
+    'weekStartDate phải là thứ 2 (UTC)'
+  );
+
+export const recommendWeeklyMealsRequestSchema = z.object({
+  weekStartDate: weekStartDateSchema,
+  userId: z.string().optional()
+});
+
+export type RecommendWeeklyMealsRequest = z.infer<
+  typeof recommendWeeklyMealsRequestSchema
+>;
+
 const aiDishPickSchema = z
   .object({
     dishId: z.string().trim().min(1, 'dishId là bắt buộc'),
@@ -70,6 +99,21 @@ const aiMealPickSchema = z
   .strict();
 
 export const aiMealRecommendationSchema = z.array(aiMealPickSchema);
+
+const aiWeeklyDayPickSchema = z.object({
+  date: z.string().trim().min(1, 'date là bắt buộc'),
+  dayOfWeek: z.string().trim().min(1, 'dayOfWeek là bắt buộc'),
+  meals: z.array(
+    z.object({
+      mealType: z.string().trim().min(1, 'mealType là bắt buộc'),
+      dishes: z.array(aiDishPickSchema.passthrough())
+    }).passthrough()
+  )
+});
+
+export const aiWeeklyMealRecommendationSchema = z
+  .array(aiWeeklyDayPickSchema)
+  .length(7, 'LLM phải trả về đúng 7 ngày');
 
 const aiExercisePickSchema = z
   .object({
@@ -131,7 +175,7 @@ export interface AiRecommendedScheduleResponse {
   createdAt?: string;
   updatedAt?: string;
   aiUsage?: {
-    endpoint: 'recommend_daily_meals' | 'recommend_daily_workout';
+    endpoint: 'recommend_daily_meals' | 'recommend_daily_workout' | 'recommend_weekly_meals';
     provider: string;
     model: string;
     inputTokens: number;
@@ -152,3 +196,9 @@ export interface AiRecommendedScheduleResponse {
 export type DailyMealRecommendationResponse = AiRecommendedScheduleResponse;
 
 export type DailyWorkoutRecommendationResponse = AiRecommendedScheduleResponse;
+
+export interface WeeklyMealRecommendationResponse {
+  weekStartDate: string;
+  weekEndDate: string;
+  days: DailyMealRecommendationResponse[];
+}

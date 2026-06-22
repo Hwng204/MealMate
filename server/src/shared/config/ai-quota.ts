@@ -7,7 +7,7 @@ export const AI_TOKEN_QUOTA_CONFIG = {
   // UTC+7 (Vietnam). Vietnam has no DST, so fixed offset is stable.
   timezoneOffsetMinutes: 7 * 60,
   dailyTokenLimitByMembership: {
-    [MEMBERSHIP_LEVEL.NORMAL]: 25_000,
+    [MEMBERSHIP_LEVEL.NORMAL]: 30_000,
     [MEMBERSHIP_LEVEL.VIP]: 120_000,
     [MEMBERSHIP_LEVEL.EXPERT_CLASS]: 550_000,
     [MEMBERSHIP_LEVEL.EXPERT_BASIC]: 550_000,
@@ -22,8 +22,13 @@ export const AI_TOKEN_QUOTA_CONFIG = {
     recommend_daily_workout: {
       min: 1_800,
       max: 5_000
+    },
+    recommend_weekly_meals: {
+      min: 15_000,
+      max: 50_000
     }
   } as const,
+  unlimitedEndpoints: ['recommend_weekly_meals'] as const,
   reserveEstimation: {
     charsPerToken: 3,
     outputTokenBudget: 512,
@@ -33,6 +38,11 @@ export const AI_TOKEN_QUOTA_CONFIG = {
 
 export type AiQuotaEndpoint =
   keyof typeof AI_TOKEN_QUOTA_CONFIG.reserveTokensByEndpoint;
+
+export const isUnlimitedQuotaEndpoint = (endpoint: AiQuotaEndpoint): boolean =>
+  (AI_TOKEN_QUOTA_CONFIG.unlimitedEndpoints as readonly AiQuotaEndpoint[]).includes(
+    endpoint
+  );
 
 export const resolveMembershipLevel = (
   value: string | null | undefined
