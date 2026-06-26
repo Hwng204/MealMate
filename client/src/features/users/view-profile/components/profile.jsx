@@ -298,6 +298,28 @@ const Profile = () => {
                         </div>
                       </div>
 
+                      {profile?.role === ROLE.USER && profile?.assignedNutritionist && (
+                        <div className='grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3 sm:gap-4 items-start sm:items-center'>
+                          <label className='text-sm font-medium pt-2 sm:pt-0'>
+                            Chuyên gia
+                          </label>
+                          <div className='space-y-2'>
+                            <div className='flex items-center gap-3'>
+                              <Avatar className='h-10 w-10'>
+                                <AvatarImage src={profile.assignedNutritionist.avatar} />
+                                <AvatarFallback>{profile.assignedNutritionist.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div className='flex-1'>
+                                <p className='font-semibold'>{profile.assignedNutritionist.name}</p>
+                                <Button variant='outline' size='sm' asChild className='mt-1'>
+                                  <Link to='#chat'>Liên hệ</Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {shouldShowMembershipAndAi && (
                         <>
                           {/* Membership Level - Read Only */}

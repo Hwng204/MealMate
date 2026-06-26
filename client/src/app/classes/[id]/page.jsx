@@ -63,9 +63,14 @@ const ClassDetailContent = () => {
               <p className='text-sm text-muted-foreground mt-1'>
                 {classDetail.description || 'Lớp học với chuyên gia dinh dưỡng'}
               </p>
+              {classDetail.nutritionistId?.name && (
+                <p className='text-sm text-muted-foreground font-bold mt-1'>
+                  Giảng viên: {classDetail.nutritionistId.name}
+                </p>
+              )}
             </div>
             {!classDetail.isActive && (
-              <ReviewNutritionistDialog 
+              <ReviewNutritionistDialog
                 nutritionistId={classDetail.nutritionistId?._id || classDetail.nutritionistId}
                 classId={classId}
               />

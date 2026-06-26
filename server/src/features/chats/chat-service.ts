@@ -1,13 +1,39 @@
 ﻿import { Types } from 'mongoose';
+import {
+  NutritionistClientModel
+} from '~/shared/database/models/nutritionist-client-model';
 import { ClassModel } from '~/shared/database/models/class-model';
 import { MessageModel } from '~/shared/database/models/message-model';
 import { UserModel } from '~/shared/database/models/user-model';
 import { ROLE } from '~/shared/constants/role';
+import { NUTRITIONIST_CLIENT_SOURCE } from '~/shared/constants/nutritionist-client-status';
 
 export class ChatService {
+  static async createContact(userId: string, nutritionistId: string) {
+    const existingContact = await NutritionistClientModel.findOne({
+      userId,
+      nutritionistId,
+    });
+
+    if (existingContact) {
+      return existingContact;
+    }
+
+    const newContact = new NutritionistClientModel({
+      userId,
+      nutritionistId,
+      source: NUTRITIONIST_CLIENT_SOURCE.REQUEST,
+    });
+
+    await newContact.save();
+
+    return newContact;
+  }
+
   static async getContacts(userId: string, role: string) {
     const userObjectId = new Types.ObjectId(userId);
     let contactIds = new Set<string>();
+
 
     if (role === ROLE.USER) {
       const classes = await ClassModel.find({ members: userObjectId }).select('nutritionistId members').lean();
@@ -23,6 +49,8 @@ export class ChatService {
           });
         }
       });
+      const contactedNutritionists = await NutritionistClientModel.find({ userId: userObjectId }).select('nutritionistId').lean();
+      contactedNutritionists.forEach(c => contactIds.add(c.nutritionistId.toString()));
     } else if (role === ROLE.NUTRITIONIST) {
       const classes = await ClassModel.find({ nutritionistId: userObjectId }).select('members').lean();
       classes.forEach(c => {
@@ -30,6 +58,8 @@ export class ChatService {
           c.members.forEach((m: any) => contactIds.add(m.toString()));
         }
       });
+      const clients = await NutritionistClientModel.find({ nutritionistId: userObjectId }).select('userId').lean();
+      clients.forEach(c => contactIds.add(c.userId.toString()));
     }
 
     const contacts = await UserModel.find({ _id: { $in: Array.from(contactIds) } })

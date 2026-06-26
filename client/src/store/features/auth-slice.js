@@ -95,7 +95,9 @@ export const authSlice = createSlice({
     error: null,
     sessionExpired: false,
     initialized: false,
-    loggingOut: false
+    loggingOut: false,
+    targetContactId: null,
+    isChatWidgetOpen: false
   },
   reducers: {
     loadUser: (state, action) => {
@@ -122,6 +124,21 @@ export const authSlice = createSlice({
     },
     setLoggingOut: state => {
       state.loggingOut = true;
+    },
+    setTargetContact: (state, action) => {
+      state.targetContactId = action.payload;
+      if (action.payload) {
+        state.isChatWidgetOpen = true;
+      }
+    },
+    clearTargetContact: state => {
+      state.targetContactId = null;
+    },
+    openChatWidget: state => {
+      state.isChatWidgetOpen = true;
+    },
+    closeChatWidget: state => {
+      state.isChatWidgetOpen = false;
     }
   },
   extraReducers: builder => {
@@ -172,8 +189,15 @@ export const authSlice = createSlice({
   }
 });
 
-export const { loadUser, clearSessionExpired, setLoggingOut } =
-  authSlice.actions;
+export const {
+  loadUser,
+  clearSessionExpired,
+  setLoggingOut,
+  setTargetContact,
+  clearTargetContact,
+  openChatWidget,
+  closeChatWidget
+} = authSlice.actions;
 
 export const setupSessionExpiredListener = dispatch => {
   const handleSessionExpiredEvent = event => {

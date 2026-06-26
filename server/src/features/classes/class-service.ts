@@ -229,10 +229,15 @@ export const ClassService = {
       throw createHttpError(400, 'Định dạng ID lớp học không hợp lệ');
     }
 
-    const classDoc = await ClassModel.findById(classId).populate({
-      path: 'members',
-      select: 'name email avatar role'
-    });
+    const classDoc = await ClassModel.findById(classId)
+      .populate({
+        path: 'members',
+        select: 'name email avatar role'
+      })
+      .populate({
+        path: 'nutritionistId',
+        select: 'name email avatar'
+      });
 
     if (!classDoc) {
       throw createHttpError(404, 'Không tìm thấy lớp học');

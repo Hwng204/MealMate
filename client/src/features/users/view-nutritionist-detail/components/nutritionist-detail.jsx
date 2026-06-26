@@ -4,13 +4,16 @@ import {
   CalendarDays,
   FileBadge2,
   GraduationCap,
-  ShieldCheck
+  ShieldCheck,
+  MessageCircle
 } from 'lucide-react';
-import { Link } from 'react-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { setTargetContact } from '~/store/features/auth-slice';
 
 import { useNutritionistDetail } from '../api/view-nutritionist-detail';
 
@@ -19,14 +22,21 @@ import { NutritionistReviews } from './nutritionist-reviews';
 const formatDate = iso =>
   iso
     ? new Date(iso).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
     : null;
 
 export default function NutritionistDetail({ id }) {
   const { data: nutritionist } = useNutritionistDetail(id);
+  const { user } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+
+  const handleContact = () => {
+    dispatch(setTargetContact(id));
+  };
+
   const certificate = nutritionist?.certificate;
   const profile = nutritionist?.nutritionistProfile;
   const hasFileUrl = !!certificate?.fileUrl;
@@ -45,6 +55,8 @@ export default function NutritionistDetail({ id }) {
       : certificate?.status === 'Pending'
         ? 'Đang chờ'
         : 'Bị từ chối';
+
+  const isOwnProfile = user?._id === id || user?.id === id;
 
   return (
     <div className='min-h-screen bg-background'>
@@ -108,6 +120,15 @@ export default function NutritionistDetail({ id }) {
                     Hồ sơ chuyên gia và thông tin chứng chỉ nghề nghiệp
                   </p>
                 </div>
+
+                {user && !isOwnProfile && (
+                  <div className='flex items-center gap-2'>
+                    <Button onClick={handleContact}>
+                      <MessageCircle className='mr-2 h-4 w-4' />
+                      Liên hệ
+                    </Button>
+                  </div>
+                )}
 
                 <div className='grid gap-3 sm:grid-cols-2'>
                   {profile?.workplace && (

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 
 import { Button } from '~/components/ui/button';
@@ -18,6 +18,7 @@ const calculateAge = (dob) => {
 const StudentDetailContent = () => {
   const { id: classId, memberId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data } = useClassMemberProgress(classId, memberId);
 
   const member = data.member;
@@ -38,15 +39,23 @@ const StudentDetailContent = () => {
     }
   }
 
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else {
+      navigate(`/nutritionist/classes/${classId}`);
+    }
+  };
+
   return (
     <div className='space-y-5'>
       <Button
         variant='ghost'
         size='sm'
-        onClick={() => navigate(`/nutritionist/classes/${classId}`)}
+        onClick={handleBack}
       >
         <ArrowLeft className='mr-2 h-4 w-4' />
-        Quay lại lớp
+        Quay lại
       </Button>
 
       <StudentProfileWeightPanel

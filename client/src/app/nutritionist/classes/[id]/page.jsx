@@ -170,6 +170,7 @@ const ClassDetailContent = () => {
                           <Link
                             to={`/nutritionist/classes/${id}/students/${member._id}`}
                             className='font-medium hover:underline'
+                            state={{ from: `/nutritionist/classes/${id}` }}
                           >
                             {member.name}
                           </Link>
@@ -193,6 +194,7 @@ const ClassDetailContent = () => {
                          <Button asChild variant='outline' size='sm'>
                            <Link
                              to={`/nutritionist/classes/${id}/students/${member._id}`}
+                             state={{ from: `/nutritionist/classes/${id}` }}
                            >
                              Xem
                            </Link>
