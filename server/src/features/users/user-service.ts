@@ -21,7 +21,9 @@ import { ROLE } from '~/shared/constants/role';
 import { USER_TARGET } from '~/shared/constants/user-target';
 import {
   AuthModel,
+  ClassModel,
   GroceryModel,
+  NutritionistClientModel,
   PostModel,
   ScheduleModel,
   UserModel
@@ -235,6 +237,10 @@ const buildProfileViewQuery = (id: string) =>
     .populate({
       path: 'blockIngredients',
       select: 'name description category image baseUnit nutrition isActive'
+    })
+    .populate({
+      path: 'assignedNutritionist',
+      select: 'name avatar email'
     })
     .select('-password');
 
@@ -911,6 +917,63 @@ export const UserService = {
 
     if (!user) {
       throw createHttpError(404, 'Không tìm thấy người dùng');
+    }
+
+    return user;
+  },
+
+  viewUserContactInfo: async (currentUserId: string, targetUserId: string) => {
+    if (!validateObjectId(currentUserId) || !validateObjectId(targetUserId)) {
+      throw createHttpError(400, 'Invalid user ID format');
+    }
+
+    if (currentUserId === targetUserId) {
+      const user = await UserModel.findById(currentUserId).select('name avatar role');
+      if (!user) {
+        throw createHttpError(404, 'User not found');
+      }
+      return user;
+    }
+
+    let areConnected = false;
+
+    // Check for Class connection
+    const commonClasses = await ClassModel.find({
+      members: { $all: [currentUserId, targetUserId] },
+    });
+
+    if (commonClasses.length > 0) {
+      areConnected = true;
+    }
+
+    if (!areConnected) {
+        // Check for Nutritionist-Client connection
+        const isClientOfNutritionist = await NutritionistClientModel.findOne({
+            $or: [
+                { userId: currentUserId, nutritionistId: targetUserId },
+                { userId: targetUserId, nutritionistId: currentUserId },
+            ],
+        });
+        if (isClientOfNutritionist) {
+            areConnected = true;
+        }
+    }
+
+
+    if (!areConnected) {
+      const currentUser = await UserModel.findById(currentUserId).select('role');
+      if(currentUser.role === ROLE.ADMIN) {
+        areConnected = true;
+      }
+    }
+
+    if (!areConnected) {
+      throw createHttpError(403, 'You do not have permission to view this user\'s contact info.');
+    }
+
+    const user = await UserModel.findById(targetUserId).select('name avatar role');
+    if (!user) {
+      throw createHttpError(404, 'User not found');
     }
 
     return user;

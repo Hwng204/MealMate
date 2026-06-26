@@ -283,7 +283,7 @@ const Dashboard = () => {
       tone: 'warning'
     },
     {
-      title: 'Số lượng người dùng',
+      title: 'Tổng số lượng người dùng',
       value: formatNumber(overview.totalUsers),
       description: 'Tổng số người dùng hệ thống',
       icon: Users,

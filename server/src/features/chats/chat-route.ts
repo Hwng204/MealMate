@@ -5,6 +5,7 @@ import { ChatController } from './chat-controller';
 
 const router = Router();
 
+router.post('/', authenticate(), asyncHandler(ChatController.createChat));
 router.get('/contacts', authenticate(), asyncHandler(ChatController.getContacts));
 router.get('/:contactId/messages', authenticate(), asyncHandler(ChatController.getMessages));
 router.put('/:senderId/read', authenticate(), asyncHandler(ChatController.markAsRead));

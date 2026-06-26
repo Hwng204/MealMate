@@ -166,6 +166,17 @@ export const UserController = {
       .json(ApiResponse.success('Người dùng được lấy thành công', result));
   },
 
+  viewUserContactInfo: async (req: Request, res: Response) => {
+    const currentUserId = req.user?._id.toString();
+    const targetUserId = req.params.id;
+
+    const result = await UserService.viewUserContactInfo(currentUserId, targetUserId);
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Thông tin liên hệ của người dùng được lấy thành công', result));
+  },
+
   viewNutritionistProfile: async (req: Request, res: Response) => {
     const id = req.params.id;
 

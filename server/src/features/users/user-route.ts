@@ -291,6 +291,12 @@ router.get(
   asyncHandler(UserController.viewUserDetail)
 );
 
+router.get(
+  '/:id/contact-info',
+  authenticate(),
+  asyncHandler(UserController.viewUserContactInfo)
+);
+
 router.put(
   '/:id',
   authenticate(),

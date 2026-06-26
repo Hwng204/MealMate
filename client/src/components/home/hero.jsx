@@ -4,9 +4,15 @@ import {
 } from 'react-icons/hi2';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
+import { MEMBERSHIP_LEVEL } from '~/constants/membership-level';
 
 const Hero = () => {
   const user = useSelector(state => state.auth.user);
+  const isUpgraded =
+    user &&
+    user.membershipLevel &&
+    user.membershipLevel !== MEMBERSHIP_LEVEL.NORMAL;
+
   return (
     <section className='relative bg-background overflow-hidden'>
       <div className='relative left-1/2 w-screen max-w-none -translate-x-1/2'>
@@ -42,24 +48,26 @@ const Hero = () => {
             trực quan và giúp duy trì thói quen ăn uống lành mạnh mỗi ngày.
           </p>
 
-          <div className='mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4'>
-            <Link
-              to={user ? '/schedules/day' : '/auth/login'}
-              className='group inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#f5812a] px-6 text-sm font-bold text-white shadow-md shadow-orange-900/10 transition-all duration-200 hover:brightness-105 sm:h-14 sm:px-8 sm:text-base'
-            >
-              Bắt đầu miễn phí
-              <HiOutlineArrowRight className='text-lg transition-transform duration-200 group-hover:translate-x-1' />
-            </Link>
+          {!isUpgraded && (
+            <div className='mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4'>
+              <Link
+                to={user ? '/schedules/day' : '/auth/login'}
+                className='group inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#f5812a] px-6 text-sm font-bold text-white shadow-md shadow-orange-900/10 transition-all duration-200 hover:brightness-105 sm:h-14 sm:px-8 sm:text-base'
+              >
+                Bắt đầu miễn phí
+                <HiOutlineArrowRight className='text-lg transition-transform duration-200 group-hover:translate-x-1' />
+              </Link>
 
-            {/* <a
-              href='https://www.youtube.com/watch?v=7uLCm3g_CLM'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-6 text-sm font-bold text-emerald-900 shadow-sm transition-colors duration-200 hover:bg-neutral-50 sm:h-14 sm:px-8 sm:text-base'
-            >
-              Xem cách hoạt động
-            </a> */}
-          </div>
+              {/* <a
+                href='https://www.youtube.com/watch?v=7uLCm3g_CLM'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-6 text-sm font-bold text-emerald-900 shadow-sm transition-colors duration-200 hover:bg-neutral-50 sm:h-14 sm:px-8 sm:text-base'
+              >
+                Xem cách hoạt động
+              </a> */}
+            </div>
+          )}
         </div>
       </div>
     </section>

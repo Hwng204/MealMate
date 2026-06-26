@@ -4,10 +4,12 @@ import { MEMBERSHIP_LEVEL } from '~/shared/constants/membership-level';
 import { PAYMENT_STATUS } from '~/shared/constants/payment-status';
 import { ROLE } from '~/shared/constants/role';
 import {
+  ClassModel,
   CollectionModel,
   DishModel,
   PaymentModel,
   PostModel,
+  ScheduleModel,
   UserModel
 } from '~/shared/database/models';
 import { toObjectId } from '~/shared/utils';
@@ -15,6 +17,31 @@ import { toObjectId } from '~/shared/utils';
 import type { dashboardQuery } from './dashboard-dto';
 
 type AdminDashboardRange = NonNullable<dashboardQuery['range']>;
+
+type ScheduleLike = {
+  meals?: Array<{ dishes?: Array<{ isEaten?: boolean }> }>;
+  workout?: Array<{ isCompleted?: boolean }>;
+};
+
+const calculateCompletionPercent = (schedules: ScheduleLike[]) => {
+  let total = 0;
+  let done = 0;
+
+  for (const schedule of schedules) {
+    for (const meal of schedule.meals || []) {
+      for (const dish of meal.dishes || []) {
+        total += 1;
+        if (dish.isEaten) done += 1;
+      }
+    }
+    for (const exercise of schedule.workout || []) {
+      total += 1;
+      if (exercise.isCompleted) done += 1;
+    }
+  }
+
+  return total ? Math.round((done / total) * 100) : 0;
+};
 
 export const DashboardService = {
   viewAdminDashboard: async (query: dashboardQuery) => {
@@ -50,6 +77,47 @@ export const DashboardService = {
       'user._id': authorId,
       ...(createdAtFilter && { createdAt: createdAtFilter })
     };
+    const byNutritionist = {
+      nutritionistId: authorId,
+      ...(createdAtFilter && { createdAt: createdAtFilter })
+    };
+
+    const openClasses = await ClassModel.find({
+      ...byNutritionist,
+      isActive: true
+    }).populate({
+      path: 'members',
+      select: 'name avatar email'
+    });
+
+    const totalOpenClasses = openClasses.length;
+    const allStudentDocs = openClasses.flatMap(c => c.members);
+    const totalStudents = allStudentDocs.length;
+    const allStudentIds = allStudentDocs.map(s => s._id);
+
+    const memberSchedules = await ScheduleModel.find({
+      'user._id': { $in: allStudentIds }
+    }).select('user._id meals workout');
+
+    const progressByMember = allStudentIds.reduce<Record<string, number>>(
+      (acc, memberId) => {
+        const schedules = memberSchedules.filter(
+          schedule => schedule.user?._id?.toString() === memberId.toString()
+        );
+        acc[memberId.toString()] = calculateCompletionPercent(schedules);
+        return acc;
+      },
+      {}
+    );
+
+    const studentsWithClass = openClasses.flatMap(c =>
+      c.members.filter(Boolean).map(member => ({
+        ...member._bsontype === 'ObjectID' ? { _id: member } : member.toObject(),
+        classId: c._id.toString(),
+        className: c.className,
+        progress: progressByMember[member._id.toString()] ?? 0
+      }))
+    );
 
     const [
       totalDishes,
@@ -74,7 +142,11 @@ export const DashboardService = {
       totalPosts,
       totalPublishedPosts,
       totalCollections,
-      engagement
+      totalOpenClasses,
+      totalStudents,
+      studentsWithClass,
+      engagement,
+      openClasses
     );
   }
 };
@@ -210,13 +282,17 @@ const buildNutritionistDashboardResponse = (
   totalPosts: number,
   totalPublishedPosts: number,
   totalCollections: number,
+  totalOpenClasses: number,
+  totalStudents: number,
+  students: any[],
   engagement:
     | {
-        totalViews: number;
-        totalLikes: number;
-        totalComments: number;
-      }
-    | undefined
+      totalViews: number;
+      totalLikes: number;
+      totalComments: number;
+    }
+    | undefined,
+  openClasses: any[]
 ) => ({
   period,
   overview: {
@@ -224,13 +300,17 @@ const buildNutritionistDashboardResponse = (
     totalPublicDishes,
     totalPosts,
     totalPublishedPosts,
-    totalCollections
+    totalCollections,
+    totalOpenClasses,
+    totalStudents
   },
+  students,
   engagement: engagement ?? {
     totalViews: 0,
     totalLikes: 0,
     totalComments: 0
-  }
+  },
+  openClasses,
 });
 
 const toStartOfDay = (date: Date) => {

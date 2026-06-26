@@ -4,6 +4,8 @@ import { Navigate, Outlet, useLocation } from 'react-router';
 
 import { Spinner } from '~/components/ui/spinner';
 import { ROLE } from '~/constants/role';
+import ChatWidget from '~/features/chats/components/chat-widget';
+import FeedbackChatWidget from '~/features/feedback/create-feedback/components/feedback-chat-widget';
 import useAchievementSse from '~/hooks/useAchievementSse';
 import { getStoredAccessToken } from '~/lib/auth-tokens';
 import {
@@ -52,6 +54,8 @@ const AppLayout = () => {
   return (
     <>
       <Outlet />
+      <FeedbackChatWidget />
+      <ChatWidget />
     </>
   );
 };

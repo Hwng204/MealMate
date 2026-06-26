@@ -2,6 +2,13 @@ import { Request, Response } from 'express';
 import { ChatService } from './chat-service';
 
 export class ChatController {
+  static async createChat(req: Request, res: Response) {
+    const userId = req.user._id.toString();
+    const { receiverId } = req.body;
+    const contact = await ChatService.createContact(userId, receiverId);
+    res.status(201).json({ data: contact });
+  }
+
   static async getContacts(req: Request, res: Response) {
     const userId = req.user._id.toString();
     const role = req.user.role;

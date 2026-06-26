@@ -1,15 +1,17 @@
 import {
   AlertCircle,
-  Book,
   BookText,
   ChefHat,
   Eye,
-  Heart,
-  MessageCircle,
   RefreshCw,
-  Sparkles
+  School,
+  Sparkles,
+  Users
 } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import {
@@ -20,6 +22,14 @@ import {
   CardTitle
 } from '~/components/ui/card';
 import { Progress } from '~/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '~/components/ui/select';
+
 import {
   Table,
   TableBody,
@@ -37,6 +47,7 @@ const formatNumber = value => Number(value ?? 0).toLocaleString('vi-VN');
 const Dashboard = () => {
   const { data, isLoading, isFetching, isError, error, refetch } =
     useNutritionistDashboard();
+  const [selectedClass, setSelectedClass] = useState('all');
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -66,9 +77,31 @@ const Dashboard = () => {
   }
 
   const overview = data?.overview || {};
-  const engagement = data?.engagement || {};
+  const students = data?.students || [];
+  const openClasses = data?.openClasses || [];
+
+  const filteredStudents =
+    selectedClass === 'all'
+      ? students
+      : students.filter(s => s.classId === selectedClass);
 
   const metricCards = [
+    {
+      title: 'Số lượng học viên',
+      value: formatNumber(overview.totalStudents),
+      description: 'Học viên trong các lớp đang mở',
+      icon: Users,
+      iconTone:
+        'text-violet-600 bg-violet-50 dark:text-violet-300 dark:bg-violet-950/30'
+    },
+    {
+      title: 'Tổng lớp học đang mở',
+      value: formatNumber(overview.totalOpenClasses),
+      description: 'Lớp học bạn đang quản lý',
+      icon: School,
+      iconTone:
+        'text-amber-600 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/30'
+    },
     {
       title: 'Tổng món ăn',
       value: formatNumber(overview.totalDishes),
@@ -92,50 +125,8 @@ const Dashboard = () => {
       icon: BookText,
       iconTone:
         'text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/30'
-    },
-    {
-      title: 'Bài viết đã xuất bản',
-      value: formatNumber(overview.totalPublishedPosts),
-      description: 'Bài viết đang công khai',
-      icon: MessageCircle,
-      iconTone:
-        'text-violet-600 bg-violet-50 dark:text-violet-300 dark:bg-violet-950/30'
-    },
-    {
-      title: 'Bộ sưu tập',
-      value: formatNumber(overview.totalCollections),
-      description: 'Bộ sưu tập bạn sở hữu',
-      icon: Book,
-      iconTone:
-        'text-amber-600 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/30'
     }
   ];
-
-  const engagementRows = [
-    {
-      key: 'views',
-      label: 'Tổng lượt xem',
-      value: Number(engagement.totalViews || 0),
-      icon: Eye,
-      iconClass: 'text-blue-600'
-    },
-    {
-      key: 'likes',
-      label: 'Tổng lượt thích',
-      value: Number(engagement.totalLikes || 0),
-      icon: Heart,
-      iconClass: 'text-rose-600'
-    },
-    {
-      key: 'comments',
-      label: 'Tổng bình luận',
-      value: Number(engagement.totalComments || 0),
-      icon: MessageCircle,
-      iconClass: 'text-emerald-600'
-    }
-  ];
-
-  const maxEngagement = Math.max(...engagementRows.map(item => item.value), 1);
 
   return (
     <div className='space-y-6'>
@@ -200,48 +191,82 @@ const Dashboard = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Tương tác bài viết</CardTitle>
-          <CardDescription>
-            Hiển thị toàn bộ chỉ số tương tác từ backend cho các bài viết của
-            bạn.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-6'>
-          <div className='space-y-4'>
-            {engagementRows.map(item => {
-              const Icon = item.icon;
-
-              return (
-                <div key={item.key} className='space-y-2'>
-                  <div className='flex items-center justify-between gap-3 text-sm'>
-                    <div className='inline-flex items-center gap-2 font-medium'>
-                      <Icon className={`size-4 ${item.iconClass}`} />
-                      {item.label}
-                    </div>
-                    <span className='font-semibold'>
-                      {formatNumber(item.value)}
-                    </span>
-                  </div>
-                  <Progress value={(item.value / maxEngagement) * 100} />
-                </div>
-              );
-            })}
+        <CardHeader className='flex-row items-center justify-between'>
+          <div>
+            <CardTitle>Danh sách học viên</CardTitle>
+            <CardDescription>
+              Danh sách các học viên đang theo học trong các lớp đang mở.
+            </CardDescription>
           </div>
-
-          <Table className='rounded-lg overflow-hidden'>
+          <div className='w-52'>
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <SelectTrigger>
+                <SelectValue placeholder='Lọc theo lớp' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả các lớp</SelectItem>
+                {openClasses.map(c => (
+                  <SelectItem key={c._id} value={c._id}>
+                    {c.className}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Chỉ số</TableHead>
-                <TableHead className='text-right'>Giá trị</TableHead>
+                <TableHead>Học viên</TableHead>
+                <TableHead>Lớp học</TableHead>
+                <TableHead>Tiến độ</TableHead>
+                <TableHead className='text-right'>Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {engagementRows.map(item => (
-                <TableRow key={`row-${item.key}`}>
-                  <TableCell>{item.label}</TableCell>
-                  <TableCell className='text-right font-medium'>
-                    {formatNumber(item.value)}
+              {filteredStudents.map(student => (
+                <TableRow key={student._id}>
+                  <TableCell>
+                    <div className='flex items-center gap-3'>
+                      <Avatar>
+                        <AvatarImage src={student.avatar} />
+                        <AvatarFallback>
+                          {student.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className='font-medium'>{student.name}</p>
+                        <p className='text-sm text-muted-foreground'>
+                          {student.email}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant='outline'>{student.className}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className='w-40'>
+                      <Progress value={student.progress} />
+                    </div>
+
+                  </TableCell>
+                  <TableCell className='text-right'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      asChild
+                      className='gap-2'
+                    >
+                      <Link
+                        to={`/nutritionist/classes/${student.classId}/students/${student._id}`}
+                        state={{ from: '/nutritionist' }}
+                      >
+                        <Eye className='size-4' />
+                        Xem chi tiết
+                      </Link>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
