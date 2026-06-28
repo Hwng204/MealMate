@@ -48,6 +48,16 @@ export const IngredientService = {
     const options = buildPaginateOptions(parsed);
     let { filter } = parsed;
 
+    // Handle name search with regex for partial matching
+    if (filter && typeof filter.name === 'string') {
+      const nameQuery = filter.name;
+      delete filter.name;
+      filter = {
+        ...filter,
+        $or: [{ name: { $regex: nameQuery, $options: 'i' } }],
+      };
+    }
+
     let favoriteIngredientIds: Set<string> = new Set();
 
     if (userId) {

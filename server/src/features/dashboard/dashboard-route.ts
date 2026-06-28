@@ -18,6 +18,13 @@ router.get(
 );
 
 router.get(
+  '/nutritionist-stats',
+  authenticate(),
+  authorize([ROLE.ADMIN]),
+  asyncHandler(DashboardController.getNutritionistStats)
+);
+
+router.get(
   '/nutritionist',
   authenticate(),
   authorize([ROLE.NUTRITIONIST]),

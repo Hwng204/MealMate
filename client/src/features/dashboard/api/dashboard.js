@@ -32,6 +32,11 @@ const fetchNutritionistDashboard = async () => {
   return response.data.data;
 };
 
+const fetchNutritionistStats = async () => {
+  const response = await apiClient.get('/api/dashboard/nutritionist-stats');
+  return response.data.data;
+}
+
 export const useAdminDashboard = (params = {}, options = {}) => {
   return useQuery({
     queryKey: [...QUERY_KEYS.ADMIN_DASHBOARD, params],
@@ -44,6 +49,14 @@ export const useNutritionistDashboard = (options = {}) => {
   return useQuery({
     queryKey: QUERY_KEYS.NUTRITIONIST_DASHBOARD,
     queryFn: fetchNutritionistDashboard,
+    ...options
+  });
+};
+
+export const useNutritionistStats = (options = {}) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.NUTRITIONIST_STATS,
+    queryFn: fetchNutritionistStats,
     ...options
   });
 };
