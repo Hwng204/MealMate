@@ -7,6 +7,7 @@ import {
   ClassModel,
   CollectionModel,
   DishModel,
+  NutritionistClientModel,
   PaymentModel,
   PostModel,
   ScheduleModel,
@@ -44,6 +45,33 @@ const calculateCompletionPercent = (schedules: ScheduleLike[]) => {
 };
 
 export const DashboardService = {
+  getNutritionistStats: async () => {
+    const nutritionists = await UserModel.find({ role: ROLE.NUTRITIONIST })
+      .select('_id name email')
+      .lean();
+
+    const stats = await Promise.all(
+      nutritionists.map(async nutritionist => {
+        const classes = await ClassModel.find({
+          'nutritionistId': nutritionist._id,
+          'isActive': true,
+        });
+
+        const clientCount = classes.reduce(
+          (acc, currentClass) => acc + (currentClass.members?.length || 0),
+          0
+        );
+
+        return {
+          ...nutritionist,
+          clientCount,
+        };
+      })
+    );
+
+    return stats;
+  },
+
   viewAdminDashboard: async (query: dashboardQuery) => {
     const { period, createdAtFilter } = resolveRange(query);
     const baseFilter = buildPaymentBaseFilter(createdAtFilter);

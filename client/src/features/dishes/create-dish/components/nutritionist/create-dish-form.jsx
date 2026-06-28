@@ -1,3 +1,4 @@
+import { useDebounce } from 'use-debounce';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   ArrowLeft,
@@ -70,6 +71,7 @@ const CreateDishForm = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [ingredientSearch, setIngredientSearch] = useState('');
+  const [debouncedIngredientSearch] = useDebounce(ingredientSearch, 300);
   const [openIngredientPopover, setOpenIngredientPopover] = useState(false);
   const [isOptionalNutritionOpen, setIsOptionalNutritionOpen] = useState(false);
 
@@ -79,7 +81,10 @@ const CreateDishForm = () => {
       page: 1,
       limit: 100,
       sort: 'name',
-      filter: JSON.stringify({ isActive: true })
+      filter: JSON.stringify({
+        isActive: true,
+        ...(debouncedIngredientSearch && { name: debouncedIngredientSearch }),
+      }),
     });
 
   const form = useForm({
@@ -438,9 +443,6 @@ const CreateDishForm = () => {
   );
 
   const ingredients = ingredientsData?.docs || [];
-  const filteredIngredients = ingredients.filter(ing =>
-    ing.name.toLowerCase().includes(ingredientSearch.toLowerCase())
-  );
 
   return (
     <div className='max-w-4xl mx-auto p-6'>
@@ -771,7 +773,7 @@ const CreateDishForm = () => {
                         </CommandEmpty>
                         <CommandGroup>
                           <ScrollArea className='h-[300px]'>
-                            {filteredIngredients.map(ingredient => {
+                            {ingredients.map(ingredient => {
                               const isAdded = ingredientFields.some(
                                 field => field.ingredientId === ingredient._id
                               );

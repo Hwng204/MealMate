@@ -5,6 +5,16 @@ import { ApiResponse } from '~/shared/utils';
 import { DashboardService } from './dashboard-service';
 
 export const DashboardController = {
+  getNutritionistStats: async (_req: Request, res: Response) => {
+    const result = await DashboardService.getNutritionistStats();
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success('Lấy thống kê chuyên gia thành công', result)
+      );
+  },
+
   viewAdminDashboard: async (req: Request, res: Response) => {
     const result = await DashboardService.viewAdminDashboard(req.query);
 
