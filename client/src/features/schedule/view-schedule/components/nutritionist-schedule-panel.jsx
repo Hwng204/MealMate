@@ -1,6 +1,10 @@
-import { addDays, addWeeks, startOfWeek, subDays, subWeeks } from 'date-fns';
+import { addDays, addWeeks, startOfWeek, subDays, subWeeks, format } from 'date-fns';
 import { useState } from 'react';
+import { HiSparkles } from 'react-icons/hi';
 
+import AITokenUsage from '~/features/schedule/view-schedule/components/ai-token-usage';
+import { useRecommendWeeklyMeals } from '~/features/ai-schedule/recommend-ai-meal/api/recommend-weekly-meals';
+import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
 import DishDetailDialog from '~/features/classes/components/dish-detail-dialog';
 import ExerciseDetailDialog from '~/features/classes/components/exercise-detail-dialog';
 import { formatScheduleTitle } from '~/lib/utils';
@@ -20,6 +24,20 @@ export default function NutritionistSchedulePanel({ userId, memberProfile }) {
   const [exerciseDialogId, setExerciseDialogId] = useState(null);
 
   const selectedDateForHeader = view === 'day' ? date : weekStart;
+
+  const { data: profile } = useProfileForPage();
+  const { mutate: generateAI, isPending: isGeneratingAI } =
+    useRecommendWeeklyMeals();
+
+  const handleGenerateAI = () => {
+    generateAI({
+      weekStartDate: format(weekStart, 'yyyy-MM-dd'),
+      userId,
+    });
+  };
+
+  const remainingTokens = profile?.aiTokens;
+  const dailyTokenLimit = profile?.aiDailyTokenLimit;
 
   return (
     <div className='space-y-4'>
@@ -66,6 +84,34 @@ export default function NutritionistSchedulePanel({ userId, memberProfile }) {
             onPrev={() => setWeekStart(d => subWeeks(d, 1))}
             onNext={() => setWeekStart(d => addWeeks(d, 1))}
           />
+          <div className='flex items-center justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3'>
+            <div className='min-w-0'>
+              <p className='text-[12px] font-black tracking-tight text-primary'>
+                Gợi ý thực đơn tuần bằng AI
+              </p>
+              <p className='text-[11px] text-muted-foreground'>
+                Tạo nhanh lịch ăn phù hợp với mục tiêu của học viên
+              </p>
+
+              <AITokenUsage
+                remainingTokens={remainingTokens}
+                dailyTokenLimit={dailyTokenLimit}
+              />
+            </div>
+
+            <button
+              onClick={handleGenerateAI}
+              disabled={isGeneratingAI}
+              className='flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[12px] font-black tracking-tight text-primary-foreground shadow-sm transition-all hover:shadow-md active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              {isGeneratingAI ? (
+                <div className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent' />
+              ) : (
+                <HiSparkles size={14} />
+              )}
+              AI gợi ý theo tuần
+            </button>
+          </div>
           <div className='rounded-3xl border px-2 py-4 sm:px-4'>
             <ScheduleWeek
               startOfSelectedWeek={weekStart}
