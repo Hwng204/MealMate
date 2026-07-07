@@ -133,21 +133,7 @@ export default function StudentWeightSection({
 
           {weightStats && (
             <div className='mt-4 space-y-3'>
-              <div className='text-xs font-medium text-muted-foreground'>Theo dõi thay đổi cân nặng từ đầu đến nay</div>
-              <div className='flex items-center'>
-                <div className='w-20 text-center text-xs font-semibold'>{weightStats.firstWeight.toFixed(1)}kg</div>
-                <div className='flex-1 h-2 bg-muted rounded-full relative'>
-                  <div
-                    className='absolute left-0 top-0 h-full bg-primary'
-                    style={{ width: `${((weightStats.lastWeight - weightStats.minWeight) / (weightStats.maxWeight - weightStats.minWeight) * 100) || 0}%` }}
-                  ></div>
-                </div>
-                <div className='w-20 text-center text-xs font-semibold'>{weightStats.lastWeight.toFixed(1)}kg</div>
-              </div>
-              <div className='flex justify-between text-xs text-muted-foreground'>
-                <span>Thay đổi: {weightStats.weightChange >= 0 ? '+' : ''}{weightStats.weightChange.toFixed(1)}kg</span>
-                <span>{weightStats.totalEntries} lần đo</span>
-              </div>
+              
             </div>
           )}
         </>
