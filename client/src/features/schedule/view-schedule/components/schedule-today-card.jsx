@@ -10,7 +10,7 @@ import {
   HiSparkles
 } from 'react-icons/hi';
 import { IoCafe, IoFastFood, IoLeaf, IoMoon, IoSunny } from 'react-icons/io5';
-import { Link, useParams } from 'react-router';
+import { Link } from 'react-router';
 
 import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
 import { formatDateVI } from '~/lib/utils';
@@ -22,7 +22,6 @@ import AddFoodModal from './add-food-modal';
 import AITokenUsage from './ai-token-usage';
 import AlternativeDishButton from './alternative-dish-button';
 import AlternativeDishModal from './alternative-dish-modal';
-import DuplicateDishButton from '../../duplicate-dish-in-schedule/components/duplicate-dish-button';
 import DeleteDishModal from './delete-dish-modal';
 
 const MEAL_CONFIG = {
@@ -39,56 +38,21 @@ const getMealIcon = (type = '') => {
   return MEAL_CONFIG[key || 'default'].icon;
 };
 
-const DishCardContent = ({ dish }) => (
-  <>
-    <div className='h-14 w-14 shrink-0 overflow-hidden rounded-[16px] border border-border bg-muted'>
-      <img
-        src={dish.image || '/logo2.png'}
-        alt={dish.name}
-        className='h-full w-full object-cover transition-transform group-hover:scale-105'
-      />
-    </div>
-    <div className='min-w-0 flex-1'>
-      <h4 className='truncate text-[14px] font-bold leading-tight text-foreground'>
-        {dish.name}
-      </h4>
-      <div className='mt-1.5 flex items-center gap-4 text-[11px] font-medium text-muted-foreground'>
-        <span className='flex items-center gap-1'>
-          <HiFire className='text-destructive/70' size={14} />
-          <b className='text-foreground/80'>{dish.energy}</b>
-          kcal
-        </span>
-        <span className='flex items-center gap-1'>
-          <HiOutlineUserGroup size={14} />
-          <b className='text-foreground/80'>{dish.servings}</b>
-          phần
-        </span>
-      </div>
-    </div>
-  </>
-);
-
 export default function ScheduleTodayCard({
   schedule,
   selectedDate,
   onGenerateAI,
-  isGeneratingAI,
-  readOnly = false,
-  onDishClick,
-  memberProfile
+  isGeneratingAI
 }) {
-  const params = useParams();
   const { data: profile } = useProfileForPage();
   const [openAlternativeDishModal, setOpenAlternativeDishModal] =
     useState(false);
   const [selectedDishForAlternative, setSelectedDishForAlternative] =
     useState(null);
 
-  // Use student profile for diet target / restrictions, but use current profile for AI token balance when a nutritionist is viewing a student.
-  const displayProfile = memberProfile || profile;
-  const targetCalories = displayProfile?.nutritionTarget?.caloriesTarget ?? undefined;
-  const remainingTokens = profile?.aiTokens ?? displayProfile?.aiTokens;
-  const dailyTokenLimit = profile?.aiDailyTokenLimit ?? displayProfile?.aiDailyTokenLimit;
+  const targetCalories = profile?.nutritionTarget?.caloriesTarget ?? undefined;
+  const remainingTokens = profile?.aiTokens;
+  const dailyTokenLimit = profile?.aiDailyTokenLimit;
 
   return (
     <div className='rounded-[32px] border border-border bg-card p-6 shadow-sm'>
@@ -105,7 +69,7 @@ export default function ScheduleTodayCard({
             </div>
 
             <div className='flex shrink-0 items-start gap-3'>
-              {targetCalories && !readOnly && (
+              {targetCalories && (
                 <div className='flex flex-col items-end gap-1'>
                   <span className='px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary/60'>
                     Mục tiêu ngày
@@ -125,20 +89,17 @@ export default function ScheduleTodayCard({
                 </div>
               )}
 
-              {!readOnly && (
-                <DeleteScheduleModal scheduleId={schedule._id}>
-                  <button
-                    className='flex h-10 w-10 items-center justify-center rounded-xl bg-background text-destructive shadow-sm transition-all hover:bg-destructive hover:text-white hover:shadow-md'
-                    title='Xoá toàn bộ lịch ăn'
-                  >
-                    <HiOutlineTrash size={18} />
-                  </button>
-                </DeleteScheduleModal>
-              )}
+              <DeleteScheduleModal scheduleId={schedule._id}>
+                <button
+                  className='flex h-10 w-10 items-center justify-center rounded-xl bg-background text-destructive shadow-sm transition-all hover:bg-destructive hover:text-white hover:shadow-md'
+                  title='Xoá toàn bộ lịch ăn'
+                >
+                  <HiOutlineTrash size={18} />
+                </button>
+              </DeleteScheduleModal>
             </div>
           </div>
 
-          {!readOnly && (
           <div className='flex items-center justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3'>
             <div className='min-w-0'>
               <p className='text-[12px] font-black tracking-tight text-primary'>
@@ -151,6 +112,7 @@ export default function ScheduleTodayCard({
               <AITokenUsage
                 remainingTokens={remainingTokens}
                 dailyTokenLimit={dailyTokenLimit}
+                showWorkoutCost={true}
               />
             </div>
 
@@ -167,7 +129,6 @@ export default function ScheduleTodayCard({
               AI gợi ý
             </button>
           </div>
-          )}
         </div>
       </div>
 
@@ -186,17 +147,15 @@ export default function ScheduleTodayCard({
                 </h5>
               </div>
 
-              {!readOnly && (
-                <AddFoodModal
-                  mealType={meal.mealType}
-                  scheduleId={schedule._id}
-                  scheduleMeals={schedule.meals}
-                >
-                  <button className='rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted'>
-                    <HiOutlineDotsVertical size={18} />
-                  </button>
-                </AddFoodModal>
-              )}
+              <AddFoodModal
+                mealType={meal.mealType}
+                scheduleId={schedule._id}
+                scheduleMeals={schedule.meals}
+              >
+                <button className='rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted'>
+                  <HiOutlineDotsVertical size={18} />
+                </button>
+              </AddFoodModal>
             </div>
 
             <div className='space-y-3'>
@@ -206,43 +165,47 @@ export default function ScheduleTodayCard({
                     key={dish.dishId}
                     className='group relative flex items-center gap-3'
                   >
-                    {!readOnly ? (
-                      <DishCheckin
-                        scheduleId={schedule._id}
-                        mealType={meal.mealType}
-                        dish={dish}
-                      />
-                    ) : (
-                      <div
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                          dish.isEaten
-                            ? 'bg-primary/15 text-primary'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                        title={dish.isEaten ? 'Đã ăn' : 'Chưa ăn'}
-                      >
-                        {dish.isEaten ? '✓' : '·'}
+                    <DishCheckin
+                      scheduleId={schedule._id}
+                      mealType={meal.mealType}
+                      dish={dish}
+                    />
+
+                    <Link
+                      to={`/dishes/${dish.dishId}`}
+                      className='flex flex-1 items-center gap-4 rounded-2xl border border-border/50 bg-background/50 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-card hover:shadow-sm'
+                    >
+                      <div className='h-14 w-14 shrink-0 overflow-hidden rounded-[16px] border border-border bg-muted'>
+                        <img
+                          src={dish.image || '/logo2.png'}
+                          alt={dish.name}
+                          className='h-full w-full object-cover transition-transform group-hover:scale-105'
+                        />
                       </div>
-                    )}
 
-                    {onDishClick ? (
-                      <button
-                        type='button'
-                        onClick={() => onDishClick?.(dish.dishId)}
-                        className='flex flex-1 cursor-pointer items-center gap-4 rounded-2xl border border-border/50 bg-background/50 p-3 text-left transition-all duration-200 hover:border-primary/30 hover:bg-card hover:shadow-sm'
-                      >
-                        <DishCardContent dish={dish} />
-                      </button>
-                    ) : (
-                      <Link
-                        to={`/dishes/${dish.dishId}`}
-                        className='flex flex-1 items-center gap-4 rounded-2xl border border-border/50 bg-background/50 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-card hover:shadow-sm'
-                      >
-                        <DishCardContent dish={dish} />
-                      </Link>
-                    )}
+                      <div className='min-w-0 flex-1'>
+                        <h4 className='truncate text-[14px] font-bold leading-tight text-foreground'>
+                          {dish.name}
+                        </h4>
 
-                    {!readOnly && (
+                        <div className='mt-1.5 flex items-center gap-4 text-[11px] font-medium text-muted-foreground'>
+                          <span className='flex items-center gap-1'>
+                            <HiFire className='text-destructive/70' size={14} />
+                            <b className='text-foreground/80'>{dish.energy}</b>
+                            kcal
+                          </span>
+
+                          <span className='flex items-center gap-1'>
+                            <HiOutlineUserGroup size={14} />
+                            <b className='text-foreground/80'>
+                              {dish.servings}
+                            </b>
+                            phần
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+
                     <div className='absolute right-2 top-2 flex items-center gap-2 opacity-0 transition group-hover:opacity-100'>
                       <AlternativeDishButton
                         dish={dish}
@@ -251,12 +214,6 @@ export default function ScheduleTodayCard({
                           setSelectedDishForAlternative(selectedDish);
                           setOpenAlternativeDishModal(true);
                         }}
-                      />
-
-                      <DuplicateDishButton
-                        scheduleId={schedule._id}
-                        mealType={meal.mealType}
-                        dishId={dish.dishId}
                       />
 
                       <DeleteDishModal
@@ -272,7 +229,6 @@ export default function ScheduleTodayCard({
                         </button>
                       </DeleteDishModal>
                     </div>
-                    )}
                   </div>
                 ))
               ) : (
@@ -306,33 +262,25 @@ export default function ScheduleTodayCard({
         ))}
       </div>
 
-      {!readOnly && (
-        <>
-          <AlternativeDishModal
-            open={openAlternativeDishModal}
-            onClose={() => {
-              setOpenAlternativeDishModal(false);
-              setSelectedDishForAlternative(null);
-            }}
-            mealType={selectedDishForAlternative?.mealType || ''}
-            scheduleId={schedule._id}
-            scheduleMeals={schedule.meals}
-            baseDish={selectedDishForAlternative}
-          />
+      <AlternativeDishModal
+        open={openAlternativeDishModal}
+        onClose={() => {
+          setOpenAlternativeDishModal(false);
+          setSelectedDishForAlternative(null);
+        }}
+        mealType={selectedDishForAlternative?.mealType || ''}
+        scheduleId={schedule._id}
+        scheduleMeals={schedule.meals}
+        baseDish={selectedDishForAlternative}
+      />
 
-          <Link
-            to={
-              params.id && params.memberId
-                ? `/nutritionist/classes/${params.id}/students/${params.memberId}/schedules/day/${schedule._id}/nutrition`
-                : `/schedules/day/${schedule._id}/nutrition`
-            }
-            className='mt-10 flex w-full items-center justify-center gap-2 rounded-[20px] bg-primary py-4 text-[12px] font-black tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98]'
-          >
-            PHÂN TÍCH DINH DƯỠNG
-            <HiOutlineChevronRight size={16} />
-          </Link>
-        </>
-      )}
+      <Link
+        to={`/schedules/day/${schedule._id}/nutrition`}
+        className='mt-10 flex w-full items-center justify-center gap-2 rounded-[20px] bg-primary py-4 text-[12px] font-black tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98]'
+      >
+        PHÂN TÍCH DINH DƯỠNG
+        <HiOutlineChevronRight size={16} />
+      </Link>
     </div>
   );
 }

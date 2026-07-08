@@ -4,6 +4,7 @@ import {
   GraduationCap,
   MessageCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ import {
 } from '~/store/features/auth-slice';
 import apiClient from '~/lib/api-client';
 
-const NutritionistCard = ({ nutritionist, onContact }) => {
+const NutritionistCard = ({ nutritionist, onContact, onZoomImage }) => {
   const { user } = useSelector(state => state.auth);
 
   if (!nutritionist) {
@@ -32,7 +33,10 @@ const NutritionistCard = ({ nutritionist, onContact }) => {
       <div className='absolute inset-x-0 top-0 h-28 bg-linear-to-br from-primary/12 via-primary/6 to-transparent' />
 
       <div className='relative px-6 pt-8 text-center'>
-        <Avatar className='mx-auto mb-4 h-28 w-28 ring-4 ring-background shadow-[0_10px_30px_rgba(15,23,42,0.12)]'>
+        <Avatar
+          className='mx-auto mb-4 h-28 w-28 cursor-pointer ring-4 ring-background shadow-[0_10px_30px_rgba(15,23,42,0.12)] transition-transform duration-200 hover:scale-105'
+          onClick={() => onZoomImage(nutritionist.avatar)}
+        >
           <AvatarImage src={nutritionist.avatar} alt={nutritionist.name} />
           <AvatarFallback className='bg-primary/10 text-3xl font-bold text-primary'>
             {nutritionist.name?.[0]?.toUpperCase()}
@@ -113,6 +117,7 @@ const NutritionistList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   const { mutate: createChat } = useMutation({
     mutationFn: receiverId =>
@@ -127,6 +132,14 @@ const NutritionistList = () => {
 
   const handleContact = nutritionistId => {
     createChat(nutritionistId);
+  };
+
+  const handleZoomImage = imageUrl => {
+    setZoomedImage(imageUrl);
+  };
+
+  const handleCloseZoom = () => {
+    setZoomedImage(null);
   };
 
   if (docs.length === 0) {
@@ -157,10 +170,25 @@ const NutritionistList = () => {
               key={nutritionist._id ?? nutritionist.name}
               nutritionist={nutritionist}
               onContact={handleContact}
+              onZoomImage={handleZoomImage}
             />
           ))}
         </div>
       </div>
+
+      {zoomedImage && (
+        <div
+          className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm'
+          onClick={handleCloseZoom}
+        >
+          <img
+            src={zoomedImage}
+            alt='Ảnh chuyên gia được phóng to'
+            className='max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl'
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </section>
   );
 };

@@ -8,13 +8,15 @@ const Footer = () => {
       <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
         <div className='grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3'>
 
-          <div className='flex flex-col items-start space-y-2'>
-            <Link to='/' className='inline-block border-0 outline-none focus:outline-none focus:border-0'>
-              <img
-                src='/logo.png'
-                alt='Logo'
-                className='h-20 w-auto object-contain border-0 outline-none'
-              />
+          <div className='flex flex-col items-start space-y-4'>
+            <Link to='/' className='inline-flex items-center'>
+              <div className='flex h-16 w-32 items-center justify-center rounded-xl bg-white/30 p-2'>
+                <img
+                  src='/logo.png'
+                  alt='Logo'
+                  className='h-full w-full object-contain'
+                />
+              </div>
             </Link>
             <p className='max-w-xs text-sm leading-relaxed text-neutral-800/90'>
               Nền tảng gợi ý bữa ăn và dinh dưỡng thông minh, đồng hành cùng bạn
@@ -53,7 +55,7 @@ const Footer = () => {
                 Liên hệ với chúng tôi
               </h3>
               <a
-                href='mailto:contact@mealmeat.vn'
+                href='mailto:mealmatemanagement@gmail.com'
                 className='mt-4 inline-flex items-center gap-2 text-sm font-medium text-neutral-900 hover:opacity-70 transition'
               >
                 <Mail className='h-4 w-4 shrink-0' />
@@ -63,7 +65,9 @@ const Footer = () => {
 
             <div className='flex gap-3'>
               <a
-                href='#'
+                href='https://www.facebook.com/mealmatemanagement'
+                target='_blank'
+                rel='noopener noreferrer'
                 aria-label='Facebook'
                 className='flex h-10 w-10 items-center justify-center rounded-full bg-white/25 text-neutral-900 transition hover:bg-white/50 hover:scale-110'
               >
