@@ -111,6 +111,13 @@ router.delete(
   asyncHandler(ScheduleController.removeScheduleDish)
 );
 
+router.post(
+  '/:id/meals/:mealType/dishes/:dishId/duplicate',
+  authenticate(),
+  authorize([ROLE.USER, ROLE.NUTRITIONIST, ROLE.ADMIN]),
+  asyncHandler(ScheduleController.duplicateScheduleDish)
+);
+
 router.delete(
   '/:id/meals/:mealType/dishes',
   authenticate(),

@@ -27,9 +27,9 @@ const ClassDetailContent = () => {
 
   const member = progress.member;
   const weight = progress.latestWeight?.weight;
-  const height = member?.height ?? profile?.height;
-  const age = calculateAge(member?.dob ?? profile?.dob);
-  const gender = member?.gender ?? profile?.gender;
+  const height = member.height ?? profile?.height;
+  const age = calculateAge(member.dob ?? profile?.dob);
+  const gender = member.gender ?? profile?.gender;
 
   const bmi =
     weight && height ? (weight / ((height / 100) ** 2)).toFixed(1) : '--';

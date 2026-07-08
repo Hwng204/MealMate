@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
-import { Camera, ImageIcon, Calendar as CalendarIcon } from 'lucide-react';
+import { Camera, ImageIcon, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 import { Button } from '~/components/ui/button';
@@ -9,8 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle
 } from '~/components/ui/dialog';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
@@ -35,13 +34,57 @@ const uploadPhotos = async ({ classId, files, dateStr }) => {
   const response = await apiClient.post(
     `/api/classes/${classId}/progress-photos`,
     formData,
-    { 
+    {
       headers: { 'Content-Type': 'multipart/form-data' },
       params: { date: dateStr }
     }
   );
   return response.data.data;
 };
+
+function ImageGallery({ open, onOpenChange, images, startIndex = 0 }) {
+  const [currentIndex, setCurrentIndex] = useState(startIndex);
+
+  if (!images || images.length === 0) return null;
+
+  const currentImage = images[currentIndex];
+
+  const goToPrevious = () => setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
+  const goToNext = () => setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-4xl p-0'>
+        <div className='relative'>
+          <AnimatePresence initial={false} mode='wait'>
+            <motion.img
+              key={currentImage._id}
+              src={currentImage.url}
+              alt={`Ảnh ${currentIndex + 1}`}
+              className='h-auto w-full max-h-[80vh] object-contain'
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            />
+          </AnimatePresence>
+          <div className='absolute inset-0 flex items-center justify-between'>
+            <Button variant='ghost' size='icon' onClick={goToPrevious} className='m-2 bg-black/30 text-white hover:bg-black/50'>
+              <ChevronLeft className='h-6 w-6' />
+            </Button>
+            <Button variant='ghost' size='icon' onClick={goToNext} className='m-2 bg-black/30 text-white hover:bg-black/50'>
+              <ChevronRight className='h-6 w-6' />
+            </Button>
+          </div>
+          <div className='absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-xs text-white'>
+            {currentIndex + 1} / {images.length}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function ClassMemberPhotosSection({
   classId,
@@ -50,7 +93,7 @@ export default function ClassMemberPhotosSection({
   asNutritionist = false
 }) {
   const inputRef = useRef(null);
-  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryState, setGalleryState] = useState({ open: false, index: 0 });
   const [date, setDate] = useState(new Date());
   const queryClient = useQueryClient();
 
@@ -75,13 +118,16 @@ export default function ClassMemberPhotosSection({
 
   const images = data?.images || [];
   const remaining = MAX_PHOTOS - images.length;
-  const preview = images[0];
 
   const handleFileChange = event => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
     upload(files.slice(0, remaining));
     event.target.value = '';
+  };
+
+  const openGallery = (index) => {
+    setGalleryState({ open: true, index });
   };
 
   return (
@@ -110,6 +156,7 @@ export default function ClassMemberPhotosSection({
                   selected={date}
                   onSelect={d => d && setDate(d)}
                   initialFocus
+                  disabled={(d) => d > new Date()}
                 />
               </PopoverContent>
             </Popover>
@@ -147,25 +194,25 @@ export default function ClassMemberPhotosSection({
             <div className='flex h-28 items-center justify-center'>
               <Spinner />
             </div>
-          ) : preview ? (
-            <button
-              type='button'
-              onClick={() => setGalleryOpen(true)}
-              className='group relative block w-full max-w-[200px] overflow-hidden rounded-xl border'
-            >
-              <img
-                src={preview.url}
-                alt='Ảnh tiến độ'
-                className='aspect-square w-full object-cover transition group-hover:scale-105'
-              />
-              {images.length > 1 && (
-                <span className='absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white'>
-                  +{images.length - 1}
-                </span>
-              )}
-            </button>
+          ) : images.length > 0 ? (
+            <div className='flex space-x-3 overflow-x-auto pb-2'>
+              {images.map((img, index) => (
+                <button
+                  key={img._id}
+                  type='button'
+                  onClick={() => openGallery(index)}
+                  className='group relative block w-28 h-28 shrink-0 overflow-hidden rounded-xl border'
+                >
+                  <img
+                    src={img.url}
+                    alt={`Ảnh tiến độ ${index + 1}`}
+                    className='aspect-square w-full h-full object-cover transition group-hover:scale-105'
+                  />
+                </button>
+              ))}
+            </div>
           ) : (
-            <div className='flex h-28 max-w-[200px] flex-col items-center justify-center rounded-xl border border-dashed text-center text-xs text-muted-foreground'>
+            <div className='flex h-28 max-w-full flex-col items-center justify-center rounded-xl border border-dashed text-center text-xs text-muted-foreground'>
               <ImageIcon className='mb-2 h-6 w-6' />
               {canUpload
                 ? 'Chưa có ảnh trong ngày này.'
@@ -174,33 +221,13 @@ export default function ClassMemberPhotosSection({
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className='max-w-3xl'>
-          <DialogHeader>
-            <DialogTitle>Ảnh tiến độ ngày {format(date, 'dd/MM/yyyy')} ({images.length})</DialogTitle>
-          </DialogHeader>
-          <div className='grid grid-cols-5 gap-3'>
-            {Array.from({ length: MAX_PHOTOS }).map((_, index) => {
-              const img = images[index];
-              return (
-                <div
-                  key={img?.url || `empty-${index}`}
-                  className='aspect-square overflow-hidden rounded-lg border bg-muted'
-                >
-                  {img ? (
-                    <img
-                      src={img.url}
-                      alt={`Ảnh ${index + 1}`}
-                      className='h-full w-full object-cover'
-                    />
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
+      
+      <ImageGallery
+        open={galleryState.open}
+        onOpenChange={(isOpen) => setGalleryState({ open: isOpen, index: 0 })}
+        images={images}
+        startIndex={galleryState.index}
+      />
     </>
   );
 }

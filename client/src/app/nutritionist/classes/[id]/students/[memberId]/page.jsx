@@ -13,7 +13,7 @@ const calculateAge = (dob) => {
   if (!dob) return 0;
   const diff = Date.now() - new Date(dob).getTime();
   return Math.abs(new Date(diff).getUTCFullYear() - 1970);
-};
+}; // Added closing brace here
 
 const StudentDetailContent = () => {
   const { id: classId, memberId } = useParams();
@@ -86,7 +86,7 @@ const StudentDetailContent = () => {
 const Page = () => (
   <Suspense
     fallback={
-      <div className='flex h-60 items-center justify-center'>
+      <div className='flex h-full items-center justify-center'>
         <Spinner />
       </div>
     }

@@ -6,6 +6,7 @@ import {
 } from 'react-icons/hi2';
 import { IoClose } from 'react-icons/io5';
 import { useSelector } from 'react-redux';
+import { useDebounce } from '~/hooks/use-debounce';
 
 import { useUpdateScheduleMeals } from '~/features/schedule/update-schedule/api/update-schedule';
 
@@ -23,33 +24,28 @@ export default function DishModal({
   const user = useSelector(state => state.auth.user);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const [appliedFilters, setAppliedFilters] = useState({
+  const [filters, setFilters] = useState({
     name: '',
     categories: [],
     nutritionFocus: ''
   });
 
-  const [draftFilters, setDraftFilters] = useState({
-    name: '',
-    categories: [],
-    nutritionFocus: ''
-  });
+  const debouncedFilters = useDebounce(filters, 300);
 
   const dishQuery = useMemo(
     () => ({
       limit: 1000,
-      ...(appliedFilters.name.trim()
-        ? { name: appliedFilters.name.trim() }
+      ...(debouncedFilters.name.trim()
+        ? { name: debouncedFilters.name.trim() }
         : {}),
-      ...(appliedFilters.categories.length
-        ? { categories: appliedFilters.categories.join(',') }
+      ...(debouncedFilters.categories.length
+        ? { categories: debouncedFilters.categories.join(',') }
         : {}),
-      ...(appliedFilters.nutritionFocus
-        ? { nutritionFocus: appliedFilters.nutritionFocus }
+      ...(debouncedFilters.nutritionFocus
+        ? { nutritionFocus: debouncedFilters.nutritionFocus }
         : {})
     }),
-    [appliedFilters]
+    [debouncedFilters]
   );
 
   const { data } = useDishes(dishQuery);
@@ -114,28 +110,9 @@ export default function DishModal({
     onClose();
   };
 
-  const handleOpenFilters = () => {
-    setDraftFilters(appliedFilters);
-    setIsFilterOpen(prev => !prev);
-  };
-
-  const handleApplyFilters = () => {
-    setAppliedFilters(draftFilters);
-    setIsFilterOpen(false);
-  };
-
-  const handleResetDraftFilters = () => {
-    setDraftFilters({
-      name: '',
-      categories: [],
-      nutritionFocus: ''
-    });
-  };
-
   const toggleCategory = categoryValue => {
-    setDraftFilters(prev => {
+    setFilters(prev => {
       const exists = prev.categories.includes(categoryValue);
-
       return {
         ...prev,
         categories: exists
@@ -145,10 +122,16 @@ export default function DishModal({
     });
   };
 
-  const hasAppliedFilters =
-    appliedFilters.name ||
-    appliedFilters.categories.length > 0 ||
-    appliedFilters.nutritionFocus;
+  const handleResetFilters = () => {
+    setFilters({
+      name: '',
+      categories: [],
+      nutritionFocus: ''
+    });
+  };
+
+  const hasActiveFilters =
+    filters.name || filters.categories.length > 0 || filters.nutritionFocus;
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
@@ -177,7 +160,7 @@ export default function DishModal({
         <div className='flex items-center gap-3 px-4 py-4'>
           <button
             type='button'
-            onClick={handleOpenFilters}
+            onClick={() => setIsFilterOpen(prev => !prev)}
             className='inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-background px-4 text-sm font-bold text-foreground transition hover:bg-accent'
           >
             <HiAdjustmentsHorizontal size={18} />
@@ -190,28 +173,27 @@ export default function DishModal({
           </button>
 
           <span className='text-sm font-medium text-primary/70'>
-            {dishes.length} món ăn
+            {data?.totalDocs || 0} món ăn
           </span>
         </div>
 
         <DishFilterPanel
           isFilterOpen={isFilterOpen}
-          draftFilters={draftFilters}
-          setDraftFilters={setDraftFilters}
+          filters={filters}
+          setFilters={setFilters}
           toggleCategory={toggleCategory}
-          handleResetDraftFilters={handleResetDraftFilters}
-          handleApplyFilters={handleApplyFilters}
+          onResetFilters={handleResetFilters}
         />
 
-        {hasAppliedFilters ? (
+        {hasActiveFilters ? (
           <div className='flex flex-wrap gap-2 border-b border-border/50 bg-background/60 px-4 py-3'>
-            {appliedFilters.name ? (
+            {filters.name ? (
               <span className='rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary'>
-                Tên: {appliedFilters.name}
+                Tên: {filters.name}
               </span>
             ) : null}
 
-            {appliedFilters.categories.map(category => (
+            {filters.categories.map(category => (
               <span
                 key={category}
                 className='rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary'
@@ -220,9 +202,9 @@ export default function DishModal({
               </span>
             ))}
 
-            {appliedFilters.nutritionFocus ? (
+            {filters.nutritionFocus ? (
               <span className='rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary'>
-                Dinh dưỡng: {appliedFilters.nutritionFocus}
+                Dinh dưỡng: {filters.nutritionFocus}
               </span>
             ) : null}
           </div>
