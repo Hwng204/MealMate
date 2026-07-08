@@ -22,6 +22,7 @@ import AddFoodModal from './add-food-modal';
 import AITokenUsage from './ai-token-usage';
 import AlternativeDishButton from './alternative-dish-button';
 import AlternativeDishModal from './alternative-dish-modal';
+import DuplicateDishButton from '../../duplicate-dish-in-schedule/components/duplicate-dish-button';
 import DeleteDishModal from './delete-dish-modal';
 
 const MEAL_CONFIG = {
@@ -250,6 +251,12 @@ export default function ScheduleTodayCard({
                           setSelectedDishForAlternative(selectedDish);
                           setOpenAlternativeDishModal(true);
                         }}
+                      />
+
+                      <DuplicateDishButton
+                        scheduleId={schedule._id}
+                        mealType={meal.mealType}
+                        dishId={dish.dishId}
                       />
 
                       <DeleteDishModal

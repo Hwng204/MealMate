@@ -1,3 +1,4 @@
+import { HiOutlineX } from 'react-icons/hi';
 import { HiMagnifyingGlass } from 'react-icons/hi2';
 
 import { DISH_CATEGORY_OPTIONS, NUTRITION_FOCUS_OPTIONS } from '~/lib/utils';
@@ -20,20 +21,19 @@ function FilterChip({ active, children, onClick }) {
 
 export default function DishFilterPanel({
   isFilterOpen,
-  draftFilters,
-  setDraftFilters,
+  filters,
+  setFilters,
   toggleCategory,
-  handleResetDraftFilters,
-  handleApplyFilters
+  onResetFilters
 }) {
   if (!isFilterOpen) return null;
 
   return (
-    <div className='max-h-[260px] overflow-y-auto border-t border-border/50 border-b border-border/50 bg-background/95 px-4 py-3 custom-scrollbar'>
+    <div className='max-h-[320px] overflow-y-auto border-b border-t border-border/50 bg-background/95 px-4 py-3 custom-scrollbar'>
       <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
         <div className='lg:col-span-2'>
           <h5 className='mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-primary/70'>
-            Search by name
+            Tìm kiếm theo tên
           </h5>
 
           <div className='relative'>
@@ -42,15 +42,15 @@ export default function DishFilterPanel({
               size={18}
             />
             <input
-              value={draftFilters.name}
+              value={filters.name}
               onChange={e =>
-                setDraftFilters(prev => ({
+                setFilters(prev => ({
                   ...prev,
                   name: e.target.value
                 }))
               }
               placeholder='Ví dụ: cơm gà, salad, phở bò...'
-              className='h-10 w-full rounded-2xl border border-border bg-background pl-11 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10'
+              className='h-10 w-full rounded-2xl border border-border bg-background py-2 pl-11 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10'
             />
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function DishFilterPanel({
             {DISH_CATEGORY_OPTIONS.map(option => (
               <FilterChip
                 key={option.value}
-                active={draftFilters.categories.includes(option.value)}
+                active={filters.categories.includes(option.value)}
                 onClick={() => toggleCategory(option.value)}
               >
                 {option.label}
@@ -82,9 +82,9 @@ export default function DishFilterPanel({
             {NUTRITION_FOCUS_OPTIONS.map(option => (
               <FilterChip
                 key={option.value}
-                active={draftFilters.nutritionFocus === option.value}
+                active={filters.nutritionFocus === option.value}
                 onClick={() =>
-                  setDraftFilters(prev => ({
+                  setFilters(prev => ({
                     ...prev,
                     nutritionFocus:
                       prev.nutritionFocus === option.value ? '' : option.value
@@ -101,19 +101,11 @@ export default function DishFilterPanel({
       <div className='mt-4 flex items-center justify-end gap-3 border-t border-border/50 pt-3'>
         <button
           type='button'
-          onClick={handleResetDraftFilters}
-          className='rounded-2xl border border-border bg-background px-4 py-2 text-sm font-bold text-foreground transition hover:bg-accent'
+          onClick={onResetFilters}
+          className='inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2 text-sm font-bold text-foreground transition hover:bg-accent'
         >
+          <HiOutlineX size={16} />
           Đặt lại
-        </button>
-
-        <button
-          type='button'
-          onClick={handleApplyFilters}
-          className='inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:opacity-90'
-        >
-          <HiMagnifyingGlass size={16} />
-          Tìm kiếm
         </button>
       </div>
     </div>

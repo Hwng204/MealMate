@@ -55,7 +55,7 @@ const router = createBrowserRouter([
               },
               {
                 path: ':id',
-                Component: lazy(() => import('~/app/classes/[id]/page'))
+                Component: lazy(() => import('~/app/classes/[id]/page.jsx'))
               }
             ]
           },
@@ -394,14 +394,14 @@ const router = createBrowserRouter([
               },
               {
                 path: ':id',
-                Component: lazy(() => import('~/app/nutritionist/classes/[id]/page'))
+                Component: lazy(() => import('~/app/nutritionist/classes/[id]/page.jsx'))
               },
               {
                 path: ':id/students/:memberId',
                 Component: lazy(
                   () =>
                     import(
-                      '~/app/nutritionist/classes/[id]/students/[memberId]/page'
+                      '~/app/nutritionist/classes/[id]/students/[memberId]/page.jsx'
                     )
                 )
               },

@@ -1,3 +1,7 @@
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
 /**
  * Builds URLSearchParams from an object of parameters
  *
@@ -17,8 +21,9 @@ export const buildQueryParams = (params, partialSearchFields = []) => {
       return;
     }
 
-    if (partialSearchFields.includes(key)) {
-      searchParams.set(key, `/${value}/i`);
+    if (partialSearchFields.includes(key) && value) {
+      const escapedValue = escapeRegExp(value);
+      searchParams.set(key, `/${escapedValue}/i`);
       return;
     }
 

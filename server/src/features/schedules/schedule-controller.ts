@@ -183,6 +183,26 @@ export const ScheduleController = {
       .json(ApiResponse.success('Xóa món ăn khỏi bữa thành công', result));
   },
 
+  duplicateScheduleDish: async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const dishId = req.params.dishId;
+    const mealType = req.params.mealType;
+    const userId = req.user!._id.toString();
+    const role = req.user?.role;
+
+    const result = await ScheduleService.duplicateScheduleDish(
+      id,
+      userId,
+      role,
+      mealType,
+      dishId
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success('Sao chép món ăn thành công', result));
+  },
+
   removeScheduleMeal: async (req: Request, res: Response) => {
     const id = req.params.id;
     const mealType = req.params.mealType;

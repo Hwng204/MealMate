@@ -1164,6 +1164,56 @@ export const ScheduleService = {
     return schedule;
   },
 
+  duplicateScheduleDish: async (
+    id: string,
+    userId: string,
+    role: string | undefined,
+    mealType: string,
+    dishId: string
+  ) => {
+    if (!validateObjectId(id)) {
+      throw createHttpError(400, 'Định dạng ID lịch ăn không hợp lệ');
+    }
+
+    if (!validateObjectId(dishId)) {
+      throw createHttpError(400, 'Định dạng ID món ăn không hợp lệ');
+    }
+
+    const schedule = await ScheduleModel.findById(id);
+
+    if (!schedule) {
+      throw createHttpError(404, 'Không tìm thấy lịch ăn');
+    }
+
+    await ensureScheduleAccess(schedule, userId, role);
+
+    const meal = schedule.meals.find(item => item.mealType === mealType);
+
+    if (!meal) {
+      throw createHttpError(404, 'Không tìm thấy bữa ăn');
+    }
+
+    const dishes = (meal.dishes ?? []) as Array<{
+      dishId?: { toString: () => string } | null;
+    }>;
+    const dishToDuplicate = dishes.find(
+      dish => dish.dishId?.toString() === dishId
+    );
+
+    if (!dishToDuplicate) {
+      throw createHttpError(404, 'Không tìm thấy món ăn trong bữa');
+    }
+
+    const newDishData = dishToDuplicate.toObject();
+    delete newDishData._id;
+
+    dishes.push(newDishData);
+
+    await schedule.save();
+
+    return schedule;
+  },
+
   removeScheduleMeal: async (
     id: string,
     userId: string,
