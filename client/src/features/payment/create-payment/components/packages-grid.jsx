@@ -9,8 +9,24 @@ import PackageCard from './package-card';
 
 const b2cPlans = [
   {
+    name: 'Miễn phí',
+    price: '0đ',
+    desc: 'Khám phá MealMate hoàn toàn miễn phí',
+    features: [
+      'Theo dõi lịch trình ăn uống',
+      'Tính toán Calories & Dinh dưỡng',
+      'Lưu món ăn yêu thích',
+      'Tra cứu kho dữ liệu món ăn'
+    ],
+    tokenInfo: '25.000 tokens / ngày',
+    amount: 0,
+    isFree: true,
+    targetMembership: null
+  },
+  {
     name: 'Premium Cá Nhân',
     price: '89.000đ',
+    originalPrice: '119.000đ',
     period: '/ 1 tháng',
     desc: 'Tối ưu hóa sức khỏe toàn diện',
     badge: 'Phổ biến',
@@ -20,6 +36,7 @@ const b2cPlans = [
       'Tự động tạo danh sách mua sắm',
       'Thêm token tạo lịch trình ăn uống'
     ],
+    tokenInfo: '120.000 tokens / ngày',
     amount: 89000,
     targetMembership: MEMBERSHIP_LEVEL.VIP
   }
@@ -29,6 +46,7 @@ const b2bPlans = [
   {
     name: 'BASIC',
     price: '349.000đ',
+    originalPrice: '449.000đ',
     period: '/ 1 tháng',
     desc: 'Khởi đầu đơn giản – Hiệu quả',
     badge: 'Tiết kiệm 22% (so với gói tháng)',
@@ -42,12 +60,14 @@ const b2bPlans = [
       'Nhắc lịch tập & ăn uống cho học viên',
       'Hỗ trợ qua email'
     ],
+    tokenInfo: '500.000 tokens / ngày',
     amount: 349000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_BASIC
   },
   {
     name: 'STANDARD',
     price: '990.000đ',
+    originalPrice: '1.190.000đ',
     period: '/ 3 tháng',
     desc: 'Tối ưu công việc – Nâng cao hiệu suất',
     badge: 'Tiết kiệm 16% (so với gói tháng)',
@@ -63,12 +83,14 @@ const b2bPlans = [
       'Ưu tiên hỗ trợ 1-1',
       'Cập nhật tính năng mới sớm nhất'
     ],
+    tokenInfo: '1.000.000 tokens / ngày',
     amount: 990000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_STANDARD
   },
   {
     name: 'PREMIUM',
     price: '2.100.000đ',
+    originalPrice: '2.699.000đ',
     period: '/ 6 tháng',
     desc: 'Toàn diện – Chuyên nghiệp – Dẫn đầu',
     badge: 'Tiết kiệm 22% (so với gói tháng)',
@@ -84,6 +106,7 @@ const b2bPlans = [
       'Workshop & sự kiện cộng đồng đồng tổ chức',
       'Ưu tiên trải nghiệm các tính năng mới'
     ],
+    tokenInfo: '2.000.000 tokens / ngày',
     amount: 2100000,
     targetMembership: MEMBERSHIP_LEVEL.EXPERT_PREMIUM
   }
@@ -144,17 +167,15 @@ const PackagesGrid = () => {
               Trải nghiệm các tính năng AI để nâng cao sức khoẻ của bạn mỗi ngày.
             </p>
           </div>
-          <div className='flex justify-center'>
-            <div className='w-full max-w-md'>
-              {b2cPlans.map(plan => (
-                <PackageCard
-                  key={`b2c-${plan.name}`}
-                  plan={plan}
-                  onSelect={handleSelectPlan}
-                  isLoading={isPending}
-                />
-              ))}
-            </div>
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+            {b2cPlans.map(plan => (
+              <PackageCard
+                key={`b2c-${plan.name}`}
+                plan={plan}
+                onSelect={handleSelectPlan}
+                isLoading={isPending}
+              />
+            ))}
           </div>
         </section>
       )}

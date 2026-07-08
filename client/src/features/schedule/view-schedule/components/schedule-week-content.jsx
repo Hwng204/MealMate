@@ -1,30 +1,16 @@
 import { addWeeks, startOfWeek, subWeeks } from 'date-fns';
-import { format } from 'date-fns';
 import { useState } from 'react';
 import { HiSparkles } from 'react-icons/hi';
-import AITokenUsage from '~/features/schedule/view-schedule/components/ai-token-usage';
-import { useRecommendWeeklyMeals } from '~/features/ai-schedule/recommend-ai-meal/api/recommend-weekly-meals';
-import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
 
 import ScheduleHeader from '~/features/schedule/view-schedule/components/schedule-header';
 import ScheduleWeek from '~/features/schedule/view-schedule/components/schedule-week';
+import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
 
-export default function ScheduleWeekContent({ userId }) {
+export default function ScheduleWeekContent() {
   const [currentWeekDate, setCurrentWeekDate] = useState(
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
-
   const { data: profile } = useProfileForPage();
-  const { mutate: generateAI, isPending: isGeneratingAI } =
-    useRecommendWeeklyMeals();
-
-  const handleGenerateAI = () => {
-    generateAI({
-      weekStartDate: format(currentWeekDate, 'yyyy-MM-dd'),
-      userId,
-    });
-  };
-  
   const remainingTokens = profile?.aiTokens;
   const dailyTokenLimit = profile?.aiDailyTokenLimit;
 
@@ -38,37 +24,44 @@ export default function ScheduleWeekContent({ userId }) {
         onNext={() => setCurrentWeekDate(d => addWeeks(d, 1))}
       />
 
-      <div className='flex items-center justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3'>
-        <div className='min-w-0'>
-          <p className='text-[12px] font-black tracking-tight text-primary'>
-            Gợi ý thực đơn tuần bằng AI
-          </p>
-          <p className='text-[11px] text-muted-foreground'>
-            Tạo nhanh lịch ăn phù hợp với mục tiêu của bạn
-          </p>
+      {typeof remainingTokens === 'number' && (
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-primary/20 bg-primary/[0.03] px-6 py-5 shadow-xs'>
+          <div className='min-w-0'>
+            <div className='flex items-center gap-2 text-primary'>
+              <HiSparkles className='h-5 w-5 shrink-0' />
+              <p className='text-sm font-black tracking-tight uppercase'>
+                Gợi ý thực đơn & bài tập theo tuần bằng AI
+              </p>
+            </div>
+            <p className='text-xs text-muted-foreground mt-1'>
+              Tự động thiết lập thực đơn và lịch trình luyện tập tối ưu phù hợp với chỉ số của bạn trong suốt cả tuần.
+            </p>
+            <div className='mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs'>
+              <p className='font-semibold text-primary/80'>
+                AI tokens còn lại: <span className='font-bold text-foreground'>{remainingTokens.toLocaleString('vi-VN')}</span>
+                {typeof dailyTokenLimit === 'number' ? ` / ${dailyTokenLimit.toLocaleString('vi-VN')}` : ''}
+              </p>
+              <span className='hidden md:inline text-muted-foreground/35'>•</span>
+              <p className='font-semibold text-muted-foreground/80'>
+                Chi phí gợi ý theo tuần: <span className='font-bold text-emerald-700'>100.000 tokens / lần</span>
+              </p>
+            </div>
+          </div>
 
-          <AITokenUsage
-            remainingTokens={remainingTokens}
-            dailyTokenLimit={dailyTokenLimit}
-          />
-        </div>
-
-        <button
-          onClick={handleGenerateAI}
-          disabled={isGeneratingAI}
-          className='flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[12px] font-black tracking-tight text-primary-foreground shadow-sm transition-all hover:shadow-md active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60'
-        >
-          {isGeneratingAI ? (
-            <div className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent' />
-          ) : (
+          <button
+            type='button'
+            disabled
+            className='flex shrink-0 items-center gap-2 rounded-xl bg-primary/20 px-5 py-3 text-[12px] font-black uppercase tracking-wider text-primary/70 cursor-not-allowed border border-primary/10'
+            title='Tính năng VIP dành cho tài khoản Premium'
+          >
             <HiSparkles size={14} />
-          )}
-          AI gợi ý theo tuần
-        </button>
-      </div>
+            AI gợi ý tuần (Premium)
+          </button>
+        </div>
+      )}
 
       <div className='rounded-3xl border border-slate-200 px-6 py-6'>
-        <ScheduleWeek startOfSelectedWeek={currentWeekDate} userId={userId} />
+        <ScheduleWeek startOfSelectedWeek={currentWeekDate} />
       </div>
     </div>
   );
