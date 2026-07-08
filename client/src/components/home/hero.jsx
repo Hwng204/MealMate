@@ -17,8 +17,8 @@ const Hero = () => {
     <section className='relative bg-background overflow-hidden'>
       <div className='relative left-1/2 w-screen max-w-none -translate-x-1/2'>
         <img
-          src="/banner.png"
-          alt="MealMeat Banner"
+          src='/banner.png'
+          alt='MealMate Banner'
           className='h-[220px] w-full object-cover object-center sm:h-[300px] md:h-[380px] lg:h-[420px]'
         />
       </div>
@@ -26,7 +26,7 @@ const Hero = () => {
         <div className='relative order-1'>
           <img
             src='/food.jpg'
-            alt='MealMeat Healthy Meal'
+            alt='MealMate Healthy Meal'
             className='relative z-10 w-full h-auto max-h-[min(520px,55vh)] object-cover rounded-3xl md:rounded-[2rem] shadow-xl shadow-black/10 border border-black/[0.06]'
           />
         </div>
@@ -44,7 +44,7 @@ const Hero = () => {
           </h1>
 
           <p className='mt-5 max-w-xl text-base leading-7 text-neutral-600 sm:text-lg'>
-            MealMeat gợi ý thực đơn phù hợp mục tiêu của bạn, theo dõi dinh dưỡng
+            MealMate gợi ý thực đơn phù hợp mục tiêu của bạn, theo dõi dinh dưỡng
             trực quan và giúp duy trì thói quen ăn uống lành mạnh mỗi ngày.
           </p>
 

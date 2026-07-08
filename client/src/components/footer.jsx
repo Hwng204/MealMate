@@ -55,11 +55,11 @@ const Footer = () => {
                 Liên hệ với chúng tôi
               </h3>
               <a
-                href='mailto:contact@mealmeat.vn'
+                href='mailto:mealmatemanagement@gmail.com'
                 className='mt-4 inline-flex items-center gap-2 text-sm font-medium text-neutral-900 hover:opacity-70 transition'
               >
                 <Mail className='h-4 w-4 shrink-0' />
-                contact@mealmeat.vn
+                mealmatemanagement@gmail.com
               </a>
             </div>
 
@@ -93,7 +93,7 @@ const Footer = () => {
 
         <div className='mt-12 border-t border-neutral-900/10 pt-8'>
           <p className='text-center text-xs font-medium text-neutral-800/60'>
-            © {new Date().getFullYear()} MealMeat. Đồng hành cùng sức khỏe Việt.
+            © {new Date().getFullYear()} MealMate. Đồng hành cùng sức khỏe Việt.
           </p>
         </div>
       </div>
