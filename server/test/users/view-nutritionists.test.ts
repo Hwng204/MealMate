@@ -1,4 +1,4 @@
-﻿import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UserService } from '~/features/users/user-service';
 import { CERTIFICATE_STATUS } from '~/shared/constants/certificate-status';
@@ -14,7 +14,8 @@ vi.mock('~/shared/database/models', () => ({
     findByIdAndDelete: vi.fn(),
     create: vi.fn(),
     deleteMany: vi.fn(),
-    countDocuments: vi.fn()
+    countDocuments: vi.fn(),
+    aggregate: vi.fn()
   },
   AuthModel: {
     create: vi.fn(),
@@ -49,8 +50,13 @@ vi.mock('~/shared/utils', async importOriginal => {
 
 const mockPaginate = vi.mocked(UserModel.paginate);
 const mockBuildPaginateOptions = vi.mocked(buildPaginateOptions);
+const mockAggregate = vi.mocked(UserModel.aggregate);
 
 describe('UserService.viewNutritionists (UC83)', () => {
+  beforeEach(() => {
+    mockAggregate.mockResolvedValue([{ avgUsageTime: 45 }]);
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -79,7 +85,8 @@ describe('UserService.viewNutritionists (UC83)', () => {
     expect(mockPaginate).toHaveBeenCalledWith(
       {
         role: ROLE.NUTRITIONIST,
-        'certificate.status': CERTIFICATE_STATUS.APPROVED
+        'certificate.status': CERTIFICATE_STATUS.APPROVED,
+        isActive: true
       },
       expect.objectContaining({
         select: 'name avatar role certificate nutritionistProfile'

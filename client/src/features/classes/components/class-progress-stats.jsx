@@ -1,6 +1,7 @@
 import {
   Activity,
   CheckCircle2,
+  Clock,
   Dumbbell,
   Flame,
   Percent,
@@ -23,6 +24,7 @@ export default function ClassProgressStats({
   weight,
   bmi,
   bmr,
+  avgUsageTime,
   compact = false
 }) {
   const stats = [
@@ -75,6 +77,14 @@ export default function ClassProgressStats({
       label: 'Tiến độ'
     }
   );
+
+  if (avgUsageTime !== undefined) {
+    stats.unshift({
+      icon: <Clock className='h-4 w-4' />,
+      value: `${Math.round(avgUsageTime || 0)} phút`,
+      label: 'TG sử dụng TB'
+    });
+  }
 
   return (
     <div

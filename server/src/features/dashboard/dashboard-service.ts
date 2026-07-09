@@ -47,7 +47,7 @@ const calculateCompletionPercent = (schedules: ScheduleLike[]) => {
 export const DashboardService = {
   getNutritionistStats: async () => {
     const nutritionists = await UserModel.find({ role: ROLE.NUTRITIONIST })
-      .select('_id name email')
+      .select('_id name email usageTime')
       .lean();
 
     const stats = await Promise.all(

@@ -17,13 +17,21 @@ const NutritionistStatsTab = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'clientCount', direction: 'descending' });
   const { data: nutritionists = [], isLoading, isError, error } = useNutritionistStats();
 
+  const averageUsage = useMemo(() => {
+    if (!nutritionists || nutritionists.length === 0) return 0;
+    const total = nutritionists.reduce((acc, curr) => acc + (curr.usageTime || 0), 0);
+    return Math.round((total / nutritionists.length) * 10) / 10;
+  }, [nutritionists]);
+
   const sortedNutritionists = useMemo(() => {
     if (!nutritionists) return [];
     return [...nutritionists].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      const aValue = a[sortConfig.key] ?? 0;
+      const bValue = b[sortConfig.key] ?? 0;
+      if (aValue < bValue) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (aValue > bValue) {
         return sortConfig.direction === 'ascending' ? 1 : -1;
       }
       return 0;
@@ -64,7 +72,7 @@ const NutritionistStatsTab = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Thời gian sử dụng trung bình (hàng ngày)</CardTitle>
+              <CardTitle className="text-sm font-medium">Thời gian sử dụng trung bình</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -123,14 +131,14 @@ const NutritionistStatsTab = () => {
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
-              Thời gian sử dụng trung bình (hàng ngày)
+              Thời gian sử dụng trung bình
             </CardTitle>
             <Clock className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>N/A</div>
+            <div className='text-2xl font-bold'>{averageUsage} phút</div>
             <p className='text-xs text-muted-foreground'>
-              Tính năng này sẽ được phát triển ở phiên bản sau
+              Thời gian sử dụng trung bình của tất cả chuyên gia
             </p>
           </CardContent>
         </Card>
@@ -146,6 +154,12 @@ const NutritionistStatsTab = () => {
                 <TableHead>Tên chuyên gia</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className='text-right'>
+                  <Button variant='ghost' onClick={() => requestSort('usageTime')}>
+                    Thời gian sử dụng
+                    {getSortIcon('usageTime')}
+                  </Button>
+                </TableHead>
+                <TableHead className='text-right'>
                   <Button variant='ghost' onClick={() => requestSort('clientCount')}>
                     Số lượng học viên
                     {getSortIcon('clientCount')}
@@ -158,6 +172,7 @@ const NutritionistStatsTab = () => {
                 <TableRow key={nutritionist._id}>
                   <TableCell>{nutritionist.name}</TableCell>
                   <TableCell>{nutritionist.email}</TableCell>
+                  <TableCell className='text-right'>{nutritionist.usageTime || 0} phút</TableCell>
                   <TableCell className='text-right'>{nutritionist.clientCount}</TableCell>
                 </TableRow>
               ))}
