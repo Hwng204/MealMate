@@ -167,7 +167,8 @@ const userSchema = new Schema(
     enrolledClasses: [
       { type: Schema.Types.ObjectId, ref: 'Class', default: [] }
     ],
-    nutritionistProfile: { type: nutritionistProfileSchema }
+    nutritionistProfile: { type: nutritionistProfileSchema },
+    usageTime: { type: Number, default: 0 }
   },
   {
     timestamps: true

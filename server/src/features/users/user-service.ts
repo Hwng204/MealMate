@@ -680,11 +680,27 @@ export const UserService = {
       throw createHttpError(404, 'Không tìm thấy chuyên gia nào');
     }
 
+    // Calculate average usage time
+    const stats = await UserModel.aggregate([
+      {
+        $match: {
+          ...filter,
+          role: ROLE.NUTRITIONIST,
+          'certificate.status': CERTIFICATE_STATUS.APPROVED,
+          isActive: true
+        }
+      },
+      { $group: { _id: null, avgUsageTime: { $avg: '$usageTime' } } }
+    ]);
+
     result.docs = result.docs.map(doc =>
       sanitizeCertificate(doc)
     ) as typeof result.docs;
 
-    return result;
+    return {
+      ...result,
+      stats: stats[0] || { avgUsageTime: 0 }
+    };
   },
 
   viewNutritionistClients: async (
@@ -947,22 +963,22 @@ export const UserService = {
     }
 
     if (!areConnected) {
-        // Check for Nutritionist-Client connection
-        const isClientOfNutritionist = await NutritionistClientModel.findOne({
-            $or: [
-                { userId: currentUserId, nutritionistId: targetUserId },
-                { userId: targetUserId, nutritionistId: currentUserId },
-            ],
-        });
-        if (isClientOfNutritionist) {
-            areConnected = true;
-        }
+      // Check for Nutritionist-Client connection
+      const isClientOfNutritionist = await NutritionistClientModel.findOne({
+        $or: [
+          { userId: currentUserId, nutritionistId: targetUserId },
+          { userId: targetUserId, nutritionistId: currentUserId },
+        ],
+      });
+      if (isClientOfNutritionist) {
+        areConnected = true;
+      }
     }
 
 
     if (!areConnected) {
       const currentUser = await UserModel.findById(currentUserId).select('role');
-      if(currentUser.role === ROLE.ADMIN) {
+      if (currentUser.role === ROLE.ADMIN) {
         areConnected = true;
       }
     }
@@ -1266,7 +1282,7 @@ export const UserService = {
 
     const { ClassModel } = await import('~/shared/database/models');
     const classDoc = await ClassModel.findById(data.classId);
-    
+
     if (!classDoc) {
       throw createHttpError(404, 'Không tìm thấy lớp học');
     }
@@ -1304,7 +1320,7 @@ export const UserService = {
     }
 
     const { NutritionistReviewModel } = await import('~/shared/database/models');
-    
+
     const review = await NutritionistReviewModel.findOne({ userId, nutritionistId });
     return review;
   },
@@ -1318,7 +1334,7 @@ export const UserService = {
     }
 
     const { NutritionistReviewModel } = await import('~/shared/database/models');
-    
+
     const { filter = {} } = parsed;
     const options = buildPaginateOptions(parsed);
 
