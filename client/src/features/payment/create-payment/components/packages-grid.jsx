@@ -184,10 +184,10 @@ const PackagesGrid = () => {
         <section className={showB2C ? 'border-t border-neutral-200 pt-16' : ''}>
           <div className='text-center max-w-4xl mx-auto mb-8 md:mb-12'>
             <h2 className='text-2xl sm:text-3xl md:text-5xl font-black text-neutral-900 tracking-tight'>
-              BẢNG GIÁ DÀNH CHO <span className='text-emerald-700'>PHÒNG GYM</span>
+              BẢNG GIÁ DÀNH CHO <span className='text-emerald-700'>PT</span>
             </h2>
             <p className='text-sm sm:text-base md:text-lg text-neutral-600 mt-3 md:mt-4'>
-              MealMate đồng hành cùng PT nâng cao chuyên môn, quản lý học viên hiệu quả và phát triển sự nghiệp bền vững.
+              Ưu đãi đặc biệt dành cho phòng Gym! Hãy liên hệ MealMate để được tư vấn gói dịch vụ và nhận mức <span className='text-emerald-700 font-bold'>giá tốt nhất</span> dành cho đối tác
             </p>
           </div>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
