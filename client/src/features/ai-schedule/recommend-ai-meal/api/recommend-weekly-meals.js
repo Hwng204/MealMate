@@ -24,6 +24,9 @@ export const useRecommendWeeklyMeals = ({ onSuccess } = {}) => {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.SCHEDULES
       });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PROFILE
+      });
 
       toast.success(res.message || 'Tạo thực đơn tuần bằng AI thành công');
       onSuccess?.(res.data);

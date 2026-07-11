@@ -134,20 +134,17 @@ export const AiController = {
   },
 
   recommendWeeklyMeals: async (req: Request, res: Response) => {
-    const payload = req.body as RecommendWeeklyMealsRequest;
     const currentUserId = req.user?._id?.toString();
-    const targetUserId = currentUserId ?? payload.userId;
-
-    if (!targetUserId) {
-      throw createHttpError(
-        400,
-        'Cần đăng nhập hoặc truyền userId trong body để gợi ý bữa ăn tuần'
-      );
+    if (!currentUserId) {
+      throw createHttpError(401, 'Unauthorized');
     }
+
+    const payload = req.body as RecommendWeeklyMealsRequest;
+    const targetUserId = await resolveTargetUserId(req, payload);
 
     const result = await AiService.recommendWeeklyMeals(
       targetUserId,
-      currentUserId ?? targetUserId,
+      currentUserId,
       payload
     );
 

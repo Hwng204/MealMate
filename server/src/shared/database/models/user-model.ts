@@ -168,7 +168,8 @@ const userSchema = new Schema(
       { type: Schema.Types.ObjectId, ref: 'Class', default: [] }
     ],
     nutritionistProfile: { type: nutritionistProfileSchema },
-    usageTime: { type: Number, default: 0 }
+    usageTime: { type: Number, default: 0 },
+    clientCount: { type: Number, default: 0 }
   },
   {
     timestamps: true

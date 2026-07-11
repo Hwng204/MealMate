@@ -52,6 +52,9 @@ export const useRecommendDailyMeals = ({ onSuccess } = {}) => {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.SCHEDULES
       });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PROFILE
+      });
 
       if (scheduleId) {
         queryClient.setQueryData(QUERY_KEYS.SCHEDULE(scheduleId), old => {

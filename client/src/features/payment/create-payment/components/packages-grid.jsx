@@ -167,14 +167,15 @@ const PackagesGrid = () => {
               Trải nghiệm các tính năng AI để nâng cao sức khoẻ của bạn mỗi ngày.
             </p>
           </div>
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+          <div className='grid grid-cols-1 gap-6 md:flex md:justify-center'>
             {b2cPlans.map(plan => (
-              <PackageCard
-                key={`b2c-${plan.name}`}
-                plan={plan}
-                onSelect={handleSelectPlan}
-                isLoading={isPending}
-              />
+              <div key={`b2c-${plan.name}`} className='w-full md:w-1/3'>
+                <PackageCard
+                  plan={plan}
+                  onSelect={handleSelectPlan}
+                  isLoading={isPending}
+                />
+              </div>
             ))}
           </div>
         </section>

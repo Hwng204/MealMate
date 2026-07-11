@@ -1,10 +1,12 @@
-import { addWeeks, startOfWeek, subWeeks } from 'date-fns';
+import { addWeeks, startOfWeek, subWeeks, format } from 'date-fns';
 import { useState } from 'react';
 import { HiSparkles } from 'react-icons/hi';
 
 import ScheduleHeader from '~/features/schedule/view-schedule/components/schedule-header';
 import ScheduleWeek from '~/features/schedule/view-schedule/components/schedule-week';
 import { useProfileForPage } from '~/features/users/view-profile/api/view-profile';
+import { useRecommendWeeklyMeals } from '~/features/ai-schedule/recommend-ai-meal/api/recommend-weekly-meals';
+import { MEMBERSHIP_LEVEL } from '~/constants/membership-level';
 
 export default function ScheduleWeekContent() {
   const [currentWeekDate, setCurrentWeekDate] = useState(
@@ -13,6 +15,15 @@ export default function ScheduleWeekContent() {
   const { data: profile } = useProfileForPage();
   const remainingTokens = profile?.aiTokens;
   const dailyTokenLimit = profile?.aiDailyTokenLimit;
+  const isUpgraded = profile?.membershipLevel && profile.membershipLevel !== MEMBERSHIP_LEVEL.NORMAL;
+  
+  const { mutate: generateAI, isPending: isGeneratingAI } = useRecommendWeeklyMeals();
+
+  const handleGenerateAI = () => {
+    generateAI({
+      weekStartDate: format(currentWeekDate, 'yyyy-MM-dd'),
+    });
+  };
 
   return (
     <div className='max-w-8xl mx-auto space-y-6 px-4 py-8'>
@@ -43,20 +54,35 @@ export default function ScheduleWeekContent() {
               </p>
               <span className='hidden md:inline text-muted-foreground/35'>•</span>
               <p className='font-semibold text-muted-foreground/80'>
-                Chi phí gợi ý theo tuần: <span className='font-bold text-emerald-700'>100.000 tokens / lần</span>
+                Chi phí gợi ý theo tuần: <span className='font-bold text-emerald-700'>70.000 tokens / lần</span>
               </p>
             </div>
           </div>
 
-          <button
-            type='button'
-            disabled
-            className='flex shrink-0 items-center gap-2 rounded-xl bg-primary/20 px-5 py-3 text-[12px] font-black uppercase tracking-wider text-primary/70 cursor-not-allowed border border-primary/10'
-            title='Tính năng VIP dành cho tài khoản Premium'
-          >
-            <HiSparkles size={14} />
-            AI gợi ý tuần (Premium)
-          </button>
+          {!isUpgraded ? (
+            <button
+              type='button'
+              disabled
+              className='flex shrink-0 items-center gap-2 rounded-xl bg-primary/20 px-5 py-3 text-[12px] font-black uppercase tracking-wider text-primary/70 cursor-not-allowed border border-primary/10'
+              title='Tính năng VIP dành cho tài khoản Premium'
+            >
+              <HiSparkles size={14} />
+              AI gợi ý tuần (Premium)
+            </button>
+          ) : (
+            <button
+              onClick={handleGenerateAI}
+              disabled={isGeneratingAI}
+              className='flex shrink-0 items-center gap-2 rounded-xl bg-primary px-5 py-3 text-[12px] font-black uppercase tracking-wider text-primary-foreground shadow-sm transition-all hover:shadow-md active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              {isGeneratingAI ? (
+                <div className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent' />
+              ) : (
+                <HiSparkles size={14} />
+              )}
+              AI gợi ý theo tuần
+            </button>
+          )}
         </div>
       )}
 

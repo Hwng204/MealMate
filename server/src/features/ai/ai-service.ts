@@ -1260,7 +1260,9 @@ const settleAiTokenUsage = async (
   usage: AiUsageMetadata
 ): Promise<AiQuotaSettlement> => {
   const normalizedTotal = toNonNegativeInt(usage.totalTokens);
-  const chargedTokens = Math.min(normalizedTotal, reservation.reservedTokens);
+  const chargedTokens = reservation.endpoint === 'recommend_weekly_meals' 
+    ? reservation.reservedTokens 
+    : Math.min(normalizedTotal, reservation.reservedTokens);
   const refundedTokens = Math.max(
     0,
     reservation.reservedTokens - chargedTokens

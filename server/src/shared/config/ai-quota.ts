@@ -24,11 +24,11 @@ export const AI_TOKEN_QUOTA_CONFIG = {
       max: 5_000
     },
     recommend_weekly_meals: {
-      min: 15_000,
-      max: 50_000
+      min: 70_000,
+      max: 70_000
     }
   } as const,
-  unlimitedEndpoints: ['recommend_weekly_meals'] as const,
+  unlimitedEndpoints: [] as const,
   reserveEstimation: {
     charsPerToken: 3,
     outputTokenBudget: 512,
@@ -76,7 +76,7 @@ export const estimateReserveTokensForPrompt = (
     AI_TOKEN_QUOTA_CONFIG.reserveEstimation.outputTokenBudget;
   const rawEstimate = Math.ceil(
     (estimatedInputTokens + estimatedOutputTokens) *
-      AI_TOKEN_QUOTA_CONFIG.reserveEstimation.safetyMultiplier
+    AI_TOKEN_QUOTA_CONFIG.reserveEstimation.safetyMultiplier
   );
 
   return Math.max(range.min, Math.min(range.max, rawEstimate));
