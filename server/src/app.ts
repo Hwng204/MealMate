@@ -22,7 +22,17 @@ app.use(passport.initialize());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      const allowedOrigins = process.env.CLIENT_URL?.split(',').map(url => url.trim()) || [];
+      // Allow requests with no origin (like mobile apps or curl requests)
+      // Allow if origin is in the allowed list
+      // Allow any Vercel preview domains
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
