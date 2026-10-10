@@ -978,7 +978,7 @@ export const UserService = {
 
     if (!areConnected) {
       const currentUser = await UserModel.findById(currentUserId).select('role');
-      if (currentUser.role === ROLE.ADMIN) {
+      if (currentUser?.role === ROLE.ADMIN) {
         areConnected = true;
       }
     }
