@@ -115,14 +115,14 @@ const ensureUserHasNoOpenRelation = async (userId: string) => {
 };
 
 const isNutritionistParticipant = (
-  relation: Pick<NutritionistClient, 'nutritionist'>,
+  relation: Pick<NutritionistClient, 'nutritionistId'>,
   actorId: string
-) => relation.nutritionist._id.toString() === actorId;
+) => relation.nutritionistId.toString() === actorId;
 
 const isUserParticipant = (
-  relation: Pick<NutritionistClient, 'user'>,
+  relation: Pick<NutritionistClient, 'userId'>,
   actorId: string
-) => relation.user._id.toString() === actorId;
+) => relation.userId.toString() === actorId;
 
 const toParticipantSnapshot = (user: HydratedDocument<User>) => ({
   _id: user._id,
@@ -940,8 +940,8 @@ export const NutritionistClientService = {
       );
     }
 
-    const initiatedByNutritionist = relation.initiatedBy === ROLE.NUTRITIONIST;
-    const initiatedByUser = relation.initiatedBy === ROLE.USER;
+    const initiatedByNutritionist = relation.source === 'Invitation';
+    const initiatedByUser = relation.source === 'Request';
 
     const isCounterpartyApproving =
       (initiatedByNutritionist &&
@@ -987,8 +987,8 @@ export const NutritionistClientService = {
     const actorIsUser = isUserParticipant(relation, actorId);
 
     const canDeleteInvite =
-      relation.initiatedBy === ROLE.NUTRITIONIST && actorIsNutritionist;
-    const canDeleteRequest = relation.initiatedBy === ROLE.USER && actorIsUser;
+      relation.source === 'Invitation' && actorIsNutritionist;
+    const canDeleteRequest = relation.source === 'Request' && actorIsUser;
 
     if (!canDeleteInvite && !canDeleteRequest) {
       throw createHttpError(

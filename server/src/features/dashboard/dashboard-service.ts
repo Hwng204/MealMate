@@ -140,7 +140,7 @@ export const DashboardService = {
 
     const studentsWithClass = openClasses.flatMap(c =>
       c.members.filter(Boolean).map(member => ({
-        ...member._bsontype === 'ObjectID' ? { _id: member } : member.toObject(),
+        ...((member as any)._bsontype === 'ObjectId' ? { _id: member } : (member as any).toObject()),
         classId: c._id.toString(),
         className: c.className,
         progress: progressByMember[member._id.toString()] ?? 0

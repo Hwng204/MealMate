@@ -1204,7 +1204,7 @@ export const ScheduleService = {
       throw createHttpError(404, 'Không tìm thấy món ăn trong bữa');
     }
 
-    const newDishData = dishToDuplicate.toObject();
+    const newDishData = (dishToDuplicate as any).toObject();
     delete newDishData._id;
 
     dishes.push(newDishData);

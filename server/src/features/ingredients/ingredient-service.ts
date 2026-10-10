@@ -49,9 +49,9 @@ export const IngredientService = {
     let { filter } = parsed;
 
     // Handle name search with regex for partial matching
-    if (filter && typeof filter.name === 'string') {
-      const nameQuery = filter.name;
-      delete filter.name;
+    if (filter && typeof (filter as any).name === 'string') {
+      const nameQuery = (filter as any).name;
+      delete (filter as any).name;
       filter = {
         ...filter,
         $or: [{ name: { $regex: nameQuery, $options: 'i' } }],
