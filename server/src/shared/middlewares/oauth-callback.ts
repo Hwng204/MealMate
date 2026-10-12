@@ -31,10 +31,13 @@ export const createOAuthCallback =
         user: Express.User | false,
         info: OAuthInfo
       ) {
+        const clientUrl =
+          process.env.CLIENT_URL?.replace(/\/+$/, '') || 'http://localhost:5173';
+
         if (err) {
           console.error(`${provider} OAuth error:`, err);
           return res.redirect(
-            `${process.env.CLIENT_URL}/auth/login?error=oauth_failed`
+            `${clientUrl}/auth/login?error=oauth_failed`
           );
         }
 
@@ -42,7 +45,7 @@ export const createOAuthCallback =
           const message = info?.message || 'authentication_failed';
           console.error(`${provider} OAuth failed:`, message);
           return res.redirect(
-            `${process.env.CLIENT_URL}/auth/login?error=${encodeURIComponent(message)}`
+            `${clientUrl}/auth/login?error=${encodeURIComponent(message)}`
           );
         }
 
