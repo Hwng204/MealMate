@@ -9,7 +9,9 @@ export const buildOAuthUrl = (
   apiUrl = import.meta.env.VITE_API_URL
 ) => {
   if (apiUrl?.startsWith('http')) {
-    return `${apiUrl}${authPath}`;
+    const cleanApiUrl = apiUrl.replace(/\/+$/, '');
+    const cleanAuthPath = authPath.startsWith('/') ? authPath : `/${authPath}`;
+    return `${cleanApiUrl}${cleanAuthPath}`;
   }
   return authPath;
 };
