@@ -42,8 +42,11 @@ export const AuthController = {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    const clientUrl =
+      process.env.CLIENT_URL?.replace(/\/+$/, '') || 'http://localhost:5173';
+
     res.redirect(
-      `${process.env.CLIENT_URL}/auth/callback?accessToken=${accessToken}&hasOnboarded=${hasOnboarded}`
+      `${clientUrl}/auth/callback?accessToken=${accessToken}&hasOnboarded=${hasOnboarded}`
     );
   },
 
